@@ -1,0 +1,23 @@
+import { defineConfig } from 'vite';
+import { fileURLToPath, URL } from 'node:url';
+
+export default defineConfig({
+  resolve: {
+    alias: {
+      // This game uses Arcade Physics exclusively, so avoid bundling Phaser's
+      // unused Matter Physics engine and other full-build extras.
+      phaser: fileURLToPath(
+        new URL('./node_modules/phaser/dist/phaser-arcade-physics.js', import.meta.url),
+      ),
+    },
+  },
+  build: {
+    // Phaser remains intentionally larger than Vite's generic 500 kB default.
+    // Keep the limit close to the known engine bundle so unexpected growth is
+    // still reported.
+    chunkSizeWarningLimit: 1_200,
+  },
+  server: {
+    port: 5173,
+  },
+});
