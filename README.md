@@ -1,8 +1,29 @@
 # NI MBAYA
 
-NI MBAYA is a Nairobi-based 2D beat-em-up prototype built with HTML5, WebGL, Phaser 3, TypeScript, and Vite.
+NI MBAYA is a Nairobi-based 2.5D beat-'em-up built with HTML5, WebGL, Phaser 3, TypeScript, and Vite.
 
-The game follows Mbavu Destroyer as he fights through Nairobi streets after Mjaka Fine is captured by Majembe. The current prototype focuses on the menu flow, character select flow, and a playable single-screen street fight with generated placeholder art that can later be replaced by production sprite sheets.
+Players choose Mbavu Destroyer or Mjaka Fine, then fight through four Nairobi-inspired stages: Nairobi CBD, Downtown Backstreet, Nairobi Rooftops, and Kibera. The current build includes melee combat, difficulty settings, touch controls, enemy variants, health-pickup chapatis, and English/Swahili story context.
+
+Progress is checkpointed locally after each cleared level. Use **Continue** on the main menu to resume the next unlocked level with the selected fighter, health, and chapatis.
+
+## Hackathon Submission Notes
+
+### Run locally
+
+```bash
+npm install
+npm run dev
+```
+
+Open the Vite URL printed in the terminal. To create a production build:
+
+```bash
+npm run build
+```
+
+### Codex and GPT-5.6 usage
+
+Codex was used as a development collaborator during the project: reviewing the Phaser architecture, tracing gameplay defects, implementing a one-hit-per-enemy attack guard, making later-level assets available before scene transitions, and verifying production builds. GPT-5.6 Terra was used during this collaboration. All changes were reviewed against the project source and validated with `npm run build`.
 
 This README is intentionally detailed. Future agents should read it before refactoring or adding features. Several parts of the game rely on a deliberate split between invisible physics bodies and visible generated bitmap art. Breaking that relationship will make characters fall, hang, overlap, or stop responding to controls.
 
@@ -47,11 +68,12 @@ File: `src/scenes/BootScene.ts`
 
 Responsibilities:
 
-- Preload menu, character select, and gameplay assets.
+- Preload menu, character select, shared gameplay, and all four level asset groups.
+- Load the Level 3 and Level 4 asset groups through `DeferredLevelAssets.ts` during boot so level transitions remain reliable on every browser.
 - Create fallback/generated placeholder textures such as `player-idle`, `goon-idle`, `hit-spark`, and `shadow`.
 - Start the main menu.
 
-Important: when adding any new PNG that is referenced by a scene, preload it here first. Phaser will fail silently or show missing art if an asset key is referenced before loading.
+Important: shared assets belong in `BootScene`; Level 3 and Level 4 asset definitions stay in `DeferredLevelAssets.ts`, which BootScene invokes during preload. This keeps the asset list organized while avoiding runtime loading handoffs that previously caused blank transitions.
 
 ### MainMenuScene
 
@@ -111,6 +133,7 @@ src/
       reference/     Target menu screenshots and cleanup sources.
   config/
     Controls.ts      Keyboard mapping and attack tuning.
+    DeferredLevelAssets.ts  Level 3 and 4 asset definitions loaded during boot.
     GameConfig.ts    Phaser config, dimensions, scene list, physics config.
     GameSettings.ts  Difficulty settings and localStorage persistence.
   entities/
@@ -134,9 +157,9 @@ src/
 
 Keyboard:
 
-- Move left/right: `A` / `D` or arrow left/right
-- Move up/down in lane: arrow up/down
-- Jump: `W`
+- Move left/right: left / right arrow keys
+- Move up/down in lane: up / down arrow keys
+- Jump: `Space`
 - Punch: `J`
 - Kick: `K`
 - Special: `L`
@@ -251,7 +274,7 @@ State values:
 Important fields:
 
 - `health`: player health, currently 0-100.
-- `coins`: reward value shown in HUD after clearing goons.
+- `chapatis`: reward value shown in the HUD after clearing a level.
 - `facing`: `1` for right, `-1` for left.
 - `z`: fake jump altitude.
 - `vz`: fake jump vertical velocity.
@@ -294,6 +317,11 @@ Enemy variants:
 - `gameplay-goon`: base goon.
 - `gameplay-goon-hoodie`: brawler-style goon.
 - `gameplay-goon-club`: bat/club goon.
+- `gameplay-goon-chain`: chain-wielding goon.
+- `gameplay-goon-heavy`: high-health heavy goon.
+- `gameplay-attack-dog`: fast melee enemy.
+- `gameplay-kibera-stone-goon`: ranged stone thrower.
+- `gameplay-kibera-shield-goon`: high-health enemy that reduces incoming damage.
 
 Important fields:
 
@@ -351,6 +379,7 @@ Responsibilities:
 - Track combo count and combo expiration.
 - Spawn hit sparks.
 - Trigger screen shake.
+- Ensure each attack can damage each enemy only once during its active hitbox window.
 
 Attack data lives in `src/config/Controls.ts`:
 
@@ -469,7 +498,7 @@ The current generated PNGs are useful for visual direction but are not final ani
 Recommended approach:
 
 1. Add sprite sheets under `src/assets/sprites/player` and `src/assets/sprites/enemies`.
-2. Preload them in `BootScene.preload()`.
+2. Put shared or early-level assets in `BootScene.preload()`; keep Level 3 and 4 definitions in `DeferredLevelAssets.ts`, which BootScene invokes during preload.
 3. Create Phaser animations in `BootScene.create()`.
 4. Keep `Player` and `EnemyGoon` state names stable.
 5. Replace `LevelScene.syncGeneratedArt()` image swapping with animation playback.
@@ -534,10 +563,11 @@ Future agents should follow these rules:
 4. Do not re-enable gravity for fight scene entities.
 5. Do not change `TouchIntent` without updating `Player.ts` and `TouchControls.ts` together.
 6. Do not remove `CombatSystem` lane/Z hit validation casually.
-7. Do not delete generated `-green.png` source files unless the user asks for cleanup.
-8. Do not bake interactive UI into background images.
-9. Keep scene responsibilities separate: Boot loads, scenes compose, entities move, systems resolve combat, UI draws HUD/controls.
-10. When in doubt, make a small focused change and verify in the browser before continuing.
+7. Preserve the one-hit-per-enemy guard for each player attack hitbox.
+8. Do not delete generated `-green.png` source files unless the user asks for cleanup.
+9. Do not bake interactive UI into background images.
+10. Keep scene responsibilities separate: Boot loads shared and later-level asset groups, scenes compose, entities move, systems resolve combat, UI draws HUD/controls.
+11. When in doubt, make a small focused change and verify in the browser before continuing.
 
 ## Current Known Limitations
 
@@ -545,9 +575,8 @@ Future agents should follow these rules:
 - Enemy AI is serviceable but simple.
 - Options is currently a difficulty cycle, not a full settings screen.
 - HUD values are partly prototype/static, such as gems and some health text.
-- No audio system yet.
 - No save-game/profile system yet.
-- No real level progression beyond the current fight scene.
+- Level 3 and Level 4 art is preloaded during boot to avoid blank scene transitions. This favors reliable level handoffs over a smaller initial download.
 - Boss Rush and Arcade currently route to the same level scene.
 
 ## Development Roadmap

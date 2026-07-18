@@ -15,6 +15,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private keys: Record<string, Phaser.Input.Keyboard.Key>;
   private canAttackAt = 0;
   private lockedUntil = 0;
+  private queuedAttack: AttackKind | null = null;
+  private queuedAttackUntil = 0;
   private touchIntent: TouchIntent = { axisX: 0, axisY: 0, jump: false, punch: false, kick: false, special: false };
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
@@ -49,13 +51,17 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       return;
     }
 
+    // Capture an attack before checking movement/combat locks. A quick press
+    // should not disappear just because the player is landing or recovering.
+    this.queueAttackInput(time);
+
     const onFloor = this.z <= 0;
     if (time < this.lockedUntil) return;
 
     const left = this.cursors.left.isDown || this.keys.left.isDown || this.touchIntent.axisX < -0.2;
     const right = this.cursors.right.isDown || this.keys.right.isDown || this.touchIntent.axisX > 0.2;
-    const up = this.cursors.up.isDown || this.touchIntent.axisY < -0.2;
-    const down = this.cursors.down.isDown || this.touchIntent.axisY > 0.2;
+    const up = this.cursors.up.isDown || this.keys.up.isDown || this.touchIntent.axisY < -0.2;
+    const down = this.cursors.down.isDown || this.keys.down.isDown || this.touchIntent.axisY > 0.2;
     const jumpPressed = Phaser.Input.Keyboard.JustDown(this.keys.jump) || this.touchIntent.jump;
 
     this.setVelocityX(left ? -360 : right ? 360 : 0);
@@ -85,7 +91,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
   consumeAttack(time: number): AttackKind | null {
     if (time < this.canAttackAt || time < this.lockedUntil || this.state === 'defeat') return null;
-    const attack = this.getAttackInput();
+    const attack = time <= this.queuedAttackUntil ? this.queuedAttack : null;
+    this.queuedAttack = null;
+    this.queuedAttackUntil = 0;
     if (!attack) return null;
     const data = ATTACK_DATA[attack];
     this.canAttackAt = time + data.cooldown;
@@ -117,11 +125,16 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
   }
 
-  private getAttackInput(): AttackKind | null {
-    if (Phaser.Input.Keyboard.JustDown(this.keys.punch) || this.touchIntent.punch) return 'punch';
-    if (Phaser.Input.Keyboard.JustDown(this.keys.kick) || this.touchIntent.kick) return 'kick';
-    if (Phaser.Input.Keyboard.JustDown(this.keys.special) || this.touchIntent.special) return 'special';
-    return null;
+  private queueAttackInput(time: number) {
+    let attack: AttackKind | null = null;
+    if (Phaser.Input.Keyboard.JustDown(this.keys.punch) || this.touchIntent.punch) attack = 'punch';
+    else if (Phaser.Input.Keyboard.JustDown(this.keys.kick) || this.touchIntent.kick) attack = 'kick';
+    else if (Phaser.Input.Keyboard.JustDown(this.keys.special) || this.touchIntent.special) attack = 'special';
+
+    if (attack) {
+      this.queuedAttack = attack;
+      this.queuedAttackUntil = time + 180;
+    }
   }
 
   private setCombatState(state: PlayerState) {

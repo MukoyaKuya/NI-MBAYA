@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { loadDeferredLevelAssets } from '../config/DeferredLevelAssets';
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -6,11 +7,16 @@ export class BootScene extends Phaser.Scene {
   }
 
   preload() {
+    // Keep later-stage art ready before gameplay starts. Runtime loader handoffs
+    // can leave a restarted Phaser scene on a blank canvas on some browsers.
+    loadDeferredLevelAssets(this, 3);
+    loadDeferredLevelAssets(this, 4);
     this.load.audio('menu-music', new URL('../assets/audio/menu-music.mp3', import.meta.url).href);
     this.load.audio('fight-music', new URL('../assets/audio/fight-music.mp3', import.meta.url).href);
+    this.load.audio('story-intro', new URL('../assets/audio/story-intro.mp3', import.meta.url).href);
     this.load.audio('ui-hover', new URL('../assets/audio/ui-hover.mp3', import.meta.url).href);
     this.load.audio('special-attack', new URL('../assets/audio/special-attack.mp3', import.meta.url).href);
-    this.load.audio('punch-hit', new URL('../assets/audio/punch-hit.mp3', import.meta.url).href);
+    this.load.audio('punch-hit', new URL('../assets/audio/punch-hit-sora.mp3', import.meta.url).href);
     this.load.audio('heavy-hit', new URL('../assets/audio/heavy-hit.mp3', import.meta.url).href);
     this.load.audio('dog-growl', new URL('../assets/audio/dog-growl.mp3', import.meta.url).href);
     this.load.audio('challenge-win', new URL('../assets/audio/challenge.mp3', import.meta.url).href);
@@ -71,28 +77,7 @@ export class BootScene extends Phaser.Scene {
     this.load.image('menu-settings-hex', new URL('../assets/menu/extracted/settings-hex.png', import.meta.url).href);
     this.load.image('menu-exit-hex', new URL('../assets/menu/extracted/exit-hex.png', import.meta.url).href);
     this.load.image('gameplay-background', new URL('../assets/gameplay/generated/gameplay-background.png', import.meta.url).href);
-    this.load.image('level3-nairobi-rooftop-background', new URL('../assets/gameplay/generated/level3-nairobi-rooftop-background.png', import.meta.url).href);
-    this.load.image('level4-kibera-background', new URL('../assets/gameplay/generated/level4-kibera-background.png', import.meta.url).href);
-    this.load.image('gameplay-kibera-stone-goon', new URL('../assets/gameplay/generated/kibera-stone-goon-idle.png', import.meta.url).href);
-    this.load.spritesheet('gameplay-kibera-stone-goon-walk-sheet', new URL('../assets/gameplay/generated/kibera-stone-goon-walk-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
-    this.load.spritesheet('gameplay-kibera-stone-goon-sprint-sheet', new URL('../assets/gameplay/generated/kibera-stone-goon-sprint-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
-    this.load.spritesheet('gameplay-kibera-stone-goon-throw-sheet', new URL('../assets/gameplay/generated/kibera-stone-goon-throw-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
-    this.load.image('gameplay-kibera-shield-goon', new URL('../assets/gameplay/generated/kibera-shield-goon-idle.png', import.meta.url).href);
-    this.load.spritesheet('gameplay-kibera-shield-goon-walk-sheet', new URL('../assets/gameplay/generated/kibera-shield-goon-walk-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
-    this.load.spritesheet('gameplay-kibera-shield-goon-sprint-sheet', new URL('../assets/gameplay/generated/kibera-shield-goon-sprint-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
-    this.load.spritesheet('gameplay-kibera-shield-goon-attack-sheet', new URL('../assets/gameplay/generated/kibera-shield-goon-attack-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
-    this.load.spritesheet('gameplay-attack-dog', new URL('../assets/gameplay/generated/attack-dog-attack-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
-    this.load.spritesheet('gameplay-attack-dog-run-sheet', new URL('../assets/gameplay/generated/attack-dog-run-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
     this.load.spritesheet('gameplay-chapati-health-pickup-sheet', new URL('../assets/gameplay/generated/chapati-health-pickup-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
-    this.load.spritesheet('gameplay-attack-dog-defeat-sheet', new URL('../assets/gameplay/generated/attack-dog-defeat-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
-    this.load.spritesheet('gameplay-goon-chain', new URL('../assets/gameplay/generated/goon-chain-idle-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
-    this.load.spritesheet('gameplay-goon-chain-walk-sheet', new URL('../assets/gameplay/generated/goon-chain-walk-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
-    this.load.spritesheet('gameplay-goon-chain-attack-sheet', new URL('../assets/gameplay/generated/goon-chain-attack-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
-    this.load.spritesheet('gameplay-goon-chain-defeat-sheet', new URL('../assets/gameplay/generated/goon-chain-defeat-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
-    this.load.spritesheet('gameplay-goon-heavy', new URL('../assets/gameplay/generated/goon-heavy-idle-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
-    this.load.spritesheet('gameplay-goon-heavy-walk-sheet', new URL('../assets/gameplay/generated/goon-heavy-walk-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
-    this.load.spritesheet('gameplay-goon-heavy-attack-sheet', new URL('../assets/gameplay/generated/goon-heavy-attack-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
-    this.load.spritesheet('gameplay-goon-heavy-defeat-sheet', new URL('../assets/gameplay/generated/goon-heavy-defeat-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
     this.load.image('nairobi-cbd-background', new URL('../assets/gameplay/generated/nairobi-cbd-background.png', import.meta.url).href);
     this.load.image('nairobi-matatu-conductor', new URL('../assets/gameplay/generated/nairobi-matatu-conductor.png', import.meta.url).href);
     this.load.spritesheet('touch-action-buttons', new URL('../assets/ui/touch-action-buttons.png', import.meta.url).href, { frameWidth: 627, frameHeight: 627 });
@@ -230,10 +215,6 @@ export class BootScene extends Phaser.Scene {
     g.destroy();
   }
 }
-
-
-
-
 
 
 

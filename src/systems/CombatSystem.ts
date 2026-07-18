@@ -28,6 +28,9 @@ export class CombatSystem {
 
   private spawnPlayerHitbox(kind: AttackKind) {
     const data = ATTACK_DATA[kind];
+    // Arcade overlap callbacks run every physics step while bodies intersect.
+    // Keep each attack to one hit per enemy for its short active window.
+    const hitEnemies = new Set<EnemyGoon>();
     const x = this.player.x + this.player.facing * (44 + data.range / 2);
     const hitbox = this.scene.add.zone(x, this.player.y - 16, data.range, 78);
     this.scene.physics.add.existing(hitbox);
@@ -38,12 +41,13 @@ export class CombatSystem {
 
     this.scene.physics.add.overlap(hitbox, this.enemies, (_zone, target) => {
       const enemy = target as unknown as EnemyGoon;
-      if (enemy.state === 'defeat') return;
+      if (enemy.state === 'defeat' || hitEnemies.has(enemy)) return;
 
       // 2.5D depth validation: same Y lane (depth) and matching Z altitude range
       if (Math.abs(this.player.y - enemy.y) > 28) return;
       if (Math.abs(this.player.z - enemy.z) > 40) return;
 
+      hitEnemies.add(enemy);
       enemy.takeDamage(data.damage, data.knockback, this.player.x);
       this.sounds.playImpact(kind, enemy.health <= 0);
       this.combo += 1;

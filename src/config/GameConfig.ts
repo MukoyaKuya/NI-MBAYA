@@ -5,6 +5,9 @@ import { CharacterSelectScene } from '../scenes/CharacterSelectScene';
 import { LevelScene } from '../scenes/LevelScene';
 import { OptionsScene } from '../scenes/OptionsScene';
 import { CultureScene } from '../scenes/CultureScene';
+import { StoryCollectionScene } from '../scenes/StoryCollectionScene';
+import { StoryCutsceneScene } from '../scenes/StoryCutsceneScene';
+import { HowToPlayScene } from '../scenes/HowToPlayScene';
 
 export const GAME_WIDTH = 1280;
 export const GAME_HEIGHT = 720;
@@ -28,5 +31,5 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
       debug: false,
     },
   },
-  scene: [BootScene, MainMenuScene, CharacterSelectScene, OptionsScene, CultureScene, LevelScene],
+  scene: [BootScene, MainMenuScene, CharacterSelectScene, OptionsScene, CultureScene, StoryCollectionScene, StoryCutsceneScene, HowToPlayScene, LevelScene],
 };

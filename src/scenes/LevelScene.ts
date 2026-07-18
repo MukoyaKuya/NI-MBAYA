@@ -1,5 +1,8 @@
 import Phaser from 'phaser';
 import { getDifficultySettings, getStoryLanguage } from '../config/GameSettings';
+import { loadDeferredLevelAssets } from '../config/DeferredLevelAssets';
+import { saveJourneyProgress, unlockLocationStory } from '../config/GameProgress';
+import { LOCATION_STORIES } from '../config/WorldContent';
 import { copyFor, LEVEL_CONTEXT } from '../config/WorldContent';
 import { GAME_HEIGHT, GAME_WIDTH, GROUND_Y } from '../config/GameConfig';
 import { EnemyGoon, EnemyVisualVariant } from '../entities/EnemyGoon';
@@ -175,12 +178,22 @@ export class LevelScene extends Phaser.Scene {
   private chapatiLanded = false;
   private selectedCharacter: PlayableCharacter = 'MBAVU DESTROYER';
   private touchControls?: TouchControls;
+  private startData: LevelStartData = {};
 
   constructor() {
     super('LevelScene');
   }
 
-  create(data: LevelStartData = {}) {
+  init(data: LevelStartData = {}) {
+    this.startData = data;
+  }
+
+  preload() {
+    const levelId = this.startData.levelId ?? 1;
+    if (!this.textures.exists(getLevelDefinition(levelId).backgroundKey)) loadDeferredLevelAssets(this, levelId);
+  }
+
+  create(data: LevelStartData = this.startData) {
     this.level = getLevelDefinition(data.levelId ?? 1);
     this.selectedCharacter = data.character === 'MJAKA FINE' ? 'MJAKA FINE' : 'MBAVU DESTROYER';
     this.levelCleared = false;
@@ -316,7 +329,7 @@ export class LevelScene extends Phaser.Scene {
   }
 
   private updateChapatiPickup() {
-    if (this.level.id !== 2 || this.player.state === 'defeat') return;
+    if (this.player.state === 'defeat') return;
 
     const defeatedCount = this.enemyList.filter((enemy) => enemy.state === 'defeat').length;
     if (!this.chapatiSpawned && defeatedCount >= 3) {
@@ -442,10 +455,17 @@ export class LevelScene extends Phaser.Scene {
   private completeLevel() {
     this.levelCleared = true;
     this.player.chapatis += this.level.reward;
+    const nextLevel = LEVELS.find((level) => level.id === this.level.id + 1);
+    saveJourneyProgress({
+      levelId: nextLevel?.id ?? this.level.id,
+      character: this.selectedCharacter,
+      chapatis: this.player.chapatis,
+      health: Math.min(100, this.player.health + 35),
+    });
     this.enemyList.forEach((enemy) => enemy.setVelocity(0, 0));
     this.physics.world.pause();
     this.sounds.playVictory();
-    this.showLevelClearOverlay();
+    this.showLevelClearOverlay(unlockLocationStory(this.level.id));
   }
 
   private handlePlayerHurt(heavy: boolean) {
@@ -493,7 +513,7 @@ export class LevelScene extends Phaser.Scene {
     });
   }
 
-  private showLevelClearOverlay() {
+  private showLevelClearOverlay(storyUnlocked: boolean) {
     const nextLevel = LEVELS.find((level) => level.id === this.level.id + 1);
     this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x030305, 0.48)
       .setScrollFactor(0)
@@ -513,7 +533,7 @@ export class LevelScene extends Phaser.Scene {
       strokeThickness: 6,
       fontStyle: 'italic',
     }).setOrigin(0.5);
-    const subtitle = this.add.text(0, 34, nextLevel ? 'READY FOR THE NEXT GOONS?' : 'ALL LEVELS CLEARED', {
+    const subtitle = this.add.text(0, 34, storyUnlocked ? 'NAIROBI STORY UNLOCKED!' : (nextLevel ? 'READY FOR THE NEXT GOONS?' : 'ALL LEVELS CLEARED'), {
       fontFamily: 'Arial Black',
       fontSize: '22px',
       color: '#ffffff',
@@ -523,7 +543,19 @@ export class LevelScene extends Phaser.Scene {
     }).setOrigin(0.5);
     banner.add([bg, title, subtitle]);
 
-    const button = this.add.container(GAME_WIDTH / 2, 418)
+    if (storyUnlocked) {
+      const story = LOCATION_STORIES[this.level.id];
+      const card = this.add.container(GAME_WIDTH / 2, 438).setScrollFactor(0).setDepth(1901).setAlpha(0);
+      const cardBg = this.add.graphics();
+      cardBg.fillStyle(0x07101d, 0.96).lineStyle(2, 0xffc51d, 0.9).fillRoundedRect(-390, -52, 780, 104, 10).strokeRoundedRect(-390, -52, 780, 104, 10);
+      const cardTitle = this.add.text(0, -26, copyFor(getStoryLanguage(), story.title), { fontFamily: 'Arial Black', fontSize: '18px', color: '#ffc51d', fontStyle: 'italic' }).setOrigin(0.5);
+      const cardBody = this.add.text(0, 12, copyFor(getStoryLanguage(), story.body), { fontFamily: 'Arial, sans-serif', fontSize: '15px', color: '#eef4ff', align: 'center', wordWrap: { width: 720 }, lineSpacing: 3 }).setOrigin(0.5);
+      card.add([cardBg, cardTitle, cardBody]);
+      this.tweens.add({ targets: card, alpha: 1, duration: 260, delay: 180 });
+    }
+
+
+    const button = this.add.container(GAME_WIDTH / 2, storyUnlocked ? 575 : 418)
       .setScrollFactor(0)
       .setDepth(1902)
       .setAlpha(0)

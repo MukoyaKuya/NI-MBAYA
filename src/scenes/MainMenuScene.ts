@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { cycleDifficulty, getDifficultySettings, isSoundEnabled } from '../config/GameSettings';
+import { getJourneySave } from '../config/GameProgress';
 
 const GAME_WIDTH = 1280;
 const GAME_HEIGHT = 720;
@@ -45,19 +46,22 @@ export class MainMenuScene extends Phaser.Scene {
     this.input.keyboard?.once('keydown-SPACE', () => this.scene.start('CharacterSelectScene'));
     this.input.keyboard?.once('keydown-ENTER', () => this.scene.start('CharacterSelectScene'));
     this.input.keyboard?.once('keydown-C', () => this.scene.start('CultureScene'));
-    this.createCultureButton();
+    this.createBottomAction();
   }
 
-  private createCultureButton() {
+  private createBottomAction() {
+    const save = getJourneySave();
+    const actionLabel = save ? `CONTINUE • LEVEL ${save.levelId}` : 'C  ABOUT NI MBAYA  •  WORLD & CREDITS';
+    const actionWidth = save ? 330 : 416;
     const button = this.add.container(GAME_WIDTH / 2, 652).setDepth(35);
     const panel = this.add.graphics();
     panel.fillStyle(0x050505, 0.9).lineStyle(2, 0xffc423, 0.95);
-    panel.fillRoundedRect(-208, -18, 416, 36, 8).strokeRoundedRect(-208, -18, 416, 36, 8);
-    const text = this.add.text(0, 0, 'C  ABOUT NI MBAYA  •  WORLD & CREDITS', {
-      fontFamily: 'Arial Black, Impact, sans-serif', fontSize: '15px', color: '#ffc423',
+    panel.fillRoundedRect(-actionWidth / 2, -18, actionWidth, 36, 8).strokeRoundedRect(-actionWidth / 2, -18, actionWidth, 36, 8);
+    const text = this.add.text(0, 0, actionLabel, {
+      fontFamily: 'Arial Black, Impact, sans-serif', fontSize: save ? '17px' : '15px', color: '#ffc423',
       stroke: '#000000', strokeThickness: 3, fontStyle: 'italic',
     }).setOrigin(0.5);
-    button.add([panel, text]).setSize(416, 36).setInteractive({ useHandCursor: true });
+    button.add([panel, text]).setSize(actionWidth, 36).setInteractive({ useHandCursor: true });
     button.on('pointerover', () => {
       this.playHoverSound();
       this.tweens.add({ targets: button, scale: 1.04, duration: 90 });
@@ -69,7 +73,8 @@ export class MainMenuScene extends Phaser.Scene {
     });
     button.on('pointerdown', () => {
       this.playSelectSound();
-      this.scene.start('CultureScene');
+      if (save) this.scene.start('LevelScene', save);
+      else this.scene.start('CultureScene');
     });
   }
   private startMenuMusic() {

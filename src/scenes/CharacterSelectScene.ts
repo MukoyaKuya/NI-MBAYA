@@ -314,12 +314,16 @@ export class CharacterSelectScene extends Phaser.Scene {
       this.showLockedToast();
       return;
     }
-    this.scene.start('LevelScene', {
-      character: fighter.gameCharacter,
-      levelId: this.startData.returnToLevel ? this.startData.levelId : 1,
-      chapatis: this.startData.returnToLevel ? this.startData.chapatis : 0,
-      health: this.startData.returnToLevel ? this.startData.health : 100,
-    });
+    if (this.startData.returnToLevel) {
+      this.scene.start('LevelScene', {
+        character: fighter.gameCharacter,
+        levelId: this.startData.levelId,
+        chapatis: this.startData.chapatis,
+        health: this.startData.health,
+      });
+      return;
+    }
+    this.scene.start('StoryCutsceneScene', { character: fighter.gameCharacter, chapatis: 0, health: 100 });
   }
 
   private startMenuAudio() {

@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { getStoryLanguage, isSoundEnabled, toggleStoryLanguage } from '../config/GameSettings';
+import { getUnlockedStoryIds } from '../config/GameProgress';
 
 const GAME_WIDTH = 1280;
 const GAME_HEIGHT = 720;
@@ -34,9 +35,11 @@ export class CultureScene extends Phaser.Scene {
     this.addPanel(196, intro, '#ffffff', 25);
     this.addPanel(340, about, '#dce6f4', 21);
     this.addPanel(484, audience, '#ffc51d', 20);
-    this.add.text(GAME_WIDTH / 2, 574, sw ? 'ILIYOTENGENEZWA KWA CODEX • MAONI NA MABORESHO YANAKARIBISHWA' : 'BUILT WITH CODEX • FEEDBACK AND IMPROVEMENT ARE WELCOME', { fontFamily: 'Arial Black', fontSize: '15px', color: '#aeb8c6', stroke: '#050505', strokeThickness: 4 }).setOrigin(0.5);
-    this.createButton(450, 652, 300, sw ? 'LUGHA: KISWAHILI' : 'LANGUAGE: ENGLISH', () => { toggleStoryLanguage(); this.scene.restart(); });
-    this.createButton(830, 652, 220, sw ? 'RUDI' : 'BACK', () => this.scene.start('MainMenuScene'));
+    const storyCount = getUnlockedStoryIds().length;
+    this.add.text(GAME_WIDTH / 2, 570, sw ? `HADITHI ZA MAENEO: ${storyCount}/4 ZIMEFUNGULIWA` : `LOCATION STORIES: ${storyCount}/4 UNLOCKED`, { fontFamily: 'Arial Black', fontSize: '15px', color: '#aeb8c6', stroke: '#050505', strokeThickness: 4 }).setOrigin(0.5);
+    this.createButton(275, 652, 260, sw ? 'HADITHI' : 'STORIES', () => this.scene.start('StoryCollectionScene'));
+    this.createButton(610, 652, 300, sw ? 'LUGHA: KISWAHILI' : 'LANGUAGE: ENGLISH', () => { toggleStoryLanguage(); this.scene.restart(); });
+    this.createButton(970, 652, 220, sw ? 'RUDI' : 'BACK', () => this.scene.start('MainMenuScene'));
   }
 
   private addPanel(y: number, text: string, color: string, size: number) {

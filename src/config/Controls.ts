@@ -14,10 +14,10 @@ export const CONTROL_LABELS: Record<ControlAction, string> = {
 };
 
 export const DEFAULT_CONTROL_KEYS: Record<ControlAction, string> = {
-  left: 'A',
-  right: 'D',
-  up: 'W',
-  down: 'S',
+  left: 'LEFT',
+  right: 'RIGHT',
+  up: 'UP',
+  down: 'DOWN',
   jump: 'SPACE',
   punch: 'J',
   kick: 'K',
@@ -47,6 +47,15 @@ export function getControlKeys(): Record<ControlAction, string> {
 
   try {
     const parsed = JSON.parse(stored) as Partial<Record<ControlAction, string>>;
+    // Move prior untouched defaults to the new arrow-key layout while
+    // preserving any player who deliberately remapped their controls.
+    if (parsed.left === 'A' && parsed.right === 'D' && parsed.up === 'W' && parsed.down === 'S') {
+      parsed.left = 'LEFT';
+      parsed.right = 'RIGHT';
+      parsed.up = 'UP';
+      parsed.down = 'DOWN';
+      globalThis.localStorage?.setItem(STORAGE_KEY, JSON.stringify(parsed));
+    }
     return CONTROL_ACTIONS.reduce<Record<ControlAction, string>>((keys, action) => {
       keys[action] = typeof parsed[action] === 'string' && parsed[action]
         ? parsed[action]

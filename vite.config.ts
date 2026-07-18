@@ -12,6 +12,15 @@ export default defineConfig({
     },
   },
   build: {
+    // Cache the engine independently from the game's own code. A content-only
+    // update then avoids forcing returning players to download Phaser again.
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          phaser: ['phaser'],
+        },
+      },
+    },
     // Phaser remains intentionally larger than Vite's generic 500 kB default.
     // Keep the limit close to the known engine bundle so unexpected growth is
     // still reported.
