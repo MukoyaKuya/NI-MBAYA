@@ -1,12 +1,25 @@
 # NI MBAYA
 
-NI MBAYA is a Nairobi-based 2.5D beat-'em-up built with HTML5, WebGL, Phaser 3, TypeScript, and Vite.
+NI MBAYA is a mobile-friendly, browser-based action game that makes Nairobi street culture playable. Built for the **Apps for Your Life** track, it gives Kenyans, the diaspora, and curious players an original way to experience Nairobi's energy, locations, language, and stories through an interactive world.
 
 Players choose Mbavu Destroyer or Mjaka Fine, then fight through four Nairobi-inspired stages: Nairobi CBD, Downtown Backstreet, Nairobi Rooftops, and Kibera. The current build includes melee combat, difficulty settings, touch controls, enemy variants, health-pickup chapatis, and English/Swahili story context.
 
 Progress is checkpointed locally after each cleared level. Use **Continue** on the main menu to resume the next unlocked level with the selected fighter, health, and chapatis.
 
 ## Hackathon Submission Notes
+
+### Apps for Your Life pitch
+
+Most games portray African cities from an outside perspective, if they appear at all. NI MBAYA is an original consumer game rooted in Nairobi's visual language and everyday street energy: matatus, M-PESA kiosks, vendors, rooftops, neighbourhoods, Swahili, and Sheng-inspired storytelling. It is designed as a quick-to-start web experience for desktop and mobile, with a continuing story and locally saved progress.
+
+### What was built during the hackathon
+
+The git history documents the project work completed during the submission period:
+
+- **17 July 2026 — `bbc83dc`, Initial NI MBAYA game project:** established the playable Phaser/TypeScript game, visual direction, core combat, character selection, and Nairobi-inspired level experience.
+- **18 July 2026 — `727a36b`, Add story progression and gameplay improvements:** added story cutscenes and collection scenes, an in-game how-to-play flow, local checkpoint/continue progression, Level 3 and 4 preload support, new punch and story audio, controls/combat refinements, and menu/character/culture/level improvements.
+
+These commits were made during the hackathon submission period. The latest production build was verified with `npm run build`.
 
 ### Run locally
 
@@ -23,7 +36,9 @@ npm run build
 
 ### Codex and GPT-5.6 usage
 
-Codex was used as a development collaborator during the project: reviewing the Phaser architecture, tracing gameplay defects, implementing a one-hit-per-enemy attack guard, making later-level assets available before scene transitions, and verifying production builds. GPT-5.6 Terra was used during this collaboration. All changes were reviewed against the project source and validated with `npm run build`.
+Codex was used as a development collaborator throughout the hackathon: reviewing the Phaser architecture, tracing gameplay defects, implementing a one-hit-per-enemy attack guard, creating story and progression features, making later-level assets available before scene transitions, and verifying production builds. GPT-5.6 Terra was used during this collaboration. Product decisions—including preserving a mobile-friendly 2.5D combat system, using local progress for a frictionless consumer experience, and marking unfinished modes as coming soon—were made by the project creator and implemented with Codex assistance. All changes were reviewed against the project source and validated with `npm run build`.
+
+For the Devpost submission, provide the required `/feedback` Codex Session ID for the project thread where the core functionality was built.
 
 This README is intentionally detailed. Future agents should read it before refactoring or adding features. Several parts of the game rely on a deliberate split between invisible physics bodies and visible generated bitmap art. Breaking that relationship will make characters fall, hang, overlap, or stop responding to controls.
 

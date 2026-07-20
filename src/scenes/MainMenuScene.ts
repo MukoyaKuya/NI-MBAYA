@@ -33,8 +33,8 @@ export class MainMenuScene extends Phaser.Scene {
     this.startMenuMusic();
 
     this.addHoverButton({ key: 'menu-v2-button-story', box: [600, 466, 1048, 554], onClick: () => this.scene.start('CharacterSelectScene'), hoverScale: 1.045, hoverLift: 2 });
-    this.addHoverButton({ key: 'menu-v2-button-arcade', box: [610, 558, 1044, 641], onClick: () => this.scene.start('LevelScene'), hoverScale: 1.045, hoverLift: 2 });
-    this.addHoverButton({ key: 'menu-v2-button-boss-rush', box: [612, 644, 1048, 730], onClick: () => this.scene.start('LevelScene'), hoverScale: 1.045, hoverLift: 2 });
+    this.addHoverButton({ key: 'menu-v2-button-arcade', box: [610, 558, 1044, 641], onClick: () => this.showComingSoon('ARCADE MODE'), hoverScale: 1.045, hoverLift: 2 });
+    this.addHoverButton({ key: 'menu-v2-button-boss-rush', box: [612, 644, 1048, 730], onClick: () => this.showComingSoon('BOSS RUSH'), hoverScale: 1.045, hoverLift: 2 });
     this.addHoverButton({ key: 'menu-v2-button-options', box: [612, 736, 1048, 824], onClick: () => this.scene.start('OptionsScene'), hoverScale: 1.045, hoverLift: 2 });
     this.addHoverButton({ key: 'menu-v2-daily-challenge-card', box: [24, 730, 306, 902], onClick: () => this.cameras.main.shake(80, 0.003), hoverScale: 1.035 });
     this.addHoverButton({ key: 'menu-v2-final-battle-card', box: [1315, 748, 1658, 908], onClick: () => this.scene.start('LevelScene'), hoverScale: 1.035 });
@@ -181,6 +181,10 @@ export class MainMenuScene extends Phaser.Scene {
       strokeThickness: 4,
     }).setOrigin(0.5).setDepth(61);
     this.tweens.add({ targets: [panel, text], alpha: 0, delay: 900, duration: 260, onComplete: () => { panel.destroy(); text.destroy(); } });
+  }
+
+  private showComingSoon(mode: string) {
+    this.showToast(`${mode} — COMING SOON`);
   }
 
   private drawLayeredBackdrop() {
