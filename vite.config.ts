@@ -2,6 +2,9 @@ import { defineConfig } from 'vite';
 import { fileURLToPath, URL } from 'node:url';
 
 export default defineConfig({
+  // GitHub Pages serves this project from /NI-MBAYA/, while local Vite runs
+  // from the site root.
+  base: process.env.GITHUB_ACTIONS ? '/NI-MBAYA/' : '/',
   resolve: {
     alias: {
       // This game uses Arcade Physics exclusively, so avoid bundling Phaser's
