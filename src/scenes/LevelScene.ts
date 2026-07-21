@@ -58,7 +58,7 @@ type LevelDefinition = {
 
 const PLAYER_ART: Record<string, PlayerArtSpec> = {
   idle: { key: 'gameplay-mbavu-idle', width: 168, height: 252, yOffset: 68, xOffset: 0 },
-  walk: { key: 'gameplay-mbavu-run-sheet', width: 190, height: 285, yOffset: 84, xOffset: 4 },
+  walk: { key: 'gameplay-mbavu-idle', width: 168, height: 252, yOffset: 68, xOffset: 0 },
   punch: { key: 'gameplay-mbavu-punch', width: 205, height: 286, yOffset: 82, xOffset: 22 },
   kick: { key: 'gameplay-mbavu-standing-kick', width: 205, height: 286, yOffset: 82, xOffset: 30 },
   special: { key: 'gameplay-mbavu-kick', width: 365, height: 244, yOffset: 120, xOffset: 58 },
@@ -83,10 +83,6 @@ const MJAKA_ART: Record<string, PlayerArtSpec> = {
 
 const PLAYER_FEINT_FRAMES: PlayerArtSpec[] = [
   { ...PLAYER_ART.idle, key: 'gameplay-mbavu-idle', xOffset: 0, width: 168, height: 252, yOffset: 68 },
-  { ...PLAYER_ART.idle, key: 'gameplay-mbavu-feint-1', xOffset: -2, width: 170, height: 250, yOffset: 67 },
-  { ...PLAYER_ART.idle, key: 'gameplay-mbavu-feint-2', xOffset: 2, width: 166, height: 256, yOffset: 70 },
-  { ...PLAYER_ART.idle, key: 'gameplay-mbavu-feint-3', xOffset: -4, width: 172, height: 248, yOffset: 66 },
-  { ...PLAYER_ART.idle, key: 'gameplay-mbavu-feint-4', xOffset: 1, width: 168, height: 254, yOffset: 69 },
 ];
 
 const LEVELS: LevelDefinition[] = [
@@ -190,11 +186,14 @@ export class LevelScene extends Phaser.Scene {
 
   preload() {
     const levelId = this.startData.levelId ?? 1;
-    const needsCoreAssets = !this.textures.exists('gameplay-goon');
+    const character = this.startData.character === 'MJAKA FINE' ? 'MJAKA FINE' : 'MBAVU DESTROYER';
+    const fighterKey = character === 'MJAKA FINE' ? 'menu-mjaka' : 'gameplay-mbavu-idle';
+    const needsCoreAssets = !this.textures.exists(fighterKey)
+      || !this.textures.exists('gameplay-chapati-health-pickup-sheet');
     const needsLevelAssets = !this.textures.exists(getLevelDefinition(levelId).backgroundKey);
     if (needsCoreAssets || needsLevelAssets) this.showLevelLoadingProgress();
-    if (needsCoreAssets) loadCoreGameplayAssets(this);
-    if (needsLevelAssets) loadDeferredLevelAssets(this, levelId);
+    loadCoreGameplayAssets(this, levelId, character);
+    loadDeferredLevelAssets(this, levelId);
   }
 
   create(data: LevelStartData = this.startData) {
@@ -680,7 +679,7 @@ export class LevelScene extends Phaser.Scene {
 
   private syncGeneratedArt(time: number) {
     const spec = this.getPlayerArtSpec(time);
-    if (this.selectedCharacter === 'MBAVU DESTROYER' && this.player.state === 'walk') {
+    if (this.selectedCharacter === 'MBAVU DESTROYER' && this.player.state === 'walk' && this.anims.exists('mbavu-run')) {
       if (this.currentPlayerArtKey !== 'gameplay-mbavu-run-animation') {
         this.currentPlayerArtKey = 'gameplay-mbavu-run-animation';
         this.playerArt.play('mbavu-run', true);
@@ -697,7 +696,7 @@ export class LevelScene extends Phaser.Scene {
     const playerShadowScale = 1.3 * (1 - this.player.z / 600);
     this.playerShadow.setScale(playerShadowScale, playerShadowScale * 0.5).setAlpha(0.35 * (1 - this.player.z / 600));
 
-    if (this.player.state === 'defeat' && this.selectedCharacter === 'MBAVU DESTROYER') {
+    if (this.player.state === 'defeat' && this.selectedCharacter === 'MBAVU DESTROYER' && this.anims.exists('mbavu-defeat-fall')) {
       if (!this.playerDefeatStarted) {
         this.playerDefeatStarted = true;
         this.tweens.killTweensOf(this.playerArt);
@@ -740,7 +739,7 @@ export class LevelScene extends Phaser.Scene {
 
   private createSceneAnimations() {
     const createEightFrameAnimation = (key: string, texture: string, frameRate: number, repeat: number) => {
-      if (this.anims.exists(key)) return;
+      if (this.anims.exists(key) || !this.textures.exists(texture)) return;
       this.anims.create({
         key,
         frames: this.anims.generateFrameNumbers(texture, { start: 0, end: 7 }),
@@ -767,7 +766,7 @@ export class LevelScene extends Phaser.Scene {
     createEightFrameAnimation('kibera-shield-sprint', 'gameplay-kibera-shield-goon-sprint-sheet', 13, -1);
     createEightFrameAnimation('kibera-shield-combo', 'gameplay-kibera-shield-goon-attack-sheet', 11, 0);
 
-    if (!this.anims.exists('mbavu-run')) {
+    if (!this.anims.exists('mbavu-run') && this.textures.exists('gameplay-mbavu-run-sheet')) {
       this.anims.create({
         key: 'mbavu-run',
         frames: this.anims.generateFrameNumbers('gameplay-mbavu-run-sheet', { start: 0, end: 7 }),
@@ -776,7 +775,7 @@ export class LevelScene extends Phaser.Scene {
       });
     }
 
-    if (!this.anims.exists('mbavu-defeat-fall')) {
+    if (!this.anims.exists('mbavu-defeat-fall') && this.textures.exists('gameplay-mbavu-defeat-fall-sheet')) {
       this.anims.create({
         key: 'mbavu-defeat-fall',
         frames: this.anims.generateFrameNumbers('gameplay-mbavu-defeat-fall-sheet', { start: 0, end: 7 }),
@@ -785,7 +784,7 @@ export class LevelScene extends Phaser.Scene {
       });
     }
 
-    if (!this.anims.exists('goon-red-attack')) {
+    if (!this.anims.exists('goon-red-attack') && this.textures.exists('gameplay-goon-red-attack-sheet')) {
       this.anims.create({
         key: 'goon-red-attack',
         frames: this.anims.generateFrameNumbers('gameplay-goon-red-attack-sheet', { start: 0, end: 7 }),
@@ -794,7 +793,7 @@ export class LevelScene extends Phaser.Scene {
       });
     }
 
-    if (!this.anims.exists('goon-hoodie-attack')) {
+    if (!this.anims.exists('goon-hoodie-attack') && this.textures.exists('gameplay-goon-hoodie-attack-sheet')) {
       this.anims.create({
         key: 'goon-hoodie-attack',
         frames: this.anims.generateFrameNumbers('gameplay-goon-hoodie-attack-sheet', { start: 0, end: 7 }),
@@ -803,7 +802,7 @@ export class LevelScene extends Phaser.Scene {
       });
     }
 
-    if (!this.anims.exists('goon-club-attack')) {
+    if (!this.anims.exists('goon-club-attack') && this.textures.exists('gameplay-goon-club-attack-sheet')) {
       this.anims.create({
         key: 'goon-club-attack',
         frames: this.anims.generateFrameNumbers('gameplay-goon-club-attack-sheet', { start: 0, end: 7 }),
@@ -812,7 +811,7 @@ export class LevelScene extends Phaser.Scene {
       });
     }
 
-    if (!this.anims.exists('goon-red-walk')) {
+    if (!this.anims.exists('goon-red-walk') && this.textures.exists('gameplay-goon-red-walk-sheet')) {
       this.anims.create({
         key: 'goon-red-walk',
         frames: this.anims.generateFrameNumbers('gameplay-goon-red-walk-sheet', { start: 0, end: 7 }),
@@ -821,7 +820,7 @@ export class LevelScene extends Phaser.Scene {
       });
     }
 
-    if (!this.anims.exists('goon-hoodie-walk')) {
+    if (!this.anims.exists('goon-hoodie-walk') && this.textures.exists('gameplay-goon-hoodie-walk-sheet')) {
       this.anims.create({
         key: 'goon-hoodie-walk',
         frames: this.anims.generateFrameNumbers('gameplay-goon-hoodie-walk-sheet', { start: 0, end: 7 }),
@@ -830,7 +829,7 @@ export class LevelScene extends Phaser.Scene {
       });
     }
 
-    if (!this.anims.exists('goon-club-walk')) {
+    if (!this.anims.exists('goon-club-walk') && this.textures.exists('gameplay-goon-club-walk-sheet')) {
       this.anims.create({
         key: 'goon-club-walk',
         frames: this.anims.generateFrameNumbers('gameplay-goon-club-walk-sheet', { start: 0, end: 7 }),
@@ -838,7 +837,7 @@ export class LevelScene extends Phaser.Scene {
         repeat: -1,
       });
     }
-    if (!this.anims.exists('goon-red-run')) {
+    if (!this.anims.exists('goon-red-run') && this.textures.exists('gameplay-goon-red-run-sheet')) {
       this.anims.create({
         key: 'goon-red-run',
         frames: this.anims.generateFrameNumbers('gameplay-goon-red-run-sheet', { start: 0, end: 7 }),
@@ -847,7 +846,7 @@ export class LevelScene extends Phaser.Scene {
       });
     }
 
-    if (!this.anims.exists('goon-hoodie-run')) {
+    if (!this.anims.exists('goon-hoodie-run') && this.textures.exists('gameplay-goon-hoodie-run-sheet')) {
       this.anims.create({
         key: 'goon-hoodie-run',
         frames: this.anims.generateFrameNumbers('gameplay-goon-hoodie-run-sheet', { start: 0, end: 7 }),
@@ -856,7 +855,7 @@ export class LevelScene extends Phaser.Scene {
       });
     }
 
-    if (!this.anims.exists('goon-club-run')) {
+    if (!this.anims.exists('goon-club-run') && this.textures.exists('gameplay-goon-club-run-sheet')) {
       this.anims.create({
         key: 'goon-club-run',
         frames: this.anims.generateFrameNumbers('gameplay-goon-club-run-sheet', { start: 0, end: 7 }),
@@ -1002,7 +1001,7 @@ export class LevelScene extends Phaser.Scene {
       art.setVisible(true);
       shadow.setVisible(true);
       const runAnim = this.getEnemyRunAnimationKey(enemy.visualVariant);
-      if (runAnim && (art.anims.currentAnim?.key !== runAnim || !art.anims.isPlaying)) {
+      if (runAnim && this.anims.exists(runAnim) && (art.anims.currentAnim?.key !== runAnim || !art.anims.isPlaying)) {
         art.play(runAnim, true);
       } else if (!runAnim) {
         art.stop();
@@ -1030,7 +1029,7 @@ export class LevelScene extends Phaser.Scene {
       if (!visual.defeatStarted) {
         visual.defeatStarted = true;
         const defeatAnim = this.getEnemyDefeatAnimationKey(enemy.visualVariant);
-        if (defeatAnim) {
+        if (defeatAnim && this.anims.exists(defeatAnim)) {
           art.play(defeatAnim, false).setAngle(0);
           if (dog) art.setDisplaySize(260, 164);
           else if (enemy.visualVariant === 'gameplay-goon-heavy') art.setDisplaySize(270, 270);
@@ -1038,11 +1037,11 @@ export class LevelScene extends Phaser.Scene {
         } else if (kiberaGoon) {
           art.setTexture(enemy.visualVariant).setDisplaySize(baseWidth, baseHeight).setAngle(enemy.x < this.player.x ? -78 : 78);
         } else {
-          art.setTexture('gameplay-goon-defeat').setDisplaySize(baseHeight, baseWidth).setAngle(enemy.x < this.player.x ? -72 : 72);
+          art.setTexture(enemy.visualVariant).setDisplaySize(baseHeight, baseWidth).setAngle(enemy.x < this.player.x ? -72 : 72);
         }
         this.tweens.add({ targets: [art, shadow], alpha: 0, delay: 850, duration: 620, ease: 'Sine.In', onComplete: () => { art.setVisible(false); shadow.setVisible(false); } });
       }
-      const generatedDefeat = Boolean(this.getEnemyDefeatAnimationKey(enemy.visualVariant));
+      const generatedDefeat = Boolean(this.getEnemyDefeatAnimationKey(enemy.visualVariant) && this.anims.exists(this.getEnemyDefeatAnimationKey(enemy.visualVariant)));
       const defeatOffsetY = dog ? 65 : kiberaGoon ? baseHeight * 0.42 : enemy.visualVariant === 'gameplay-goon-heavy' ? 120 : enemy.visualVariant === 'gameplay-goon-chain' ? 102 : 34;
       const defeatHalfWidth = generatedDefeat ? art.displayWidth / 2 : 20;
       const defeatX = Phaser.Math.Clamp(enemy.x, defeatHalfWidth + 12, GAME_WIDTH - defeatHalfWidth - 12);
@@ -1065,16 +1064,19 @@ export class LevelScene extends Phaser.Scene {
 
     if (walking) {
       const walkAnim = this.getEnemyWalkAnimationKey(enemy.visualVariant);
-      if (walkAnim && (art.anims.currentAnim?.key !== walkAnim || !art.anims.isPlaying)) art.play(walkAnim, true);
+      if (walkAnim && this.anims.exists(walkAnim) && (art.anims.currentAnim?.key !== walkAnim || !art.anims.isPlaying)) art.play(walkAnim, true);
       else if (!walkAnim) {
         art.stop();
         art.setTexture(texture);
       }
     } else if (striking) {
       const attackAnim = this.getEnemyAttackAnimationKey(enemy.visualVariant);
-      if (visual.renderedAttackAt !== enemy.lastAttackAt || art.anims.currentAnim?.key !== attackAnim) {
+      if (attackAnim && this.anims.exists(attackAnim) && (visual.renderedAttackAt !== enemy.lastAttackAt || art.anims.currentAnim?.key !== attackAnim)) {
         visual.renderedAttackAt = enemy.lastAttackAt;
         art.play(attackAnim, false);
+      } else if (!this.anims.exists(attackAnim)) {
+        art.stop();
+        art.setTexture(texture);
       }
     } else {
       if (art.anims.isPlaying) art.stop();

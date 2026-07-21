@@ -69,7 +69,34 @@ export class CharacterSelectScene extends Phaser.Scene {
     super('CharacterSelectScene');
   }
 
+  preload() {
+    const assetsNeeded = !this.textures.exists('character-select-background-v2')
+      || !this.textures.exists('character-card-frame-v2')
+      || !this.textures.exists('menu-mbavu')
+      || !this.textures.exists('menu-mjaka')
+      || !this.textures.exists('menu-majembe');
+    if (!assetsNeeded) return;
+
+    this.showLoadingProgress();
+    if (!this.textures.exists('character-select-background-v2')) {
+      this.load.image('character-select-background-v2', new URL('../assets/character-select/generated/character-select-background.png', import.meta.url).href);
+    }
+    if (!this.textures.exists('character-card-frame-v2')) {
+      this.load.image('character-card-frame-v2', new URL('../assets/character-select/generated/character-card-frame.png', import.meta.url).href);
+    }
+    if (!this.textures.exists('menu-mbavu')) {
+      this.load.image('menu-mbavu', new URL('../assets/menu/generated/mbavu.png', import.meta.url).href);
+    }
+    if (!this.textures.exists('menu-mjaka')) {
+      this.load.image('menu-mjaka', new URL('../assets/menu/generated/mjaka.png', import.meta.url).href);
+    }
+    if (!this.textures.exists('menu-majembe')) {
+      this.load.image('menu-majembe', new URL('../assets/menu/generated/majembe.png', import.meta.url).href);
+    }
+  }
+
   create(data: CharacterSelectData = {}) {
+    document.getElementById('character-select-loading-overlay')?.remove();
     this.startData = data;
     this.selectedIndex = data.character === 'MJAKA FINE' ? 1 : 0;
     this.cards = [];
@@ -115,6 +142,23 @@ export class CharacterSelectScene extends Phaser.Scene {
       fontFamily: 'Arial Black', fontSize: '22px', color: '#ffffff', fontStyle: 'italic',
     }).setOrigin(0.5);
     wallet.add([walletBg, chapati, amount]);
+  }
+
+  private showLoadingProgress() {
+    const existing = document.getElementById('character-select-loading-overlay');
+    existing?.remove();
+    const overlay = document.createElement('div');
+    overlay.id = 'character-select-loading-overlay';
+    Object.assign(overlay.style, {
+      position: 'fixed', inset: '0', zIndex: '9999', display: 'grid', placeItems: 'center',
+      background: '#07090d', color: '#ffc51d', fontFamily: 'Arial Black, Impact, sans-serif',
+      fontSize: 'clamp(14px, 3vw, 25px)', letterSpacing: '0.08em', textAlign: 'center', padding: '24px',
+    });
+    overlay.textContent = 'LOADING FIGHTERS · 0%';
+    document.body.appendChild(overlay);
+    this.load.on(Phaser.Loader.Events.PROGRESS, (progress: number) => {
+      overlay.textContent = `LOADING FIGHTERS · ${Math.round(progress * 100)}%`;
+    });
   }
 
   private createFighterCard(definition: FighterDefinition, index: number) {

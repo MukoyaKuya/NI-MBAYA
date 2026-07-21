@@ -18,7 +18,26 @@ export class StoryCutsceneScene extends Phaser.Scene {
 
   init(data: StoryStartData = {}) { this.startData = data; }
 
+  preload() {
+    const assetsNeeded = !this.textures.exists('nairobi-cbd-background')
+      || !this.textures.exists('gameplay-background')
+      || !this.textures.exists('gameplay-goon-club');
+    if (!assetsNeeded) return;
+
+    this.showLoadingProgress();
+    if (!this.textures.exists('nairobi-cbd-background')) {
+      this.load.image('nairobi-cbd-background', new URL('../assets/gameplay/generated/nairobi-cbd-background.png', import.meta.url).href);
+    }
+    if (!this.textures.exists('gameplay-background')) {
+      this.load.image('gameplay-background', new URL('../assets/gameplay/generated/gameplay-background.png', import.meta.url).href);
+    }
+    if (!this.textures.exists('gameplay-goon-club')) {
+      this.load.image('gameplay-goon-club', new URL('../assets/gameplay/generated/goon-club.png', import.meta.url).href);
+    }
+  }
+
   create() {
+    document.getElementById('story-loading-overlay')?.remove();
     this.startStoryAudio();
     this.showPanel();
     this.input.keyboard?.on('keydown-SPACE', () => this.advance());
@@ -71,6 +90,23 @@ export class StoryCutsceneScene extends Phaser.Scene {
     this.tweens.add({ targets: captionText, alpha: 1, duration: 380, delay: 160, ease: 'Sine.Out' });
 
     this.createButton(GAME_WIDTH - 215, 638, this.panelIndex === 2 ? (getStoryLanguage() === 'sw' ? 'ANZA PAMBANO' : 'START THE FIGHT') : (getStoryLanguage() === 'sw' ? 'ENDELEA' : 'NEXT'));
+  }
+
+  private showLoadingProgress() {
+    const existing = document.getElementById('story-loading-overlay');
+    existing?.remove();
+    const overlay = document.createElement('div');
+    overlay.id = 'story-loading-overlay';
+    Object.assign(overlay.style, {
+      position: 'fixed', inset: '0', zIndex: '9999', display: 'grid', placeItems: 'center',
+      background: '#07090d', color: '#ffc51d', fontFamily: 'Arial Black, Impact, sans-serif',
+      fontSize: 'clamp(14px, 3vw, 25px)', letterSpacing: '0.08em', textAlign: 'center', padding: '24px',
+    });
+    overlay.textContent = 'OPENING THE STORY · 0%';
+    document.body.appendChild(overlay);
+    this.load.on(Phaser.Loader.Events.PROGRESS, (progress: number) => {
+      overlay.textContent = `OPENING THE STORY · ${Math.round(progress * 100)}%`;
+    });
   }
 
   private createButton(x: number, y: number, label: string) {

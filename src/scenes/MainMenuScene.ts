@@ -30,7 +30,7 @@ export class MainMenuScene extends Phaser.Scene {
   create() {
     this.cameras.main.setBackgroundColor('#050507');
     this.drawLayeredBackdrop();
-    this.startMenuMusic();
+    this.loadMenuMusicAfterMenuIsVisible();
 
     this.addHoverButton({ key: 'menu-v2-button-story', box: [600, 466, 1048, 554], onClick: () => this.scene.start('CharacterSelectScene'), hoverScale: 1.045, hoverLift: 2 });
     this.addHoverButton({ key: 'menu-v2-button-arcade', box: [610, 558, 1044, 641], onClick: () => this.showComingSoon('ARCADE MODE'), hoverScale: 1.045, hoverLift: 2 });
@@ -101,6 +101,21 @@ export class MainMenuScene extends Phaser.Scene {
       this.menuMusic = undefined;
       this.hoverSound = undefined;
     });
+  }
+
+  private loadMenuMusicAfterMenuIsVisible() {
+    if (this.cache.audio.exists('menu-music')) {
+      this.startMenuMusic();
+      return;
+    }
+
+    this.load.audio('menu-music', new URL('../assets/audio/menu-music.mp3', import.meta.url).href);
+    this.load.once(Phaser.Loader.Events.COMPLETE, () => {
+      if (this.scene.manager.getScenes(true).includes(this) && this.cache.audio.exists('menu-music')) {
+        this.startMenuMusic();
+      }
+    });
+    this.load.start();
   }
 
   private playMenuMusic() {
