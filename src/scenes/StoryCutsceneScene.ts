@@ -18,26 +18,7 @@ export class StoryCutsceneScene extends Phaser.Scene {
 
   init(data: StoryStartData = {}) { this.startData = data; }
 
-  preload() {
-    const assetsNeeded = !this.textures.exists('nairobi-cbd-background')
-      || !this.textures.exists('gameplay-background')
-      || !this.textures.exists('gameplay-goon-club');
-    if (!assetsNeeded) return;
-
-    this.showLoadingProgress();
-    if (!this.textures.exists('nairobi-cbd-background')) {
-      this.load.image('nairobi-cbd-background', new URL('../assets/gameplay/generated/nairobi-cbd-background.png', import.meta.url).href);
-    }
-    if (!this.textures.exists('gameplay-background')) {
-      this.load.image('gameplay-background', new URL('../assets/gameplay/generated/gameplay-background.png', import.meta.url).href);
-    }
-    if (!this.textures.exists('gameplay-goon-club')) {
-      this.load.image('gameplay-goon-club', new URL('../assets/gameplay/generated/goon-club.png', import.meta.url).href);
-    }
-  }
-
   create() {
-    document.getElementById('story-loading-overlay')?.remove();
     this.startStoryAudio();
     this.showPanel();
     this.input.keyboard?.on('keydown-SPACE', () => this.advance());
@@ -49,14 +30,14 @@ export class StoryCutsceneScene extends Phaser.Scene {
     const sw = getStoryLanguage() === 'sw';
     return sw
       ? [
-        { chapter: 'SURA 1 — WATEKWA', caption: 'Mbavu Destroyer amemteka Mjaka Mfine, mpenzi wako, na kutoweka naye katika maficho yake jijini.', background: 'nairobi-cbd-background', accent: 0xe1443f, art: 'menu-mjaka', artX: 960, artScale: 1.08 },
-        { chapter: 'SURA 2 — JIJI LIMEZUILIWA', caption: 'Ili kukupunguza kasi, ametuma goons kote Nairobi kukuwinda na kukuzuia usimfikie.', background: 'gameplay-background', accent: 0xffbd1a, art: 'gameplay-goon-club', artX: 925, artScale: 1.05 },
-        { chapter: 'SURA 3 — UOKOAJI', caption: 'Mtafute Mbavu Destroyer na umwokoe mpenzi wako. Hakikisha unamfundisha somo ambalo hatalisahau kamwe.', background: 'nairobi-cbd-background', accent: 0x4fa6ff, art: 'menu-majembe', artX: 930, artScale: 1.08 },
+        { chapter: 'SURA 1 — WATEKWA', caption: 'Mbavu Destroyer amemteka Mjaka Mfine, mpenzi wako, na kutoweka naye katika maficho yake jijini.', background: 'menu-v2-background', accent: 0xe1443f, art: 'menu-mjaka', artX: 960, artScale: 1.08 },
+        { chapter: 'SURA 2 — JIJI LIMEZUILIWA', caption: 'Ili kukupunguza kasi, ametuma goons kote Nairobi kukuwinda na kukuzuia usimfikie.', background: 'menu-v2-background', accent: 0xffbd1a, art: 'menu-majembe', artX: 925, artScale: 1.05 },
+        { chapter: 'SURA 3 — UOKOAJI', caption: 'Mtafute Mbavu Destroyer na umwokoe mpenzi wako. Hakikisha unamfundisha somo ambalo hatalisahau kamwe.', background: 'menu-v2-background', accent: 0x4fa6ff, art: 'menu-majembe', artX: 930, artScale: 1.08 },
       ]
       : [
-        { chapter: 'CHAPTER 1 — TAKEN', caption: 'Mbavu Destroyer has kidnapped Mjaka Mfine, your girlfriend, and disappeared with her into his hideout in the city.', background: 'nairobi-cbd-background', accent: 0xe1443f, art: 'menu-mjaka', artX: 960, artScale: 1.08 },
-        { chapter: 'CHAPTER 2 — THE CITY IS BLOCKED', caption: 'To slow you down, he has sent goons across Nairobi to hunt you and stop you from getting to him.', background: 'gameplay-background', accent: 0xffbd1a, art: 'gameplay-goon-club', artX: 925, artScale: 1.05 },
-        { chapter: 'CHAPTER 3 — THE RESCUE', caption: 'Go find Mbavu Destroyer and save your girlfriend. Ensure you teach him a lesson he will never forget.', background: 'nairobi-cbd-background', accent: 0x4fa6ff, art: 'menu-majembe', artX: 930, artScale: 1.08 },
+        { chapter: 'CHAPTER 1 — TAKEN', caption: 'Mbavu Destroyer has kidnapped Mjaka Mfine, your girlfriend, and disappeared with her into his hideout in the city.', background: 'menu-v2-background', accent: 0xe1443f, art: 'menu-mjaka', artX: 960, artScale: 1.08 },
+        { chapter: 'CHAPTER 2 — THE CITY IS BLOCKED', caption: 'To slow you down, he has sent goons across Nairobi to hunt you and stop you from getting to him.', background: 'menu-v2-background', accent: 0xffbd1a, art: 'menu-majembe', artX: 925, artScale: 1.05 },
+        { chapter: 'CHAPTER 3 — THE RESCUE', caption: 'Go find Mbavu Destroyer and save your girlfriend. Ensure you teach him a lesson he will never forget.', background: 'menu-v2-background', accent: 0x4fa6ff, art: 'menu-majembe', artX: 930, artScale: 1.08 },
       ];
   }
 
@@ -90,23 +71,6 @@ export class StoryCutsceneScene extends Phaser.Scene {
     this.tweens.add({ targets: captionText, alpha: 1, duration: 380, delay: 160, ease: 'Sine.Out' });
 
     this.createButton(GAME_WIDTH - 215, 638, this.panelIndex === 2 ? (getStoryLanguage() === 'sw' ? 'ANZA PAMBANO' : 'START THE FIGHT') : (getStoryLanguage() === 'sw' ? 'ENDELEA' : 'NEXT'));
-  }
-
-  private showLoadingProgress() {
-    const existing = document.getElementById('story-loading-overlay');
-    existing?.remove();
-    const overlay = document.createElement('div');
-    overlay.id = 'story-loading-overlay';
-    Object.assign(overlay.style, {
-      position: 'fixed', inset: '0', zIndex: '9999', display: 'grid', placeItems: 'center',
-      background: '#07090d', color: '#ffc51d', fontFamily: 'Arial Black, Impact, sans-serif',
-      fontSize: 'clamp(14px, 3vw, 25px)', letterSpacing: '0.08em', textAlign: 'center', padding: '24px',
-    });
-    overlay.textContent = 'OPENING THE STORY · 0%';
-    document.body.appendChild(overlay);
-    this.load.on(Phaser.Loader.Events.PROGRESS, (progress: number) => {
-      overlay.textContent = `OPENING THE STORY · ${Math.round(progress * 100)}%`;
-    });
   }
 
   private createButton(x: number, y: number, label: string) {

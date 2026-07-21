@@ -19,6 +19,9 @@ export class BootScene extends Phaser.Scene {
     this.load.audio('story-intro', new URL('../assets/audio/story-intro.mp3', import.meta.url).href);
     this.load.audio('ui-hover', new URL('../assets/audio/ui-hover.mp3', import.meta.url).href);
     this.load.audio('select', new URL('../assets/audio/select.mp3', import.meta.url).href);
+    this.load.image('menu-mbavu', new URL('../assets/menu/generated/mbavu.png', import.meta.url).href);
+    this.load.image('menu-mjaka', new URL('../assets/menu/generated/mjaka.png', import.meta.url).href);
+    this.load.image('menu-majembe', new URL('../assets/menu/generated/majembe.png', import.meta.url).href);
     this.load.image('menu-v2-background', new URL('../assets/menu/v2/menu-background-clean.png', import.meta.url).href);
     this.load.image('menu-v2-hero-status-panel', new URL('../assets/menu/v2/hero-status-panel.png', import.meta.url).href);
     this.load.image('menu-v2-ni-mbaya-logo', new URL('../assets/menu/v2/ni-mbaya-logo.png', import.meta.url).href);
@@ -33,6 +36,7 @@ export class BootScene extends Phaser.Scene {
     this.load.image('menu-v2-daily-challenge-card', new URL('../assets/menu/v2/daily-challenge-card.png', import.meta.url).href);
     this.load.image('menu-v2-final-battle-card', new URL('../assets/menu/v2/final-battle-card.png', import.meta.url).href);
     this.load.image('menu-v2-footer-socials', new URL('../assets/menu/v2/footer-socials.png', import.meta.url).href);
+    this.load.spritesheet('gameplay-chapati-health-pickup-sheet', new URL('../assets/gameplay/generated/chapati-health-pickup-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
   }
 
   create() {
@@ -136,7 +140,6 @@ export class BootScene extends Phaser.Scene {
     g.destroy();
   }
 }
-
 
 
 

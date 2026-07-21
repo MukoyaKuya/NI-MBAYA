@@ -12,10 +12,16 @@ const assetUrls: Record<string, string> = {
   'menu/generated/mjaka.png': new URL('../assets/menu/generated/mjaka.png', import.meta.url).href,
   'gameplay/generated/chapati-health-pickup-sheet.png': new URL('../assets/gameplay/generated/chapati-health-pickup-sheet.png', import.meta.url).href,
   'gameplay/generated/mbavu-idle.png': new URL('../assets/gameplay/generated/mbavu-idle.png', import.meta.url).href,
+  'gameplay/generated/mbavu-feint-1.png': new URL('../assets/gameplay/generated/mbavu-feint-1.png', import.meta.url).href,
+  'gameplay/generated/mbavu-feint-2.png': new URL('../assets/gameplay/generated/mbavu-feint-2.png', import.meta.url).href,
+  'gameplay/generated/mbavu-feint-3.png': new URL('../assets/gameplay/generated/mbavu-feint-3.png', import.meta.url).href,
+  'gameplay/generated/mbavu-feint-4.png': new URL('../assets/gameplay/generated/mbavu-feint-4.png', import.meta.url).href,
+  'gameplay/generated/mbavu-run-sheet.png': new URL('../assets/gameplay/generated/mbavu-run-sheet.png', import.meta.url).href,
   'gameplay/generated/mbavu-punch.png': new URL('../assets/gameplay/generated/mbavu-punch.png', import.meta.url).href,
   'gameplay/generated/mbavu-flying-kick-canonical.png': new URL('../assets/gameplay/generated/mbavu-flying-kick-canonical.png', import.meta.url).href,
   'gameplay/generated/mbavu-kick.png': new URL('../assets/gameplay/generated/mbavu-kick.png', import.meta.url).href,
   'gameplay/generated/mbavu-defeat.png': new URL('../assets/gameplay/generated/mbavu-defeat.png', import.meta.url).href,
+  'gameplay/generated/mbavu-defeat-fall-fullboots-sheet.png': new URL('../assets/gameplay/generated/mbavu-defeat-fall-fullboots-sheet.png', import.meta.url).href,
   'gameplay/generated/mjaka-palm-strike.png': new URL('../assets/gameplay/generated/mjaka-palm-strike.png', import.meta.url).href,
   'gameplay/generated/mjaka-high-kick.png': new URL('../assets/gameplay/generated/mjaka-high-kick.png', import.meta.url).href,
   'gameplay/generated/mjaka-rush-kick.png': new URL('../assets/gameplay/generated/mjaka-rush-kick.png', import.meta.url).href,
@@ -24,27 +30,56 @@ const assetUrls: Record<string, string> = {
   'gameplay/generated/nairobi-goon.png': new URL('../assets/gameplay/generated/nairobi-goon.png', import.meta.url).href,
   'gameplay/generated/goon-hoodie.png': new URL('../assets/gameplay/generated/goon-hoodie.png', import.meta.url).href,
   'gameplay/generated/goon-club.png': new URL('../assets/gameplay/generated/goon-club.png', import.meta.url).href,
+  'gameplay/generated/goon-red-attack-sheet.png': new URL('../assets/gameplay/generated/goon-red-attack-sheet.png', import.meta.url).href,
+  'gameplay/generated/goon-hoodie-attack-sheet.png': new URL('../assets/gameplay/generated/goon-hoodie-attack-sheet.png', import.meta.url).href,
+  'gameplay/generated/goon-club-attack-sheet.png': new URL('../assets/gameplay/generated/goon-club-attack-sheet.png', import.meta.url).href,
+  'gameplay/generated/goon-red-walk-sheet.png': new URL('../assets/gameplay/generated/goon-red-walk-sheet.png', import.meta.url).href,
+  'gameplay/generated/goon-hoodie-walk-sheet.png': new URL('../assets/gameplay/generated/goon-hoodie-walk-sheet.png', import.meta.url).href,
+  'gameplay/generated/goon-club-walk-sheet.png': new URL('../assets/gameplay/generated/goon-club-walk-sheet.png', import.meta.url).href,
+  'gameplay/generated/goon-red-run-sheet.png': new URL('../assets/gameplay/generated/goon-red-run-sheet.png', import.meta.url).href,
+  'gameplay/generated/goon-hoodie-run-sheet.png': new URL('../assets/gameplay/generated/goon-hoodie-run-sheet.png', import.meta.url).href,
+  'gameplay/generated/goon-club-run-sheet.png': new URL('../assets/gameplay/generated/goon-club-run-sheet.png', import.meta.url).href,
   'gameplay/generated/level3-nairobi-rooftop-background.png': new URL('../assets/gameplay/generated/level3-nairobi-rooftop-background.png', import.meta.url).href,
   'gameplay/generated/attack-dog-attack-sheet.png': new URL('../assets/gameplay/generated/attack-dog-attack-sheet.png', import.meta.url).href,
+  'gameplay/generated/attack-dog-run-sheet.png': new URL('../assets/gameplay/generated/attack-dog-run-sheet.png', import.meta.url).href,
+  'gameplay/generated/attack-dog-defeat-sheet.png': new URL('../assets/gameplay/generated/attack-dog-defeat-sheet.png', import.meta.url).href,
   'gameplay/generated/goon-chain-idle-sheet.png': new URL('../assets/gameplay/generated/goon-chain-idle-sheet.png', import.meta.url).href,
+  'gameplay/generated/goon-chain-walk-sheet.png': new URL('../assets/gameplay/generated/goon-chain-walk-sheet.png', import.meta.url).href,
+  'gameplay/generated/goon-chain-attack-sheet.png': new URL('../assets/gameplay/generated/goon-chain-attack-sheet.png', import.meta.url).href,
+  'gameplay/generated/goon-chain-defeat-sheet.png': new URL('../assets/gameplay/generated/goon-chain-defeat-sheet.png', import.meta.url).href,
   'gameplay/generated/goon-heavy-idle-sheet.png': new URL('../assets/gameplay/generated/goon-heavy-idle-sheet.png', import.meta.url).href,
+  'gameplay/generated/goon-heavy-walk-sheet.png': new URL('../assets/gameplay/generated/goon-heavy-walk-sheet.png', import.meta.url).href,
+  'gameplay/generated/goon-heavy-attack-sheet.png': new URL('../assets/gameplay/generated/goon-heavy-attack-sheet.png', import.meta.url).href,
+  'gameplay/generated/goon-heavy-defeat-sheet.png': new URL('../assets/gameplay/generated/goon-heavy-defeat-sheet.png', import.meta.url).href,
   'gameplay/generated/level4-kibera-background.png': new URL('../assets/gameplay/generated/level4-kibera-background.png', import.meta.url).href,
   'gameplay/generated/kibera-stone-goon-idle.png': new URL('../assets/gameplay/generated/kibera-stone-goon-idle.png', import.meta.url).href,
   'gameplay/generated/kibera-shield-goon-idle.png': new URL('../assets/gameplay/generated/kibera-shield-goon-idle.png', import.meta.url).href,
+  'gameplay/generated/kibera-stone-goon-walk-sheet.png': new URL('../assets/gameplay/generated/kibera-stone-goon-walk-sheet.png', import.meta.url).href,
+  'gameplay/generated/kibera-stone-goon-sprint-sheet.png': new URL('../assets/gameplay/generated/kibera-stone-goon-sprint-sheet.png', import.meta.url).href,
+  'gameplay/generated/kibera-stone-goon-throw-sheet.png': new URL('../assets/gameplay/generated/kibera-stone-goon-throw-sheet.png', import.meta.url).href,
+  'gameplay/generated/kibera-shield-goon-walk-sheet.png': new URL('../assets/gameplay/generated/kibera-shield-goon-walk-sheet.png', import.meta.url).href,
+  'gameplay/generated/kibera-shield-goon-sprint-sheet.png': new URL('../assets/gameplay/generated/kibera-shield-goon-sprint-sheet.png', import.meta.url).href,
+  'gameplay/generated/kibera-shield-goon-attack-sheet.png': new URL('../assets/gameplay/generated/kibera-shield-goon-attack-sheet.png', import.meta.url).href,
 };
 
 const asset = (path: string) => assetUrls[path];
 
 const loadImage = (scene: Phaser.Scene, key: string, path: string) => {
-  if (!scene.textures.exists(key)) scene.load.image(key, asset(path));
+  if (scene.textures.exists(key)) return false;
+  scene.load.image(key, asset(path));
+  return true;
 };
 
 const loadSheet = (scene: Phaser.Scene, key: string, path: string, frameWidth: number) => {
-  if (!scene.textures.exists(key)) scene.load.spritesheet(key, asset(path), { frameWidth, frameHeight: 384 });
+  if (scene.textures.exists(key)) return false;
+  scene.load.spritesheet(key, asset(path), { frameWidth, frameHeight: 384 });
+  return true;
 };
 
 const loadAudio = (scene: Phaser.Scene, key: string, path: string) => {
-  if (!scene.cache.audio.exists(key)) scene.load.audio(key, asset(path));
+  if (scene.cache.audio.exists(key)) return false;
+  scene.load.audio(key, asset(path));
+  return true;
 };
 
 /**
@@ -98,4 +133,57 @@ export function loadDeferredLevelAssets(scene: Phaser.Scene, levelId: number) {
     loadImage(scene, 'gameplay-kibera-stone-goon', 'gameplay/generated/kibera-stone-goon-idle.png');
     loadImage(scene, 'gameplay-kibera-shield-goon', 'gameplay/generated/kibera-shield-goon-idle.png');
   }
+}
+
+/**
+ * Queues the heavier motion sheets after the arena is already playable. They
+ * restore the authored walking and attack animations without another blocking
+ * loading screen.
+ */
+export function loadBattleAnimationAssets(scene: Phaser.Scene, levelId: number, character: string) {
+  let queued = false;
+  const add = (didQueue: boolean) => { queued = didQueue || queued; };
+
+  if (character !== 'MJAKA FINE') {
+    add(loadImage(scene, 'gameplay-mbavu-feint-1', 'gameplay/generated/mbavu-feint-1.png'));
+    add(loadImage(scene, 'gameplay-mbavu-feint-2', 'gameplay/generated/mbavu-feint-2.png'));
+    add(loadImage(scene, 'gameplay-mbavu-feint-3', 'gameplay/generated/mbavu-feint-3.png'));
+    add(loadImage(scene, 'gameplay-mbavu-feint-4', 'gameplay/generated/mbavu-feint-4.png'));
+    add(loadSheet(scene, 'gameplay-mbavu-run-sheet', 'gameplay/generated/mbavu-run-sheet.png', 256));
+    add(loadSheet(scene, 'gameplay-mbavu-defeat-fall-sheet', 'gameplay/generated/mbavu-defeat-fall-fullboots-sheet.png', 512));
+  }
+
+  if (levelId === 1 || levelId === 2) {
+    add(loadSheet(scene, 'gameplay-goon-red-attack-sheet', 'gameplay/generated/goon-red-attack-sheet.png', 384));
+    add(loadSheet(scene, 'gameplay-goon-hoodie-attack-sheet', 'gameplay/generated/goon-hoodie-attack-sheet.png', 384));
+    add(loadSheet(scene, 'gameplay-goon-club-attack-sheet', 'gameplay/generated/goon-club-attack-sheet.png', 384));
+    add(loadSheet(scene, 'gameplay-goon-red-walk-sheet', 'gameplay/generated/goon-red-walk-sheet.png', 384));
+    add(loadSheet(scene, 'gameplay-goon-hoodie-walk-sheet', 'gameplay/generated/goon-hoodie-walk-sheet.png', 384));
+    add(loadSheet(scene, 'gameplay-goon-club-walk-sheet', 'gameplay/generated/goon-club-walk-sheet.png', 384));
+    add(loadSheet(scene, 'gameplay-goon-red-run-sheet', 'gameplay/generated/goon-red-run-sheet.png', 384));
+    add(loadSheet(scene, 'gameplay-goon-hoodie-run-sheet', 'gameplay/generated/goon-hoodie-run-sheet.png', 384));
+    add(loadSheet(scene, 'gameplay-goon-club-run-sheet', 'gameplay/generated/goon-club-run-sheet.png', 384));
+  }
+
+  if (levelId === 3) {
+    add(loadSheet(scene, 'gameplay-attack-dog-run-sheet', 'gameplay/generated/attack-dog-run-sheet.png', 384));
+    add(loadSheet(scene, 'gameplay-attack-dog-defeat-sheet', 'gameplay/generated/attack-dog-defeat-sheet.png', 384));
+    add(loadSheet(scene, 'gameplay-goon-chain-walk-sheet', 'gameplay/generated/goon-chain-walk-sheet.png', 384));
+    add(loadSheet(scene, 'gameplay-goon-chain-attack-sheet', 'gameplay/generated/goon-chain-attack-sheet.png', 384));
+    add(loadSheet(scene, 'gameplay-goon-chain-defeat-sheet', 'gameplay/generated/goon-chain-defeat-sheet.png', 384));
+    add(loadSheet(scene, 'gameplay-goon-heavy-walk-sheet', 'gameplay/generated/goon-heavy-walk-sheet.png', 384));
+    add(loadSheet(scene, 'gameplay-goon-heavy-attack-sheet', 'gameplay/generated/goon-heavy-attack-sheet.png', 384));
+    add(loadSheet(scene, 'gameplay-goon-heavy-defeat-sheet', 'gameplay/generated/goon-heavy-defeat-sheet.png', 384));
+  }
+
+  if (levelId === 4) {
+    add(loadSheet(scene, 'gameplay-kibera-stone-goon-walk-sheet', 'gameplay/generated/kibera-stone-goon-walk-sheet.png', 384));
+    add(loadSheet(scene, 'gameplay-kibera-stone-goon-sprint-sheet', 'gameplay/generated/kibera-stone-goon-sprint-sheet.png', 384));
+    add(loadSheet(scene, 'gameplay-kibera-stone-goon-throw-sheet', 'gameplay/generated/kibera-stone-goon-throw-sheet.png', 384));
+    add(loadSheet(scene, 'gameplay-kibera-shield-goon-walk-sheet', 'gameplay/generated/kibera-shield-goon-walk-sheet.png', 384));
+    add(loadSheet(scene, 'gameplay-kibera-shield-goon-sprint-sheet', 'gameplay/generated/kibera-shield-goon-sprint-sheet.png', 384));
+    add(loadSheet(scene, 'gameplay-kibera-shield-goon-attack-sheet', 'gameplay/generated/kibera-shield-goon-attack-sheet.png', 384));
+  }
+
+  return queued;
 }

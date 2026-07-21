@@ -69,39 +69,12 @@ export class CharacterSelectScene extends Phaser.Scene {
     super('CharacterSelectScene');
   }
 
-  preload() {
-    const assetsNeeded = !this.textures.exists('character-select-background-v2')
-      || !this.textures.exists('character-card-frame-v2')
-      || !this.textures.exists('menu-mbavu')
-      || !this.textures.exists('menu-mjaka')
-      || !this.textures.exists('menu-majembe');
-    if (!assetsNeeded) return;
-
-    this.showLoadingProgress();
-    if (!this.textures.exists('character-select-background-v2')) {
-      this.load.image('character-select-background-v2', new URL('../assets/character-select/generated/character-select-background.png', import.meta.url).href);
-    }
-    if (!this.textures.exists('character-card-frame-v2')) {
-      this.load.image('character-card-frame-v2', new URL('../assets/character-select/generated/character-card-frame.png', import.meta.url).href);
-    }
-    if (!this.textures.exists('menu-mbavu')) {
-      this.load.image('menu-mbavu', new URL('../assets/menu/generated/mbavu.png', import.meta.url).href);
-    }
-    if (!this.textures.exists('menu-mjaka')) {
-      this.load.image('menu-mjaka', new URL('../assets/menu/generated/mjaka.png', import.meta.url).href);
-    }
-    if (!this.textures.exists('menu-majembe')) {
-      this.load.image('menu-majembe', new URL('../assets/menu/generated/majembe.png', import.meta.url).href);
-    }
-  }
-
   create(data: CharacterSelectData = {}) {
-    document.getElementById('character-select-loading-overlay')?.remove();
     this.startData = data;
     this.selectedIndex = data.character === 'MJAKA FINE' ? 1 : 0;
     this.cards = [];
     this.cameras.main.setBackgroundColor('#030507');
-    this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'character-select-background-v2')
+    this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'menu-v2-background')
       .setDisplaySize(GAME_WIDTH, GAME_HEIGHT).setDepth(-20);
     this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x02050a, 0.18).setDepth(-19);
     this.startMenuAudio();
@@ -144,30 +117,13 @@ export class CharacterSelectScene extends Phaser.Scene {
     wallet.add([walletBg, chapati, amount]);
   }
 
-  private showLoadingProgress() {
-    const existing = document.getElementById('character-select-loading-overlay');
-    existing?.remove();
-    const overlay = document.createElement('div');
-    overlay.id = 'character-select-loading-overlay';
-    Object.assign(overlay.style, {
-      position: 'fixed', inset: '0', zIndex: '9999', display: 'grid', placeItems: 'center',
-      background: '#07090d', color: '#ffc51d', fontFamily: 'Arial Black, Impact, sans-serif',
-      fontSize: 'clamp(14px, 3vw, 25px)', letterSpacing: '0.08em', textAlign: 'center', padding: '24px',
-    });
-    overlay.textContent = 'LOADING FIGHTERS · 0%';
-    document.body.appendChild(overlay);
-    this.load.on(Phaser.Loader.Events.PROGRESS, (progress: number) => {
-      overlay.textContent = `LOADING FIGHTERS · ${Math.round(progress * 100)}%`;
-    });
-  }
-
   private createFighterCard(definition: FighterDefinition, index: number) {
     const container = this.add.container(CARD_X[Math.min(index, 2)], CARD_Y).setDepth(10);
     const portrait = this.add.image(0, definition.portraitY, definition.artKey)
       .setDisplaySize(definition.portraitWidth, definition.portraitHeight);
     if (definition.locked) portrait.setTint(0xb8b8bd).setAlpha(1);
 
-    const frame = this.add.image(0, 0, 'character-card-frame-v2').setDisplaySize(CARD_WIDTH, CARD_HEIGHT);
+    const frame = this.createCardFrame();
     const name = this.add.text(0, 130, definition.name, {
       fontFamily: 'Arial Black, Impact, sans-serif',
       fontSize: definition.name.length > 9 ? '22px' : '27px',
@@ -210,6 +166,18 @@ export class CharacterSelectScene extends Phaser.Scene {
       if (definition.locked) this.cameras.main.shake(100, 0.004);
     });
     this.cards.push({ container, definition });
+  }
+
+  private createCardFrame() {
+    const frame = this.add.graphics();
+    frame.fillStyle(0x05070d, 0.9).lineStyle(4, 0xffbd1a, 0.95);
+    frame.fillRoundedRect(-CARD_WIDTH / 2, -CARD_HEIGHT / 2, CARD_WIDTH, CARD_HEIGHT, 16)
+      .strokeRoundedRect(-CARD_WIDTH / 2, -CARD_HEIGHT / 2, CARD_WIDTH, CARD_HEIGHT, 16);
+    frame.lineStyle(2, 0xffffff, 0.35).strokeRoundedRect(
+      -CARD_WIDTH / 2 + 9, -CARD_HEIGHT / 2 + 9, CARD_WIDTH - 18, CARD_HEIGHT - 18, 12,
+    );
+    frame.fillStyle(0xffbd1a, 0.16).fillRect(-CARD_WIDTH / 2 + 12, 74, CARD_WIDTH - 24, 2);
+    return frame;
   }
 
   private createFighterProfile() {

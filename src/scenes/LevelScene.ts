@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { getDifficultySettings, getStoryLanguage } from '../config/GameSettings';
-import { loadCoreGameplayAssets, loadDeferredLevelAssets } from '../config/DeferredLevelAssets';
+import { loadBattleAnimationAssets, loadCoreGameplayAssets, loadDeferredLevelAssets } from '../config/DeferredLevelAssets';
 import { saveJourneyProgress, unlockLocationStory } from '../config/GameProgress';
 import { LOCATION_STORIES } from '../config/WorldContent';
 import { copyFor, LEVEL_CONTEXT } from '../config/WorldContent';
@@ -58,7 +58,7 @@ type LevelDefinition = {
 
 const PLAYER_ART: Record<string, PlayerArtSpec> = {
   idle: { key: 'gameplay-mbavu-idle', width: 168, height: 252, yOffset: 68, xOffset: 0 },
-  walk: { key: 'gameplay-mbavu-idle', width: 168, height: 252, yOffset: 68, xOffset: 0 },
+  walk: { key: 'gameplay-mbavu-run-sheet', width: 190, height: 285, yOffset: 84, xOffset: 4 },
   punch: { key: 'gameplay-mbavu-punch', width: 205, height: 286, yOffset: 82, xOffset: 22 },
   kick: { key: 'gameplay-mbavu-standing-kick', width: 205, height: 286, yOffset: 82, xOffset: 30 },
   special: { key: 'gameplay-mbavu-kick', width: 365, height: 244, yOffset: 120, xOffset: 58 },
@@ -83,6 +83,10 @@ const MJAKA_ART: Record<string, PlayerArtSpec> = {
 
 const PLAYER_FEINT_FRAMES: PlayerArtSpec[] = [
   { ...PLAYER_ART.idle, key: 'gameplay-mbavu-idle', xOffset: 0, width: 168, height: 252, yOffset: 68 },
+  { ...PLAYER_ART.idle, key: 'gameplay-mbavu-feint-1', xOffset: -2, width: 170, height: 250, yOffset: 67 },
+  { ...PLAYER_ART.idle, key: 'gameplay-mbavu-feint-2', xOffset: 2, width: 166, height: 256, yOffset: 70 },
+  { ...PLAYER_ART.idle, key: 'gameplay-mbavu-feint-3', xOffset: -4, width: 172, height: 248, yOffset: 66 },
+  { ...PLAYER_ART.idle, key: 'gameplay-mbavu-feint-4', xOffset: 1, width: 168, height: 254, yOffset: 69 },
 ];
 
 const LEVELS: LevelDefinition[] = [
@@ -247,6 +251,7 @@ export class LevelScene extends Phaser.Scene {
       this.touchControls = new TouchControls(this);
     }
     this.showLevelIntro();
+    this.loadBattleAnimationsInBackground();
 
     this.cameras.main.setBounds(0, 0, GAME_WIDTH, GAME_HEIGHT);
     this.input.keyboard?.on('keydown-ESC', () => this.scene.start('MainMenuScene'));
@@ -287,9 +292,16 @@ export class LevelScene extends Phaser.Scene {
   }
 
   private shouldShowTouchControls() {
-    return navigator.maxTouchPoints > 0
-      || window.matchMedia('(pointer: coarse)').matches
-      || window.matchMedia('(max-width: 900px)').matches;
+    return window.matchMedia('(pointer: coarse)').matches
+      && window.matchMedia('(max-width: 900px)').matches;
+  }
+
+  private loadBattleAnimationsInBackground() {
+    if (!loadBattleAnimationAssets(this, this.level.id, this.selectedCharacter)) return;
+    this.load.once(Phaser.Loader.Events.COMPLETE, () => {
+      if (this.scene.isActive()) this.createSceneAnimations();
+    });
+    this.load.start();
   }
 
   private showLevelLoadingProgress() {
@@ -732,9 +744,11 @@ export class LevelScene extends Phaser.Scene {
   private getPlayerArtSpec(time: number) {
     if (this.selectedCharacter === 'MJAKA FINE') return MJAKA_ART[this.player.state] ?? MJAKA_ART.idle;
     if (this.player.state === 'idle') {
-      return PLAYER_FEINT_FRAMES[Math.floor(time / 140) % PLAYER_FEINT_FRAMES.length];
+      const feint = PLAYER_FEINT_FRAMES[Math.floor(time / 140) % PLAYER_FEINT_FRAMES.length];
+      return this.textures.exists(feint.key) ? feint : PLAYER_ART.idle;
     }
-    return PLAYER_ART[this.player.state] ?? PLAYER_ART.idle;
+    const spec = PLAYER_ART[this.player.state] ?? PLAYER_ART.idle;
+    return this.textures.exists(spec.key) ? spec : PLAYER_ART.idle;
   }
 
   private createSceneAnimations() {
