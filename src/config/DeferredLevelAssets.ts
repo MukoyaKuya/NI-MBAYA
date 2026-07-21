@@ -27,6 +27,7 @@ const assetUrls: Record<string, string> = {
   'gameplay/generated/mjaka-rush-kick.png': new URL('../assets/gameplay/generated/mjaka-rush-kick.png', import.meta.url).href,
   'gameplay/generated/nairobi-cbd-background.png': new URL('../assets/gameplay/generated/nairobi-cbd-background.png', import.meta.url).href,
   'gameplay/generated/gameplay-background.png': new URL('../assets/gameplay/generated/gameplay-background.png', import.meta.url).href,
+  'gameplay/generated/nairobi-matatu-conductor.png': new URL('../assets/gameplay/generated/nairobi-matatu-conductor.png', import.meta.url).href,
   'gameplay/generated/nairobi-goon.png': new URL('../assets/gameplay/generated/nairobi-goon.png', import.meta.url).href,
   'gameplay/generated/goon-hoodie.png': new URL('../assets/gameplay/generated/goon-hoodie.png', import.meta.url).href,
   'gameplay/generated/goon-club.png': new URL('../assets/gameplay/generated/goon-club.png', import.meta.url).href,
@@ -112,6 +113,7 @@ export function loadCoreGameplayAssets(scene: Phaser.Scene, levelId: number, cha
     loadImage(scene, levelId === 1 ? 'nairobi-cbd-background' : 'gameplay-background', levelId === 1
       ? 'gameplay/generated/nairobi-cbd-background.png'
       : 'gameplay/generated/gameplay-background.png');
+    loadImage(scene, 'nairobi-matatu-conductor', 'gameplay/generated/nairobi-matatu-conductor.png');
     loadImage(scene, 'gameplay-goon', 'gameplay/generated/nairobi-goon.png');
     loadImage(scene, 'gameplay-goon-hoodie', 'gameplay/generated/goon-hoodie.png');
     loadImage(scene, 'gameplay-goon-club', 'gameplay/generated/goon-club.png');

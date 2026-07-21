@@ -8,6 +8,11 @@ const SOURCE_WIDTH = 1672;
 const SOURCE_HEIGHT = 941;
 const SX = GAME_WIDTH / SOURCE_WIDTH;
 const SY = GAME_HEIGHT / SOURCE_HEIGHT;
+const FIGHTER_ART = [
+  ['menu-mbavu', new URL('../assets/menu/generated/mbavu.png', import.meta.url).href],
+  ['menu-mjaka', new URL('../assets/menu/generated/mjaka.png', import.meta.url).href],
+  ['menu-majembe', new URL('../assets/menu/generated/majembe.png', import.meta.url).href],
+] as const;
 
 type HoverButtonConfig = {
   key: string;
@@ -22,6 +27,7 @@ export class MainMenuScene extends Phaser.Scene {
   private hoverSound?: Phaser.Sound.BaseSound;
   private audioUnlockPrompt?: Phaser.GameObjects.Container;
   private lastHoverAt = -1000;
+  private fighterArtReady = false;
 
   constructor() {
     super('MainMenuScene');
@@ -30,9 +36,9 @@ export class MainMenuScene extends Phaser.Scene {
   create() {
     this.cameras.main.setBackgroundColor('#050507');
     this.drawLayeredBackdrop();
-    this.loadMenuMusicAfterMenuIsVisible();
+    this.loadFighterArtAfterMenuIsVisible();
 
-    this.addHoverButton({ key: 'menu-v2-button-story', box: [600, 466, 1048, 554], onClick: () => this.scene.start('CharacterSelectScene'), hoverScale: 1.045, hoverLift: 2 });
+    this.addHoverButton({ key: 'menu-v2-button-story', box: [600, 466, 1048, 554], onClick: () => this.openCharacterSelect(), hoverScale: 1.045, hoverLift: 2 });
     this.addHoverButton({ key: 'menu-v2-button-arcade', box: [610, 558, 1044, 641], onClick: () => this.showComingSoon('ARCADE MODE'), hoverScale: 1.045, hoverLift: 2 });
     this.addHoverButton({ key: 'menu-v2-button-boss-rush', box: [612, 644, 1048, 730], onClick: () => this.showComingSoon('BOSS RUSH'), hoverScale: 1.045, hoverLift: 2 });
     this.addHoverButton({ key: 'menu-v2-button-options', box: [612, 736, 1048, 824], onClick: () => this.scene.start('OptionsScene'), hoverScale: 1.045, hoverLift: 2 });
@@ -43,8 +49,8 @@ export class MainMenuScene extends Phaser.Scene {
     this.addHoverButton({ key: 'menu-v2-top-settings', box: [1436, 26, 1535, 132], onClick: () => this.scene.start('OptionsScene'), hoverScale: 1.06 });
     this.addHoverButton({ key: 'menu-v2-top-exit', box: [1542, 26, 1640, 132], onClick: () => this.cameras.main.fadeOut(220, 0, 0, 0), hoverScale: 1.06 });
 
-    this.input.keyboard?.once('keydown-SPACE', () => this.scene.start('CharacterSelectScene'));
-    this.input.keyboard?.once('keydown-ENTER', () => this.scene.start('CharacterSelectScene'));
+    this.input.keyboard?.once('keydown-SPACE', () => this.openCharacterSelect());
+    this.input.keyboard?.once('keydown-ENTER', () => this.openCharacterSelect());
     this.input.keyboard?.once('keydown-C', () => this.scene.start('CultureScene'));
     this.createBottomAction();
   }
@@ -101,6 +107,32 @@ export class MainMenuScene extends Phaser.Scene {
       this.menuMusic = undefined;
       this.hoverSound = undefined;
     });
+  }
+
+  private loadFighterArtAfterMenuIsVisible() {
+    FIGHTER_ART.forEach(([key, url]) => {
+      if (!this.textures.exists(key)) this.load.image(key, url);
+    });
+
+    if (FIGHTER_ART.every(([key]) => this.textures.exists(key))) {
+      this.fighterArtReady = true;
+      this.loadMenuMusicAfterMenuIsVisible();
+      return;
+    }
+
+    this.load.once(Phaser.Loader.Events.COMPLETE, () => {
+      this.fighterArtReady = FIGHTER_ART.every(([key]) => this.textures.exists(key));
+      if (this.scene.manager.getScenes(true).includes(this)) this.loadMenuMusicAfterMenuIsVisible();
+    });
+    this.load.start();
+  }
+
+  private openCharacterSelect() {
+    if (!this.fighterArtReady) {
+      this.showToast('FIGHTERS ARE ENTERING — ONE MOMENT');
+      return;
+    }
+    this.scene.start('CharacterSelectScene');
   }
 
   private loadMenuMusicAfterMenuIsVisible() {

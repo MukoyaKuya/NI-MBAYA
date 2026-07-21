@@ -16,12 +16,8 @@ export class BootScene extends Phaser.Scene {
 
     // Later-stage art is loaded only when that chapter starts. This keeps the
     // first playable screen fast enough for mobile connections.
-    this.load.audio('story-intro', new URL('../assets/audio/story-intro.mp3', import.meta.url).href);
     this.load.audio('ui-hover', new URL('../assets/audio/ui-hover.mp3', import.meta.url).href);
     this.load.audio('select', new URL('../assets/audio/select.mp3', import.meta.url).href);
-    this.load.image('menu-mbavu', new URL('../assets/menu/generated/mbavu.png', import.meta.url).href);
-    this.load.image('menu-mjaka', new URL('../assets/menu/generated/mjaka.png', import.meta.url).href);
-    this.load.image('menu-majembe', new URL('../assets/menu/generated/majembe.png', import.meta.url).href);
     this.load.image('menu-v2-background', new URL('../assets/menu/v2/menu-background-clean.png', import.meta.url).href);
     this.load.image('menu-v2-hero-status-panel', new URL('../assets/menu/v2/hero-status-panel.png', import.meta.url).href);
     this.load.image('menu-v2-ni-mbaya-logo', new URL('../assets/menu/v2/ni-mbaya-logo.png', import.meta.url).href);
@@ -60,7 +56,7 @@ export class BootScene extends Phaser.Scene {
     const intro = document.getElementById('brand-intro');
     const startedAt = Number(intro?.dataset.startedAt ?? Date.now());
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const minimumDuration = reducedMotion ? 500 : 2600;
+    const minimumDuration = reducedMotion ? 250 : 900;
     let started = false;
 
     const startGame = () => {
@@ -140,7 +136,6 @@ export class BootScene extends Phaser.Scene {
     g.destroy();
   }
 }
-
 
 
 

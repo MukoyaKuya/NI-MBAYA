@@ -8,6 +8,11 @@ const CARD_Y = 336;
 const CARD_WIDTH = 276;
 const CARD_HEIGHT = 486;
 const CARD_X = [302, 640, 978];
+const FIGHTER_ART = [
+  ['menu-mbavu', new URL('../assets/menu/generated/mbavu.png', import.meta.url).href],
+  ['menu-mjaka', new URL('../assets/menu/generated/mjaka.png', import.meta.url).href],
+  ['menu-majembe', new URL('../assets/menu/generated/majembe.png', import.meta.url).href],
+] as const;
 
 type CharacterSelectData = {
   returnToLevel?: boolean;
@@ -67,6 +72,12 @@ export class CharacterSelectScene extends Phaser.Scene {
 
   constructor() {
     super('CharacterSelectScene');
+  }
+
+  preload() {
+    FIGHTER_ART.forEach(([key, url]) => {
+      if (!this.textures.exists(key)) this.load.image(key, url);
+    });
   }
 
   create(data: CharacterSelectData = {}) {

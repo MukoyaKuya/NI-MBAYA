@@ -298,8 +298,16 @@ export class LevelScene extends Phaser.Scene {
 
   private loadBattleAnimationsInBackground() {
     if (!loadBattleAnimationAssets(this, this.level.id, this.selectedCharacter)) return;
-    this.load.once(Phaser.Loader.Events.COMPLETE, () => {
+    const activateLoadedAnimations = () => {
       if (this.scene.isActive()) this.createSceneAnimations();
+    };
+    // A slow connection should not make every goon stay static until the
+    // entire animation pack has arrived. Enable each variant as its sheet
+    // finishes, while the arena stays playable throughout.
+    this.load.on(Phaser.Loader.Events.FILE_COMPLETE, activateLoadedAnimations);
+    this.load.once(Phaser.Loader.Events.COMPLETE, () => {
+      this.load.off(Phaser.Loader.Events.FILE_COMPLETE, activateLoadedAnimations);
+      activateLoadedAnimations();
     });
     this.load.start();
   }
