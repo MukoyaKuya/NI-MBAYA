@@ -12,6 +12,8 @@ export class SoundSystem {
   private victorySound?: Phaser.Sound.BaseSound;
   private defeatSound?: Phaser.Sound.BaseSound;
   private uiHover?: Phaser.Sound.BaseSound;
+  private fightMusicRequested = false;
+  private waitingForAudioUnlock = false;
 
   constructor(private scene: Phaser.Scene) {
     const unlock = () => {
@@ -20,9 +22,16 @@ export class SoundSystem {
     };
     scene.input.on('pointerdown', unlock);
     scene.input.keyboard?.on('keydown', unlock);
+    const onAudioFileComplete = (key: string) => {
+      if (key !== 'fight-music') return;
+      this.fightMusicRequested = false;
+      this.startFightMusic();
+    };
+    scene.load.on(Phaser.Loader.Events.FILE_COMPLETE, onAudioFileComplete);
     scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       scene.input.off('pointerdown', unlock);
       scene.input.keyboard?.off('keydown', unlock);
+      scene.load.off(Phaser.Loader.Events.FILE_COMPLETE, onAudioFileComplete);
       this.music?.stop();
       this.music?.destroy();
       this.victorySound?.stop();
@@ -148,9 +157,30 @@ export class SoundSystem {
     const menuMusic = this.scene.sound.get('menu-music');
     menuMusic?.stop();
     menuMusic?.destroy();
-    if (this.music?.isPlaying || !this.scene.cache.audio.exists('fight-music')) return;
+    if (this.music?.isPlaying) return;
+    if (!this.scene.cache.audio.exists('fight-music')) {
+      this.requestFightMusic();
+      return;
+    }
+    if (this.scene.sound.locked) {
+      if (!this.waitingForAudioUnlock) {
+        this.waitingForAudioUnlock = true;
+        this.scene.sound.once(Phaser.Sound.Events.UNLOCKED, () => {
+          this.waitingForAudioUnlock = false;
+          this.startFightMusic();
+        });
+      }
+      return;
+    }
     this.music = this.scene.sound.add('fight-music', { loop: true, volume: 0.2 });
     this.music.play();
+  }
+
+  private requestFightMusic() {
+    if (this.fightMusicRequested) return;
+    this.fightMusicRequested = true;
+    this.scene.load.audio('fight-music', new URL('../assets/audio/fight-music.mp3', import.meta.url).href);
+    if (!this.scene.load.isLoading()) this.scene.load.start();
   }
 
   private playClip(key: string, volume: number, rate = 1) {

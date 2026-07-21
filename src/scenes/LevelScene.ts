@@ -194,7 +194,8 @@ export class LevelScene extends Phaser.Scene {
     const fighterKey = character === 'MJAKA FINE' ? 'menu-mjaka' : 'gameplay-mbavu-idle';
     const needsCoreAssets = !this.textures.exists(fighterKey)
       || !this.textures.exists('gameplay-chapati-health-pickup-sheet');
-    const needsLevelAssets = !this.textures.exists(getLevelDefinition(levelId).backgroundKey);
+    const needsLevelAssets = !this.textures.exists(getLevelDefinition(levelId).backgroundKey)
+      || (levelId <= 2 && !this.textures.exists('nairobi-matatu-conductor'));
     if (needsCoreAssets || needsLevelAssets) this.showLevelLoadingProgress();
     loadCoreGameplayAssets(this, levelId, character);
     loadDeferredLevelAssets(this, levelId);
@@ -340,7 +341,7 @@ export class LevelScene extends Phaser.Scene {
   }
 
   private createBackgroundTraffic() {
-    const nearMatatu = this.add.image(-240, 455, 'nairobi-matatu-conductor')
+    const nearMatatu = this.add.image(-240, 455, this.getMatatuTextureKey())
       .setDisplaySize(335, 116)
       .setDepth(5)
       .setAlpha(0.88);
@@ -368,6 +369,31 @@ export class LevelScene extends Phaser.Scene {
       ease: 'Sine.InOut',
     });
 
+  }
+
+  private getMatatuTextureKey() {
+    const sourceKey = 'nairobi-matatu-conductor';
+    if (this.textures.exists(sourceKey)) return sourceKey;
+
+    // A cached or interrupted image request must never expose Phaser's green
+    // missing-texture marker in the street. Keep a readable matatu on screen
+    // until the real artwork is available on the next load.
+    const fallbackKey = 'nairobi-matatu-fallback';
+    if (!this.textures.exists(fallbackKey)) {
+      const art = this.add.graphics();
+      art.fillStyle(0x10141b, 0.95).fillRoundedRect(8, 18, 344, 84, 12);
+      art.fillStyle(0xe04a25, 1).fillRoundedRect(12, 22, 336, 74, 10);
+      art.fillStyle(0xffbf1a, 1).fillRect(18, 76, 324, 18);
+      art.fillStyle(0x1ab8ba, 1).fillRoundedRect(28, 34, 222, 28, 4);
+      art.fillStyle(0x18222f, 1).fillRoundedRect(264, 30, 62, 56, 6);
+      art.lineStyle(3, 0xf4f0d8, 0.9).strokeRoundedRect(12, 22, 336, 74, 10);
+      for (let x = 58; x < 244; x += 40) art.lineStyle(2, 0x10141b, 0.8).lineBetween(x, 35, x, 61);
+      art.fillStyle(0x090b10, 1).fillCircle(78, 101, 18).fillCircle(290, 101, 18);
+      art.fillStyle(0xc8c8c8, 1).fillCircle(78, 101, 7).fillCircle(290, 101, 7);
+      art.generateTexture(fallbackKey, 360, 128);
+      art.destroy();
+    }
+    return fallbackKey;
   }
 
   private updateChapatiPickup() {
