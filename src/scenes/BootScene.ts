@@ -1,5 +1,4 @@
 import Phaser from 'phaser';
-import { loadDeferredLevelAssets } from '../config/DeferredLevelAssets';
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -15,10 +14,8 @@ export class BootScene extends Phaser.Scene {
       if (loadingLabel) loadingLabel.textContent = 'Starting NI MBAYA…';
     });
 
-    // Keep later-stage art ready before gameplay starts. Runtime loader handoffs
-    // can leave a restarted Phaser scene on a blank canvas on some browsers.
-    loadDeferredLevelAssets(this, 3);
-    loadDeferredLevelAssets(this, 4);
+    // Later-stage art is loaded only when that chapter starts. This keeps the
+    // first playable screen fast enough for mobile connections.
     this.load.audio('menu-music', new URL('../assets/audio/menu-music.mp3', import.meta.url).href);
     this.load.audio('fight-music', new URL('../assets/audio/fight-music.mp3', import.meta.url).href);
     this.load.audio('story-intro', new URL('../assets/audio/story-intro.mp3', import.meta.url).href);
@@ -30,32 +27,9 @@ export class BootScene extends Phaser.Scene {
     this.load.audio('challenge-win', new URL('../assets/audio/challenge.mp3', import.meta.url).href);
     this.load.audio('hero-defeat', new URL('../assets/audio/hero-defeat.mp3', import.meta.url).href);
     this.load.audio('select', new URL('../assets/audio/select.mp3', import.meta.url).href);
-    this.load.image('main-menu-target', new URL('../assets/menu/reference/main-menu-target.png', import.meta.url).href);
-    this.load.image('main-menu-base-clean', new URL('../assets/menu/reference/main-menu-base-clean.png', import.meta.url).href);
-    this.load.image('menu-background', new URL('../assets/menu/generated/menu-background-source.png', import.meta.url).href);
     this.load.image('menu-mbavu', new URL('../assets/menu/generated/mbavu.png', import.meta.url).href);
     this.load.image('menu-mjaka', new URL('../assets/menu/generated/mjaka.png', import.meta.url).href);
     this.load.image('menu-majembe', new URL('../assets/menu/generated/majembe.png', import.meta.url).href);
-    this.load.image('menu-story-button', new URL('../assets/menu/extracted/story-button.png', import.meta.url).href);
-    this.load.image('menu-arcade-button', new URL('../assets/menu/extracted/arcade-button.png', import.meta.url).href);
-    this.load.image('menu-boss-button', new URL('../assets/menu/extracted/boss-button.png', import.meta.url).href);
-    this.load.image('menu-options-button', new URL('../assets/menu/extracted/options-button.png', import.meta.url).href);
-    this.load.image('menu-final-battle-card', new URL('../assets/menu/extracted/final-battle-card.png', import.meta.url).href);
-    this.load.image('menu-avatar-card', new URL('../assets/menu/extracted/avatar-card.png', import.meta.url).href);
-    this.load.image('menu-achievements-icon', new URL('../assets/menu/extracted/achievements-icon.png', import.meta.url).href);
-    this.load.image('menu-settings-icon', new URL('../assets/menu/extracted/settings-icon.png', import.meta.url).href);
-    this.load.image('menu-exit-icon', new URL('../assets/menu/extracted/exit-icon.png', import.meta.url).href);
-    this.load.image('menu-daily-card', new URL('../assets/menu/extracted/daily-card.png', import.meta.url).href);
-    this.load.image('menu-story-button-standalone', new URL('../assets/menu/extracted/story-button-standalone.png', import.meta.url).href);
-    this.load.image('menu-arcade-button-standalone', new URL('../assets/menu/extracted/arcade-button-standalone.png', import.meta.url).href);
-    this.load.image('menu-boss-button-standalone', new URL('../assets/menu/extracted/boss-button-standalone.png', import.meta.url).href);
-    this.load.image('menu-options-button-standalone', new URL('../assets/menu/extracted/options-button-standalone.png', import.meta.url).href);
-    this.load.image('menu-daily-card-standalone', new URL('../assets/menu/extracted/daily-card-standalone.png', import.meta.url).href);
-    this.load.image('menu-final-battle-card-standalone', new URL('../assets/menu/extracted/final-battle-card-standalone.png', import.meta.url).href);
-    this.load.image('menu-avatar-card-standalone', new URL('../assets/menu/extracted/avatar-card-standalone.png', import.meta.url).href);
-    this.load.image('menu-logo-text-standalone', new URL('../assets/menu/extracted/logo-text-standalone.png', import.meta.url).href);
-    this.load.image('menu-top-actions-standalone', new URL('../assets/menu/extracted/top-actions-standalone.png', import.meta.url).href);
-    this.load.image('menu-footer-socials-standalone', new URL('../assets/menu/extracted/footer-socials-standalone.png', import.meta.url).href);
     this.load.image('menu-v2-background', new URL('../assets/menu/v2/menu-background-clean.png', import.meta.url).href);
     this.load.image('menu-v2-hero-status-panel', new URL('../assets/menu/v2/hero-status-panel.png', import.meta.url).href);
     this.load.image('menu-v2-ni-mbaya-logo', new URL('../assets/menu/v2/ni-mbaya-logo.png', import.meta.url).href);
@@ -70,25 +44,12 @@ export class BootScene extends Phaser.Scene {
     this.load.image('menu-v2-daily-challenge-card', new URL('../assets/menu/v2/daily-challenge-card.png', import.meta.url).href);
     this.load.image('menu-v2-final-battle-card', new URL('../assets/menu/v2/final-battle-card.png', import.meta.url).href);
     this.load.image('menu-v2-footer-socials', new URL('../assets/menu/v2/footer-socials.png', import.meta.url).href);
-    this.load.image('character-select-target', new URL('../assets/character-select/reference/character-select-target.png', import.meta.url).href);
     this.load.image('character-select-background-v2', new URL('../assets/character-select/generated/character-select-background.png', import.meta.url).href);
     this.load.image('character-card-frame-v2', new URL('../assets/character-select/generated/character-card-frame.png', import.meta.url).href);
-    this.load.image('character-back-button', new URL('../assets/character-select/extracted/back-button.png', import.meta.url).href);
-    this.load.image('character-currency-panel', new URL('../assets/character-select/extracted/currency-panel.png', import.meta.url).href);
-    this.load.image('character-mbavu-card', new URL('../assets/character-select/extracted/mbavu-card.png', import.meta.url).href);
-    this.load.image('character-mjaka-card', new URL('../assets/character-select/extracted/mjaka-card.png', import.meta.url).href);
-    this.load.image('character-majembe-card', new URL('../assets/character-select/extracted/majembe-card.png', import.meta.url).href);
-    this.load.image('character-select-button', new URL('../assets/character-select/extracted/select-button.png', import.meta.url).href);
-    this.load.image('character-left-arrow', new URL('../assets/character-select/extracted/left-arrow.png', import.meta.url).href);
-    this.load.image('character-right-arrow', new URL('../assets/character-select/extracted/right-arrow.png', import.meta.url).href);
-    this.load.image('menu-achievements-hex', new URL('../assets/menu/extracted/achievements-hex.png', import.meta.url).href);
-    this.load.image('menu-settings-hex', new URL('../assets/menu/extracted/settings-hex.png', import.meta.url).href);
-    this.load.image('menu-exit-hex', new URL('../assets/menu/extracted/exit-hex.png', import.meta.url).href);
     this.load.image('gameplay-background', new URL('../assets/gameplay/generated/gameplay-background.png', import.meta.url).href);
     this.load.spritesheet('gameplay-chapati-health-pickup-sheet', new URL('../assets/gameplay/generated/chapati-health-pickup-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
     this.load.image('nairobi-cbd-background', new URL('../assets/gameplay/generated/nairobi-cbd-background.png', import.meta.url).href);
     this.load.image('nairobi-matatu-conductor', new URL('../assets/gameplay/generated/nairobi-matatu-conductor.png', import.meta.url).href);
-    this.load.spritesheet('touch-action-buttons', new URL('../assets/ui/touch-action-buttons.png', import.meta.url).href, { frameWidth: 627, frameHeight: 627 });
     this.load.image('gameplay-mbavu-kick', new URL('../assets/gameplay/generated/mbavu-flying-kick-canonical.png', import.meta.url).href);
     this.load.image('gameplay-goon', new URL('../assets/gameplay/generated/nairobi-goon.png', import.meta.url).href);
     this.load.spritesheet('gameplay-goon-red-attack-sheet', new URL('../assets/gameplay/generated/goon-red-attack-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
@@ -223,7 +184,6 @@ export class BootScene extends Phaser.Scene {
     g.destroy();
   }
 }
-
 
 
 

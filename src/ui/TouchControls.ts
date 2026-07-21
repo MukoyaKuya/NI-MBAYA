@@ -42,10 +42,10 @@ export class TouchControls {
       this.knob.setPosition(baseX, baseY);
     });
 
-    this.createButton(GAME_WIDTH - 105, GAME_HEIGHT - 84, 'punch', 0, 104);
-    this.createButton(GAME_WIDTH - 205, GAME_HEIGHT - 86, 'kick', 1, 96);
-    this.createButton(GAME_WIDTH - 166, GAME_HEIGHT - 176, 'special', 2, 86);
-    this.createButton(GAME_WIDTH - 76, GAME_HEIGHT - 190, 'jump', 3, 88);
+    this.createButton(GAME_WIDTH - 100, GAME_HEIGHT - 82, 'punch', 'P', 0xd9453d, 100);
+    this.createButton(GAME_WIDTH - 202, GAME_HEIGHT - 86, 'kick', 'K', 0xe0a521, 94);
+    this.createButton(GAME_WIDTH - 160, GAME_HEIGHT - 178, 'special', 'S', 0x2c9be8, 84);
+    this.createButton(GAME_WIDTH - 70, GAME_HEIGHT - 184, 'jump', 'J', 0x8846c7, 84);
   }
 
   postUpdate() {
@@ -64,25 +64,33 @@ export class TouchControls {
     g.fillTriangle(x, y + 50, x - 9, y + 36, x + 9, y + 36);
   }
 
-  private createButton(x: number, y: number, key: 'punch' | 'kick' | 'special' | 'jump', frame: number, size: number) {
-    const button = this.scene.add.image(x, y, 'touch-action-buttons', frame)
-      .setDisplaySize(size, size)
-      .setScrollFactor(0)
-      .setDepth(1188)
-      .setInteractive({ useHandCursor: true });
+  private createButton(
+    x: number, y: number, key: 'punch' | 'kick' | 'special' | 'jump', label: string, color: number, size: number,
+  ) {
+    const button = this.scene.add.container(x, y).setScrollFactor(0).setDepth(1188);
+    const background = this.scene.add.circle(0, 0, size / 2, 0x070b12, 0.9).setStrokeStyle(4, color, 1);
+    const inner = this.scene.add.circle(0, 0, size / 2 - 8, color, 0.82).setStrokeStyle(2, 0xffffff, 0.65);
+    const text = this.scene.add.text(0, -4, label, {
+      fontFamily: 'Arial Black, Impact, sans-serif', fontSize: `${Math.round(size * 0.42)}px`, color: '#ffffff',
+      stroke: '#080b11', strokeThickness: 7,
+    }).setOrigin(0.5);
+    const caption = this.scene.add.text(0, size * 0.28, key.toUpperCase(), {
+      fontFamily: 'Arial Black, sans-serif', fontSize: `${Math.max(10, Math.round(size * 0.12))}px`, color: '#ffffff',
+      stroke: '#080b11', strokeThickness: 3,
+    }).setOrigin(0.5);
+    button.add([background, inner, text, caption]).setSize(size, size).setInteractive({ useHandCursor: true });
 
     button.on('pointerdown', () => {
       this.intent[key] = true;
       this.scene.tweens.killTweensOf(button);
-      button.setDisplaySize(size, size);
+      button.setScale(1);
       this.scene.tweens.add({
         targets: button,
-        displayWidth: size * 0.88,
-        displayHeight: size * 0.88,
+        scale: 0.88,
         duration: 65,
         yoyo: true,
         ease: 'Sine.Out',
-        onComplete: () => button.setDisplaySize(size, size),
+        onComplete: () => button.setScale(1),
       });
     });
   }
