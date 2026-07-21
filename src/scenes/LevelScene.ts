@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { getDifficultySettings, getStoryLanguage } from '../config/GameSettings';
-import { loadDeferredLevelAssets } from '../config/DeferredLevelAssets';
+import { loadCoreGameplayAssets, loadDeferredLevelAssets } from '../config/DeferredLevelAssets';
 import { saveJourneyProgress, unlockLocationStory } from '../config/GameProgress';
 import { LOCATION_STORIES } from '../config/WorldContent';
 import { copyFor, LEVEL_CONTEXT } from '../config/WorldContent';
@@ -190,10 +190,15 @@ export class LevelScene extends Phaser.Scene {
 
   preload() {
     const levelId = this.startData.levelId ?? 1;
-    if (!this.textures.exists(getLevelDefinition(levelId).backgroundKey)) loadDeferredLevelAssets(this, levelId);
+    const needsCoreAssets = !this.textures.exists('gameplay-goon');
+    const needsLevelAssets = !this.textures.exists(getLevelDefinition(levelId).backgroundKey);
+    if (needsCoreAssets || needsLevelAssets) this.showLevelLoadingProgress();
+    if (needsCoreAssets) loadCoreGameplayAssets(this);
+    if (needsLevelAssets) loadDeferredLevelAssets(this, levelId);
   }
 
   create(data: LevelStartData = this.startData) {
+    document.getElementById('level-loading-overlay')?.remove();
     this.level = getLevelDefinition(data.levelId ?? 1);
     this.selectedCharacter = data.character === 'MJAKA FINE' ? 'MJAKA FINE' : 'MBAVU DESTROYER';
     this.levelCleared = false;
@@ -286,6 +291,24 @@ export class LevelScene extends Phaser.Scene {
     return navigator.maxTouchPoints > 0
       || window.matchMedia('(pointer: coarse)').matches
       || window.matchMedia('(max-width: 900px)').matches;
+  }
+
+  private showLevelLoadingProgress() {
+    document.getElementById('level-loading-overlay')?.remove();
+    const overlay = document.createElement('div');
+    overlay.id = 'level-loading-overlay';
+    overlay.setAttribute('role', 'status');
+    overlay.setAttribute('aria-live', 'polite');
+    Object.assign(overlay.style, {
+      position: 'fixed', inset: '0', zIndex: '1500', display: 'grid', placeItems: 'center',
+      color: '#ffc51d', background: '#07111f', font: 'italic 800 22px/1 Arial Black, Arial, sans-serif',
+      letterSpacing: '0.05em', textAlign: 'center',
+    });
+    overlay.textContent = 'PREPARING THE STREETS OF NAIROBI · 0%';
+    document.body.append(overlay);
+    this.load.on(Phaser.Loader.Events.PROGRESS, (progress: number) => {
+      overlay.textContent = `PREPARING THE STREETS OF NAIROBI · ${Math.round(progress * 100)}%`;
+    });
   }
 
   private drawGeneratedStage() {

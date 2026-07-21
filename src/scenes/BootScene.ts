@@ -17,15 +17,8 @@ export class BootScene extends Phaser.Scene {
     // Later-stage art is loaded only when that chapter starts. This keeps the
     // first playable screen fast enough for mobile connections.
     this.load.audio('menu-music', new URL('../assets/audio/menu-music.mp3', import.meta.url).href);
-    this.load.audio('fight-music', new URL('../assets/audio/fight-music.mp3', import.meta.url).href);
     this.load.audio('story-intro', new URL('../assets/audio/story-intro.mp3', import.meta.url).href);
     this.load.audio('ui-hover', new URL('../assets/audio/ui-hover.mp3', import.meta.url).href);
-    this.load.audio('special-attack', new URL('../assets/audio/special-attack.mp3', import.meta.url).href);
-    this.load.audio('punch-hit', new URL('../assets/audio/punch-hit-sora.mp3', import.meta.url).href);
-    this.load.audio('heavy-hit', new URL('../assets/audio/heavy-hit.mp3', import.meta.url).href);
-    this.load.audio('dog-growl', new URL('../assets/audio/dog-growl.mp3', import.meta.url).href);
-    this.load.audio('challenge-win', new URL('../assets/audio/challenge.mp3', import.meta.url).href);
-    this.load.audio('hero-defeat', new URL('../assets/audio/hero-defeat.mp3', import.meta.url).href);
     this.load.audio('select', new URL('../assets/audio/select.mp3', import.meta.url).href);
     this.load.image('menu-mbavu', new URL('../assets/menu/generated/mbavu.png', import.meta.url).href);
     this.load.image('menu-mjaka', new URL('../assets/menu/generated/mjaka.png', import.meta.url).href);
@@ -46,41 +39,8 @@ export class BootScene extends Phaser.Scene {
     this.load.image('menu-v2-footer-socials', new URL('../assets/menu/v2/footer-socials.png', import.meta.url).href);
     this.load.image('character-select-background-v2', new URL('../assets/character-select/generated/character-select-background.png', import.meta.url).href);
     this.load.image('character-card-frame-v2', new URL('../assets/character-select/generated/character-card-frame.png', import.meta.url).href);
-    this.load.image('gameplay-background', new URL('../assets/gameplay/generated/gameplay-background.png', import.meta.url).href);
     this.load.spritesheet('gameplay-chapati-health-pickup-sheet', new URL('../assets/gameplay/generated/chapati-health-pickup-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
     this.load.image('nairobi-cbd-background', new URL('../assets/gameplay/generated/nairobi-cbd-background.png', import.meta.url).href);
-    this.load.image('nairobi-matatu-conductor', new URL('../assets/gameplay/generated/nairobi-matatu-conductor.png', import.meta.url).href);
-    this.load.image('gameplay-mbavu-kick', new URL('../assets/gameplay/generated/mbavu-flying-kick-canonical.png', import.meta.url).href);
-    this.load.image('gameplay-goon', new URL('../assets/gameplay/generated/nairobi-goon.png', import.meta.url).href);
-    this.load.spritesheet('gameplay-goon-red-attack-sheet', new URL('../assets/gameplay/generated/goon-red-attack-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
-    this.load.spritesheet('gameplay-goon-hoodie-attack-sheet', new URL('../assets/gameplay/generated/goon-hoodie-attack-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
-    this.load.spritesheet('gameplay-goon-club-attack-sheet', new URL('../assets/gameplay/generated/goon-club-attack-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
-    this.load.spritesheet('gameplay-goon-red-walk-sheet', new URL('../assets/gameplay/generated/goon-red-walk-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
-    this.load.spritesheet('gameplay-goon-hoodie-walk-sheet', new URL('../assets/gameplay/generated/goon-hoodie-walk-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
-    this.load.spritesheet('gameplay-goon-club-walk-sheet', new URL('../assets/gameplay/generated/goon-club-walk-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
-    this.load.spritesheet('gameplay-goon-red-run-sheet', new URL('../assets/gameplay/generated/goon-red-run-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
-    this.load.spritesheet('gameplay-goon-hoodie-run-sheet', new URL('../assets/gameplay/generated/goon-hoodie-run-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
-    this.load.spritesheet('gameplay-goon-club-run-sheet', new URL('../assets/gameplay/generated/goon-club-run-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
-    this.load.image('gameplay-mbavu-idle', new URL('../assets/gameplay/generated/mbavu-idle.png', import.meta.url).href);
-    this.load.image('gameplay-mbavu-feint-1', new URL('../assets/gameplay/generated/mbavu-feint-1.png', import.meta.url).href);
-    this.load.image('gameplay-mbavu-feint-2', new URL('../assets/gameplay/generated/mbavu-feint-2.png', import.meta.url).href);
-    this.load.image('gameplay-mbavu-feint-3', new URL('../assets/gameplay/generated/mbavu-feint-3.png', import.meta.url).href);
-    this.load.image('gameplay-mbavu-feint-4', new URL('../assets/gameplay/generated/mbavu-feint-4.png', import.meta.url).href);
-    this.load.image('gameplay-mbavu-run', new URL('../assets/gameplay/generated/mbavu-run.png', import.meta.url).href);
-    this.load.spritesheet('gameplay-mbavu-run-sheet', new URL('../assets/gameplay/generated/mbavu-run-sheet.png', import.meta.url).href, { frameWidth: 256, frameHeight: 384 });
-    this.load.image('gameplay-mbavu-punch', new URL('../assets/gameplay/generated/mbavu-punch.png', import.meta.url).href);
-    this.load.image('gameplay-goon-club', new URL('../assets/gameplay/generated/goon-club.png', import.meta.url).href);
-    this.load.image('gameplay-goon-hoodie', new URL('../assets/gameplay/generated/goon-hoodie.png', import.meta.url).href);
-    this.load.image('gameplay-mbavu-defeat', new URL('../assets/gameplay/generated/mbavu-defeat.png', import.meta.url).href);
-    this.load.spritesheet('gameplay-mbavu-defeat-fall-sheet', new URL('../assets/gameplay/generated/mbavu-defeat-fall-fullboots-sheet.png', import.meta.url).href, { frameWidth: 512, frameHeight: 384 });
-    this.load.image('gameplay-mbavu-standing-kick', new URL('../assets/gameplay/generated/mbavu-kick.png', import.meta.url).href);
-    this.load.image('gameplay-mjaka-palm-strike', new URL('../assets/gameplay/generated/mjaka-palm-strike.png', import.meta.url).href);
-    this.load.image('gameplay-mjaka-high-kick', new URL('../assets/gameplay/generated/mjaka-high-kick.png', import.meta.url).href);
-    this.load.image('gameplay-mjaka-rush-kick', new URL('../assets/gameplay/generated/mjaka-rush-kick.png', import.meta.url).href);
-    this.load.image('gameplay-goon-bat-attack', new URL('../assets/gameplay/generated/goon-bat-attack.png', import.meta.url).href);
-    this.load.image('gameplay-goon-bat-attack-2', new URL('../assets/gameplay/generated/goon-bat-attack-2.png', import.meta.url).href);
-    this.load.image('gameplay-goon-bat-attack-3', new URL('../assets/gameplay/generated/goon-bat-attack-3.png', import.meta.url).href);
-    this.load.image('gameplay-goon-defeat', new URL('../assets/gameplay/generated/goon-defeat.png', import.meta.url).href);
   }
 
   create() {
@@ -184,7 +144,6 @@ export class BootScene extends Phaser.Scene {
     g.destroy();
   }
 }
-
 
 
 
