@@ -109,7 +109,6 @@
       intro.dataset.startedAt = String(Date.now());
       intro.querySelector('.brand-intro__skip').addEventListener('click', () => {
         intro.dataset.skipped = 'true';
-        intro.classList.add('is-leaving');
         window.dispatchEvent(new Event('brand-intro-skip'));
       });
     </script>
