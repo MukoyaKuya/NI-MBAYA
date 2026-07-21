@@ -7,6 +7,14 @@ export class BootScene extends Phaser.Scene {
   }
 
   preload() {
+    const loadingLabel = document.querySelector<HTMLElement>('.brand-intro__loading');
+    this.load.on(Phaser.Loader.Events.PROGRESS, (progress: number) => {
+      if (loadingLabel) loadingLabel.textContent = `Loading NI MBAYA · ${Math.round(progress * 100)}%`;
+    });
+    this.load.once(Phaser.Loader.Events.COMPLETE, () => {
+      if (loadingLabel) loadingLabel.textContent = 'Starting NI MBAYA…';
+    });
+
     // Keep later-stage art ready before gameplay starts. Runtime loader handoffs
     // can leave a restarted Phaser scene on a blank canvas on some browsers.
     loadDeferredLevelAssets(this, 3);
@@ -215,7 +223,6 @@ export class BootScene extends Phaser.Scene {
     g.destroy();
   }
 }
-
 
 
 

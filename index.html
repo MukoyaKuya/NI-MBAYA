@@ -20,6 +20,16 @@
         visibility: hidden;
         pointer-events: none;
       }
+      .brand-intro__loading {
+        position: absolute;
+        left: 50%;
+        bottom: 34px;
+        transform: translateX(-50%);
+        color: #6a3d22;
+        font: 700 12px/1 system-ui, sans-serif;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+      }
       .brand-intro__logo {
         width: min(76vw, 880px);
         height: auto;
@@ -90,6 +100,7 @@
     </div>
     <div id="brand-intro" data-started-at="0" role="status" aria-label="Sababisha Africa presents NI MBAYA">
       <img class="brand-intro__logo" src="/src/assets/intro/sababisha-africa-logo.jpeg" alt="Sababisha Africa" />
+      <div class="brand-intro__loading" aria-live="polite">Loading NI MBAYA · 0%</div>
       <button class="brand-intro__skip" type="button">Skip intro</button>
     </div>
     <div id="game"></div>
@@ -98,6 +109,7 @@
       intro.dataset.startedAt = String(Date.now());
       intro.querySelector('.brand-intro__skip').addEventListener('click', () => {
         intro.dataset.skipped = 'true';
+        intro.classList.add('is-leaving');
         window.dispatchEvent(new Event('brand-intro-skip'));
       });
     </script>
