@@ -1,6 +1,6 @@
 # NI MBAYA
 
-**NI MBAYA is a Nairobi street-fighting adventure for the browser.** It is a quick game for the moments between everyday life: a break after work, a commute, or a few minutes with friends. Instead of treating Nairobi as scenery, it puts its energy, language, neighbourhoods, matatus, street vendors, and humour at the centre of the experience.
+**NI MBAYA is a Nairobi street-fighting adventure for the browser.** It is a quick game for the moments between everyday life: a break after work, a commute, or a few minutes with friends. Instead of treating Nairobi as scenery, it puts its energy, language, neighbourhoods, matatus, street vendors, and humour at the centre of the experience. 
 
 Built for the **Apps for Your Life** track of OpenAI Build Week.
 
