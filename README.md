@@ -4,7 +4,7 @@
 
 Built for the **Apps for Your Life** track of OpenAI Build Week.   
  
-**[Play the live game](https://mukoyakuya.github.io/NI-MBAYA/)** · **[View the source](https://github.com/MukoyaKuya/NI-MBAYA)**
+**[Play the live game](https://mukoyakuya.github.io/NI-MBAYA/)** · **[View the source](https://github.com/MukoyaKuya/NI-MBAYA)** 
 
 ## Why this game 
 
