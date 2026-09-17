@@ -6,7 +6,7 @@ Built for the **Apps for Your Life** track of OpenAI Build Week.
  
 **[Play the live game](https://mukoyakuya.github.io/NI-MBAYA/)** · **[View the source](https://github.com/MukoyaKuya/NI-MBAYA)**
 
-## Why this game
+## Why this game 
 
 I wanted to make a game that feels familiar to people who know Nairobi and inviting to people discovering it. NI MBAYA turns a city that is usually seen from the outside into a playable place with its own pace, visual language, and story.
 
