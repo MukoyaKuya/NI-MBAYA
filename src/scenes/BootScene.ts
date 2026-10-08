@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 
 export class BootScene extends Phaser.Scene {
+  private failedAsset?: string;
+
   constructor() {
     super('BootScene');
   }
@@ -8,9 +10,17 @@ export class BootScene extends Phaser.Scene {
   preload() {
     const loadingLabel = document.querySelector<HTMLElement>('.brand-intro__loading');
     this.load.on(Phaser.Loader.Events.PROGRESS, (progress: number) => {
+      if (this.failedAsset) return;
       if (loadingLabel) loadingLabel.textContent = `Loading NI MBAYA · ${Math.round(progress * 100)}%`;
     });
+    this.load.on(Phaser.Loader.Events.FILE_LOAD_ERROR, (file: Phaser.Loader.File) => {
+      this.failedAsset = file.key;
+      if (loadingLabel) loadingLabel.textContent = `Could not load ${file.key}. Reload to try again.`;
+      const retryButton = document.querySelector<HTMLButtonElement>('.brand-intro__retry');
+      if (retryButton) retryButton.hidden = false;
+    });
     this.load.once(Phaser.Loader.Events.COMPLETE, () => {
+      if (this.failedAsset) return;
       if (loadingLabel) loadingLabel.textContent = 'Starting NI MBAYA…';
     });
 
@@ -18,7 +28,7 @@ export class BootScene extends Phaser.Scene {
     // first playable screen fast enough for mobile connections.
     this.load.audio('ui-hover', new URL('../assets/audio/ui-hover.mp3', import.meta.url).href);
     this.load.audio('select', new URL('../assets/audio/select.mp3', import.meta.url).href);
-    this.load.image('menu-v2-background', new URL('../assets/menu/v2/menu-background-clean.png', import.meta.url).href);
+    this.load.image('menu-v2-background', new URL('../assets/menu/v2/menu-background-clean.webp', import.meta.url).href);
     this.load.image('menu-v2-hero-status-panel', new URL('../assets/menu/v2/hero-status-panel.png', import.meta.url).href);
     this.load.image('menu-v2-ni-mbaya-logo', new URL('../assets/menu/v2/ni-mbaya-logo.png', import.meta.url).href);
     this.load.image('menu-v2-tagline', new URL('../assets/menu/v2/menu-tagline.png', import.meta.url).href);
@@ -32,10 +42,13 @@ export class BootScene extends Phaser.Scene {
     this.load.image('menu-v2-daily-challenge-card', new URL('../assets/menu/v2/daily-challenge-card.png', import.meta.url).href);
     this.load.image('menu-v2-final-battle-card', new URL('../assets/menu/v2/final-battle-card.png', import.meta.url).href);
     this.load.image('menu-v2-footer-socials', new URL('../assets/menu/v2/footer-socials.png', import.meta.url).href);
-    this.load.spritesheet('gameplay-chapati-health-pickup-sheet', new URL('../assets/gameplay/generated/chapati-health-pickup-sheet.png', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
   }
 
   create() {
+    if (this.failedAsset) return;
+    const intro = document.getElementById('brand-intro');
+    if (intro) intro.dataset.bootComplete = 'true';
+
     this.createFighterTexture('player-idle', 0x246bfe, 0xf8d49d);
     this.createFighterTexture('player-walk', 0x2f8cff, 0xf8d49d);
     this.createFighterTexture('player-jump', 0x8fd3ff, 0xf8d49d);
