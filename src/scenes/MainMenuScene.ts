@@ -239,7 +239,6 @@ export class MainMenuScene extends Phaser.Scene {
     this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x050507, 0.08).setDepth(-19);
     this.addImageInSourceBox('menu-v2-ni-mbaya-logo', [495, 12, 1225, 238], 2);
     this.addImageInSourceBox('menu-v2-tagline', [640, 248, 1088, 398], 2);
-    this.addImageInSourceBox('menu-v2-footer-socials', [608, 884, 944, 930], 5);
 
     const frame = this.add.graphics().setDepth(30);
     frame.lineStyle(4, 0xd8d1c8, 0.85);
