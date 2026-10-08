@@ -41,7 +41,6 @@ export class BootScene extends Phaser.Scene {
     this.load.image('menu-v2-top-exit', new URL('../assets/menu/v2/top-exit.png', import.meta.url).href);
     this.load.image('menu-v2-daily-challenge-card', new URL('../assets/menu/v2/daily-challenge-card.png', import.meta.url).href);
     this.load.image('menu-v2-final-battle-card', new URL('../assets/menu/v2/final-battle-card.png', import.meta.url).href);
-    this.load.image('menu-v2-footer-socials', new URL('../assets/menu/v2/footer-socials.png', import.meta.url).href);
   }
 
   create() {
@@ -69,7 +68,7 @@ export class BootScene extends Phaser.Scene {
     const intro = document.getElementById('brand-intro');
     const startedAt = Number(intro?.dataset.startedAt ?? Date.now());
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const minimumDuration = reducedMotion ? 250 : 900;
+    const minimumDuration = reducedMotion ? 150 : 300;
     let started = false;
 
     const startGame = () => {
@@ -86,7 +85,7 @@ export class BootScene extends Phaser.Scene {
           return;
         }
         this.scene.start('MainMenuScene');
-      }, 600);
+      }, 200);
     };
 
     const skipIntro = () => startGame();
