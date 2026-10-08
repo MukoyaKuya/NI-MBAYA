@@ -68,7 +68,7 @@ export class BootScene extends Phaser.Scene {
     const intro = document.getElementById('brand-intro');
     const startedAt = Number(intro?.dataset.startedAt ?? Date.now());
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const minimumDuration = reducedMotion ? 250 : 900;
+    const minimumDuration = reducedMotion ? 150 : 300;
     let started = false;
 
     const startGame = () => {
@@ -85,7 +85,7 @@ export class BootScene extends Phaser.Scene {
           return;
         }
         this.scene.start('MainMenuScene');
-      }, 600);
+      }, 200);
     };
 
     const skipIntro = () => startGame();
