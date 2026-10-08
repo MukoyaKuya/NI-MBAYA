@@ -41,7 +41,6 @@ export class BootScene extends Phaser.Scene {
     this.load.image('menu-v2-top-exit', new URL('../assets/menu/v2/top-exit.png', import.meta.url).href);
     this.load.image('menu-v2-daily-challenge-card', new URL('../assets/menu/v2/daily-challenge-card.png', import.meta.url).href);
     this.load.image('menu-v2-final-battle-card', new URL('../assets/menu/v2/final-battle-card.png', import.meta.url).href);
-    this.load.image('menu-v2-footer-socials', new URL('../assets/menu/v2/footer-socials.png', import.meta.url).href);
   }
 
   create() {
