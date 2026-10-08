@@ -20,6 +20,7 @@ export class HUD {
   private enemyHealthText: Phaser.GameObjects.Text;
   private pauseText: Phaser.GameObjects.Text;
   private pauseOverlay?: Phaser.GameObjects.Container;
+  private onQuitToMenu?: () => void;
 
   constructor(
     private scene: Phaser.Scene,
@@ -27,7 +28,9 @@ export class HUD {
     private locationName = 'NAIROBI CBD',
     character: PlayableCharacter = 'MBAVU DESTROYER',
     onChangeCharacter?: () => void,
+    onQuitToMenu?: () => void,
   ) {
+    this.onQuitToMenu = onQuitToMenu;
     this.panel = scene.add.graphics().setScrollFactor(0).setDepth(1080);
     this.drawPanels();
 
@@ -67,6 +70,12 @@ export class HUD {
     pauseZone.on('pointerdown', () => {
       (this.scene as any).sounds?.playUiSelect();
       this.togglePause();
+    });
+    scene.input.keyboard?.on('keydown-ESC', this.togglePause, this);
+    scene.input.keyboard?.on('keydown-P', this.togglePause, this);
+    scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      scene.input.keyboard?.off('keydown-ESC', this.togglePause, this);
+      scene.input.keyboard?.off('keydown-P', this.togglePause, this);
     });
 
     scene.add.text(951, 105, 'CURRENT TARGET', { fontFamily: 'Arial Black', fontSize: '8px', color: '#ffbd1a', fontStyle: 'italic' }).setScrollFactor(0).setDepth(1082);
@@ -135,8 +144,21 @@ export class HUD {
     this.pauseText.setText('▶');
     const overlay = this.scene.add.container(0, 0).setScrollFactor(0).setDepth(1070);
     const shade = this.scene.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x03050a, 0.48);
-    const label = this.scene.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'PAUSED', { fontFamily: 'Arial Black', fontSize: '64px', color: '#ffc51d', stroke: '#050505', strokeThickness: 8, fontStyle: 'italic' }).setOrigin(0.5);
-    overlay.add([shade, label]);
+    const label = this.scene.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 88, 'PAUSED', { fontFamily: 'Arial Black', fontSize: '64px', color: '#ffc51d', stroke: '#050505', strokeThickness: 8, fontStyle: 'italic' }).setOrigin(0.5);
+    const hint = this.scene.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 34, 'PRESS ESC OR P TO RESUME', { fontFamily: 'Arial Black', fontSize: '16px', color: '#ffffff' }).setOrigin(0.5);
+    overlay.add([shade, label, hint]);
+    const makeButton = (y: number, text: string, action: () => void, primary = false) => {
+      const button = this.scene.add.container(GAME_WIDTH / 2, y);
+      const bg = this.scene.add.rectangle(0, 0, 240, 48, primary ? 0xffbd1a : 0x111a28, 0.98).setStrokeStyle(2, 0xffbd1a, 1);
+      const caption = this.scene.add.text(0, 0, text, { fontFamily: 'Arial Black', fontSize: '18px', color: primary ? '#080a0f' : '#ffffff' }).setOrigin(0.5);
+      button.add([bg, caption]).setSize(240, 48).setInteractive({ useHandCursor: true });
+      button.on('pointerover', () => button.setScale(1.04));
+      button.on('pointerout', () => button.setScale(1));
+      button.on('pointerdown', action);
+      overlay.add(button);
+    };
+    makeButton(GAME_HEIGHT / 2 + 25, 'RESUME', () => this.togglePause(), true);
+    makeButton(GAME_HEIGHT / 2 + 84, 'RETURN TO MENU', () => this.onQuitToMenu?.());
     this.pauseOverlay = overlay;
   }
 

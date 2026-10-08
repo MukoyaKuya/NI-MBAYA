@@ -246,7 +246,14 @@ export class LevelScene extends Phaser.Scene {
       this.events.off('enemy:stone-throw', this.handleStoneThrow, this);
     });
     this.combat = new CombatSystem(this, this.player, this.enemies, this.sounds);
-    this.hud = new HUD(this, this.level.title, this.level.location, this.selectedCharacter, () => this.openCharacterSelect());
+    this.hud = new HUD(
+      this,
+      this.level.title,
+      this.level.location,
+      this.selectedCharacter,
+      () => this.openCharacterSelect(),
+      () => this.scene.start('MainMenuScene'),
+    );
     if (this.shouldShowTouchControls()) {
       this.input.addPointer(3);
       this.touchControls = new TouchControls(this);
@@ -255,7 +262,6 @@ export class LevelScene extends Phaser.Scene {
     this.loadBattleAnimationsInBackground();
 
     this.cameras.main.setBounds(0, 0, GAME_WIDTH, GAME_HEIGHT);
-    this.input.keyboard?.on('keydown-ESC', () => this.scene.start('MainMenuScene'));
   }
 
   update(time: number, delta: number) {
