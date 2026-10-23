@@ -15,7 +15,7 @@
     "source": "audio/fight-music.mp3",
     "output": "optimized/audio/fight-music.mp3",
     "before": 3257573,
-    "after": 1222261
+    "after": 611372
   },
   {
     "source": "audio/heavy-hit.mp3",
@@ -33,7 +33,7 @@
     "source": "audio/menu-music.mp3",
     "output": "optimized/audio/menu-music.mp3",
     "before": 5767000,
-    "after": 2163296
+    "after": 1081964
   },
   {
     "source": "audio/punch-hit-sora.mp3",
@@ -63,13 +63,13 @@
     "source": "audio/ui-hover.mp3",
     "output": "optimized/audio/ui-hover.mp3",
     "before": 454739,
-    "after": 114145
+    "after": 4124
   },
   {
     "source": "culture/generated/world-background-v1.png",
     "output": "optimized/culture/generated/world-background-v1.webp",
     "before": 2653814,
-    "after": 381350
+    "after": 135322
   },
   {
     "source": "gameplay/generated/attack-dog-attack-sheet.png",
@@ -99,7 +99,7 @@
     "source": "gameplay/generated/gameplay-background.png",
     "output": "optimized/gameplay/generated/gameplay-background.webp",
     "before": 2680398,
-    "after": 387226
+    "after": 142066
   },
   {
     "source": "gameplay/generated/goon-chain-attack-sheet.png",
@@ -267,13 +267,13 @@
     "source": "gameplay/generated/level3-nairobi-rooftop-background.png",
     "output": "optimized/gameplay/generated/level3-nairobi-rooftop-background.webp",
     "before": 2178391,
-    "after": 256364
+    "after": 87598
   },
   {
     "source": "gameplay/generated/level4-kibera-background.png",
     "output": "optimized/gameplay/generated/level4-kibera-background.webp",
     "before": 2622308,
-    "after": 386556
+    "after": 136470
   },
   {
     "source": "gameplay/generated/mbavu-defeat-fall-fullboots-sheet.png",
@@ -363,7 +363,7 @@
     "source": "gameplay/generated/nairobi-cbd-background.png",
     "output": "optimized/gameplay/generated/nairobi-cbd-background.webp",
     "before": 1688446,
-    "after": 285266
+    "after": 156152
   },
   {
     "source": "gameplay/generated/nairobi-goon.png",
@@ -441,7 +441,7 @@
     "source": "menu/v2/menu-background-clean.png",
     "output": "optimized/menu/v2/menu-background-clean.webp",
     "before": 2996295,
-    "after": 361136
+    "after": 130660
   },
   {
     "source": "menu/v2/menu-tagline.png",

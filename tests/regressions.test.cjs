@@ -4,6 +4,44 @@ const ts = require('typescript');
 const fs = require('node:fs');
 const path = require('node:path');
 
+test('streaming music retries after a gesture, respects sound settings and releases old tracks', async () => {
+  const previousAudio = globalThis.Audio, previousWindow = globalThis.window;
+  const listeners = {}, tracks = [];
+  let enabled = true, allowed = false;
+  globalThis.window = { addEventListener(name, listener) { listeners[name] = listener; } };
+  globalThis.Audio = class {
+    constructor(url) { this.url = url; this.paused = true; this.readyState = 1; this.attempts = 0; tracks.push(this); }
+    addEventListener() {}
+    play() { this.attempts++; if (!allowed) return Promise.reject(Object.assign(new Error(), { name: 'NotAllowedError' })); this.paused = false; return Promise.resolve(); }
+    pause() { this.paused = true; }
+    removeAttribute(name) { assert.equal(name, 'src'); this.released = true; }
+    load() { this.reloaded = true; }
+  };
+  try {
+    const music = loadSource('src/systems/StreamingMusic.ts', { '../config/GameSettings': { isSoundEnabled: () => enabled } });
+    music.startStreamingMusic('menu-music', '/menu.mp3', 0.24);
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(music.getStreamingMusicStatus().error, 'NotAllowedError');
+    assert.equal(tracks[0].preload, 'none');
+    allowed = true;
+    listeners.pointerdown();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(music.getStreamingMusicStatus().playing, true);
+    enabled = false; listeners['ni-mbaya:sound-changed']();
+    assert.equal(tracks[0].paused, true);
+    enabled = true; listeners['ni-mbaya:sound-changed']();
+    assert.equal(tracks[0].paused, false);
+    music.startStreamingMusic('fight-music', '/fight.mp3', 0.2);
+    assert.equal(tracks[0].released, true);
+    assert.equal(tracks[0].reloaded, true);
+    assert.equal(music.getStreamingMusicStatus().track, 'fight-music');
+    music.stopStreamingMusic('menu-music');
+    assert.equal(tracks[1].paused, false);
+    music.stopStreamingMusic('fight-music');
+    assert.deepEqual(music.getStreamingMusicStatus(), { track: null });
+  } finally { globalThis.Audio = previousAudio; globalThis.window = previousWindow; }
+});
+
 test('optional combat audio loads after the arena instead of blocking its startup', () => {
   const { loadCoreGameplayAssets, loadBattleAnimationAssets } = loadSource('src/config/DeferredLevelAssets.ts', { phaser: {} });
   const audio = [];

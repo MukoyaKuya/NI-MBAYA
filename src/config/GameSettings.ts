@@ -36,7 +36,11 @@ export function cycleDifficulty(): Difficulty {
 }
 
 export function isSoundEnabled() { return readStorage(SOUND_STORAGE_KEY) !== 'false'; }
-export function setSoundEnabled(enabled: boolean) { writeStorage(SOUND_STORAGE_KEY, String(enabled)); return enabled; }
+export function setSoundEnabled(enabled: boolean) {
+  writeStorage(SOUND_STORAGE_KEY, String(enabled));
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event('ni-mbaya:sound-changed'));
+  return enabled;
+}
 export function toggleSoundEnabled() { return setSoundEnabled(!isSoundEnabled()); }
 export function getStoryLanguage(): StoryLanguage { return readStorage(STORY_LANGUAGE_STORAGE_KEY) === 'sw' ? 'sw' : 'en'; }
 export function toggleStoryLanguage(): StoryLanguage {

@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { AttackKind } from '../config/Controls';
 import { isSoundEnabled } from '../config/GameSettings';
+import { startStreamingMusic, stopStreamingMusic } from './StreamingMusic';
 
 type ToneShape = OscillatorType;
 
@@ -9,12 +10,10 @@ export class SoundSystem {
   private static context?: AudioContext;
   private static master?: GainNode;
   private noiseBuffers = new Map<number, AudioBuffer>();
-  private music?: Phaser.Sound.BaseSound;
   private victorySound?: Phaser.Sound.BaseSound;
   private defeatSound?: Phaser.Sound.BaseSound;
   private uiHover?: Phaser.Sound.BaseSound;
-  private fightMusicRequested = false;
-  private waitingForAudioUnlock = false;
+  private battleOver = false;
 
   constructor(private scene: Phaser.Scene) {
     const unlock = () => {
@@ -23,25 +22,16 @@ export class SoundSystem {
     };
     scene.input.on('pointerdown', unlock);
     scene.input.keyboard?.on('keydown', unlock);
-    const onAudioFileComplete = (key: string) => {
-      if (key !== 'fight-music') return;
-      this.fightMusicRequested = false;
-      this.startFightMusic();
-    };
-    scene.load.on(Phaser.Loader.Events.FILE_COMPLETE, onAudioFileComplete);
     scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       scene.input.off('pointerdown', unlock);
       scene.input.keyboard?.off('keydown', unlock);
-      scene.load.off(Phaser.Loader.Events.FILE_COMPLETE, onAudioFileComplete);
-      this.music?.stop();
-      this.music?.destroy();
+      stopStreamingMusic('fight-music');
       this.victorySound?.stop();
       this.victorySound?.destroy();
       this.defeatSound?.stop();
       this.defeatSound?.destroy();
       this.uiHover?.stop();
       this.uiHover?.destroy();
-      this.music = undefined;
     });
     this.startFightMusic();
   }
@@ -102,8 +92,9 @@ export class SoundSystem {
   }
 
   playPlayerDefeat() {
+    this.battleOver = true;
+    stopStreamingMusic('fight-music');
     if (!isSoundEnabled()) return;
-    this.music?.stop();
     if (this.scene.cache.audio.exists('hero-defeat')) {
       this.defeatSound?.stop();
       this.defeatSound?.destroy();
@@ -116,8 +107,9 @@ export class SoundSystem {
   }
 
   playVictory() {
+    this.battleOver = true;
+    stopStreamingMusic('fight-music');
     if (!isSoundEnabled()) return;
-    this.music?.stop();
     if (this.scene.cache.audio.exists('challenge-win')) {
       this.victorySound?.stop();
       this.victorySound?.destroy();
@@ -154,34 +146,8 @@ export class SoundSystem {
     this.tone(580, 880, 0.08, 0.12, 'sine');
   }
   private startFightMusic() {
-    if (!isSoundEnabled()) return;
-    const menuMusic = this.scene.sound.get('menu-music');
-    menuMusic?.stop();
-    menuMusic?.destroy();
-    if (this.music?.isPlaying) return;
-    if (!this.scene.cache.audio.exists('fight-music')) {
-      this.requestFightMusic();
-      return;
-    }
-    if (this.scene.sound.locked) {
-      if (!this.waitingForAudioUnlock) {
-        this.waitingForAudioUnlock = true;
-        this.scene.sound.once(Phaser.Sound.Events.UNLOCKED, () => {
-          this.waitingForAudioUnlock = false;
-          this.startFightMusic();
-        });
-      }
-      return;
-    }
-    this.music = this.scene.sound.add('fight-music', { loop: true, volume: 0.2 });
-    this.music.play();
-  }
-
-  private requestFightMusic() {
-    if (this.fightMusicRequested) return;
-    this.fightMusicRequested = true;
-    this.scene.load.audio('fight-music', new URL('../assets/optimized/audio/fight-music.mp3', import.meta.url).href);
-    if (!this.scene.load.isLoading()) this.scene.load.start();
+    if (this.battleOver) return;
+    startStreamingMusic('fight-music', new URL('../assets/optimized/audio/fight-music.mp3', import.meta.url).href, 0.2);
   }
 
   private playClip(key: string, volume: number, rate = 1) {
