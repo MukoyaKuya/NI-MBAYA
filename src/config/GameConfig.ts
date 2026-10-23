@@ -23,6 +23,7 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
   height: GAME_HEIGHT,
   backgroundColor: '#0f1720',
   pixelArt: false,
+  loader: { maxParallelDownloads: 4 },
   scale: {
     fullscreenTarget: 'game',
     // Keep artwork and pointer coordinates proportional at every window size.

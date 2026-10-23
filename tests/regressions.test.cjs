@@ -4,6 +4,30 @@ const ts = require('typescript');
 const fs = require('node:fs');
 const path = require('node:path');
 
+test('optional combat audio loads after the arena instead of blocking its startup', () => {
+  const { loadCoreGameplayAssets, loadBattleAnimationAssets } = loadSource('src/config/DeferredLevelAssets.ts', { phaser: {} });
+  const audio = [];
+  const scene = { textures: { exists: () => false }, cache: { audio: { exists: () => false } },
+    load: { image() {}, spritesheet() {}, audio(key) { audio.push(key); } } };
+  loadCoreGameplayAssets(scene, 1, 'MBAVU DESTROYER');
+  assert.deepEqual(audio, []);
+  assert.equal(loadBattleAnimationAssets(scene, 1, 'MBAVU DESTROYER'), true);
+  assert.deepEqual(audio.sort(), ['challenge-win', 'heavy-hit', 'hero-defeat', 'punch-hit', 'special-attack']);
+});
+
+test('precomputed cleanup spans stay inside all seven original sheets', () => {
+  const { SPRITE_FRAGMENT_RUNS } = loadSource('src/systems/SpriteFragmentRuns.ts');
+  assert.equal(Object.keys(SPRITE_FRAGMENT_RUNS).length, 7);
+  for (const [key, spans] of Object.entries(SPRITE_FRAGMENT_RUNS)) {
+    const pixels = (key.includes('mbavu') ? 512 : 384) * 8 * 384;
+    assert.equal(spans.length % 2, 0);
+    assert.ok(spans.length > 0);
+    for (let index = 0; index < spans.length; index += 2) {
+      assert.ok(spans[index] >= 0 && spans[index + 1] > 0 && spans[index] + spans[index + 1] <= pixels);
+    }
+  }
+});
+
 test('runner cleanup removes fragments inside and outside its bounds in both directions', () => {
   const { removeDetachedPixels } = loadSource('src/systems/EnemyRunTexture.ts');
   for (const flipped of [false, true]) {
