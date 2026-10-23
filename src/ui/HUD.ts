@@ -1,3 +1,4 @@
+import { getDailyChallenge, getDailyRewardBalance, DAILY_TARGET } from '../config/DailyChallenge';
 import Phaser from 'phaser';
 import { EnemyGoon, EnemyVisualVariant } from '../entities/EnemyGoon';
 import { Player } from '../entities/Player';
@@ -19,6 +20,11 @@ export class HUD {
   private enemyName: Phaser.GameObjects.Text;
   private enemyHealthText: Phaser.GameObjects.Text;
   private pauseText: Phaser.GameObjects.Text;
+  private pausedByHud = false;
+  private displayedChapatis = Number.NaN;
+  private dailyRewardBalance = getDailyRewardBalance();
+  private dailyText: Phaser.GameObjects.Text;
+  private nextDailyRefreshAt = 0;
   private pauseOverlay?: Phaser.GameObjects.Container;
   private onQuitToMenu?: () => void;
 
@@ -33,6 +39,10 @@ export class HUD {
     this.onQuitToMenu = onQuitToMenu;
     this.panel = scene.add.graphics().setScrollFactor(0).setDepth(1080);
     this.drawPanels();
+    const daily = getDailyChallenge();
+    this.dailyText = scene.add.text(640, 113, `DAILY CHALLENGE  ${daily.defeats}/${DAILY_TARGET}`, {
+      fontFamily: 'Arial Black, sans-serif', fontSize: '11px', color: '#ffc51d', stroke: '#07101d', strokeThickness: 3,
+    }).setOrigin(0.5).setDepth(1082).setScrollFactor(0);
 
     const portraitKey = character === 'MJAKA FINE' ? 'menu-mjaka' : 'gameplay-mbavu-idle';
     const displayName = character === 'MBAVU DESTROYER' ? 'MAJEMBE' : character;
@@ -52,16 +62,28 @@ export class HUD {
       onChangeCharacter?.();
     });
 
-    scene.add.text(GAME_WIDTH / 2, 17, 'MISSION', { fontFamily: 'Arial Black', fontSize: '9px', color: '#0a0e16', fontStyle: 'italic' }).setOrigin(0.5).setScrollFactor(0).setDepth(1083);
-    this.objectiveLabel = scene.add.text(GAME_WIDTH / 2, 34, `${this.levelTitle}  •  ${this.locationName}`, { fontFamily: 'Arial Black', fontSize: '14px', color: '#ffffff', fontStyle: 'italic' }).setOrigin(0.5).setScrollFactor(0).setDepth(1082);
-    this.objectiveCount = scene.add.text(754, 57, '0 / 0', { fontFamily: 'Arial Black', fontSize: '17px', color: '#ffc51d', fontStyle: 'italic' }).setOrigin(1, 0.5).setScrollFactor(0).setDepth(1083);
-    scene.add.text(494, 57, 'GOONS DEFEATED', { fontFamily: 'Arial Black', fontSize: '9px', color: '#8fa4c8' }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(1082);
-    this.objectiveProgress = scene.add.rectangle(494, 70, 0, 5, 0xffbd1a).setOrigin(0, 0.5).setScrollFactor(0).setDepth(1083);
+    scene.add.text(482, 27, 'MISSION', {
+      fontFamily: 'Arial Black, sans-serif', fontSize: '10px', color: '#ffc51d',
+    }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(1083);
+    scene.add.text(798, 27, this.levelTitle, {
+      fontFamily: 'Arial Black, sans-serif', fontSize: '10px', color: '#b7c8df',
+    }).setOrigin(1, 0.5).setScrollFactor(0).setDepth(1083);
+    this.objectiveLabel = scene.add.text(482, 48, this.locationName, {
+      fontFamily: 'Arial Black, sans-serif', fontSize: '17px', color: '#ffffff', fontStyle: 'italic',
+    }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(1082);
+    this.objectiveCount = scene.add.text(798, 72, '0 / 0', {
+      fontFamily: 'Arial Black, sans-serif', fontSize: '16px', color: '#ffc51d',
+    }).setOrigin(1, 0.5).setScrollFactor(0).setDepth(1083);
+    scene.add.text(482, 72, 'GOONS DEFEATED', {
+      fontFamily: 'Arial, sans-serif', fontSize: '10px', color: '#b7c8df', fontStyle: 'bold',
+    }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(1082);
+    this.objectiveProgress = scene.add.rectangle(482, 88, 0, 6, 0xffbd1a)
+      .setOrigin(0, 0.5).setScrollFactor(0).setDepth(1083);
 
     scene.add.image(886, 43, 'gameplay-chapati-health-pickup-sheet', 0).setDisplaySize(42, 42).setScrollFactor(0).setDepth(1083);
-    scene.add.text(916, 24, 'CHAPATIS', { fontFamily: 'Arial Black', fontSize: '9px', color: '#eabf6a', fontStyle: 'italic' }).setScrollFactor(0).setDepth(1082);
-    this.chapatisText = scene.add.text(916, 38, '0', { fontFamily: 'Arial Black', fontSize: '22px', color: '#ffffff', fontStyle: 'italic' }).setScrollFactor(0).setDepth(1082);
-    scene.add.text(1000, 43, 'COLLECTED', { fontFamily: 'Arial Black', fontSize: '8px', color: '#7185a5' }).setOrigin(1, 0.5).setScrollFactor(0).setDepth(1082);
+    scene.add.text(916, 21, 'CHAPATIS', { fontFamily: 'Arial Black', fontSize: '9px', color: '#eabf6a', fontStyle: 'italic' }).setScrollFactor(0).setDepth(1082);
+    this.chapatisText = scene.add.text(916, 32, '0', { fontFamily: 'Arial Black', fontSize: '22px', color: '#ffffff', fontStyle: 'italic' }).setScrollFactor(0).setDepth(1082);
+    scene.add.text(916, 61, 'COLLECTED', { fontFamily: 'Arial Black', fontSize: '8px', color: '#ffffff' }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(1082);
 
     this.pauseText = scene.add.text(1219, 42, 'Ⅱ', { fontFamily: 'Arial Black', fontSize: '25px', color: '#ffc51d' }).setOrigin(0.5).setScrollFactor(0).setDepth(1083);
     const pauseZone = scene.add.zone(1219, 42, 60, 60).setScrollFactor(0).setDepth(1084).setInteractive({ useHandCursor: true });
@@ -74,12 +96,17 @@ export class HUD {
     scene.input.keyboard?.on('keydown-ESC', this.togglePause, this);
     scene.input.keyboard?.on('keydown-P', this.togglePause, this);
     scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      if (this.pausedByHud) {
+        scene.physics.world?.resume();
+        scene.anims.resumeAll();
+        this.pausedByHud = false;
+      }
       scene.input.keyboard?.off('keydown-ESC', this.togglePause, this);
       scene.input.keyboard?.off('keydown-P', this.togglePause, this);
     });
 
     scene.add.text(951, 105, 'CURRENT TARGET', { fontFamily: 'Arial Black', fontSize: '8px', color: '#ffbd1a', fontStyle: 'italic' }).setScrollFactor(0).setDepth(1082);
-    this.enemyName = scene.add.text(951, 117, 'NAIROBI GOON', { fontFamily: 'Arial Black', fontSize: '14px', color: '#ffffff', fontStyle: 'italic' }).setScrollFactor(0).setDepth(1082);
+    this.enemyName = scene.add.text(951, 117, 'BOSSY GOONS', { fontFamily: 'Arial Black', fontSize: '14px', color: '#ffffff', fontStyle: 'italic' }).setScrollFactor(0).setDepth(1082);
     this.enemyFill = scene.add.rectangle(951, 142, 216, 8, 0xf0443b).setOrigin(0, 0.5).setScrollFactor(0).setDepth(1083);
     this.enemyHealthText = scene.add.text(1182, 135, '100%', { fontFamily: 'Arial Black', fontSize: '9px', color: '#ffffff' }).setOrigin(1, 0).setScrollFactor(0).setDepth(1083);
 
@@ -88,19 +115,33 @@ export class HUD {
   }
 
   update(player: Player, enemies: EnemyGoon[], combo: number) {
-    const alive = enemies.filter((enemy) => enemy.state !== 'defeat');
-    const defeated = enemies.length - alive.length;
-    const currentTarget = alive.reduce<EnemyGoon | undefined>((closest, enemy) => {
-      if (!closest) return enemy;
-      return Math.abs(enemy.x - player.x) < Math.abs(closest.x - player.x) ? enemy : closest;
-    }, undefined);
+    if (this.scene.time.now >= this.nextDailyRefreshAt) {
+      const daily = getDailyChallenge();
+      this.dailyText.setText(`DAILY CHALLENGE  ${daily.defeats}/${DAILY_TARGET}${daily.claimed ? '  CLAIMED' : daily.defeats === DAILY_TARGET ? '  COMPLETE' : ''}`);
+      this.nextDailyRefreshAt = this.scene.time.now + 1000;
+    }
+    let aliveCount = 0;
+    let currentTarget: EnemyGoon | undefined;
+    let nearestDistance = Infinity;
+    for (const enemy of enemies) {
+      if (enemy.state === 'defeat') continue;
+      aliveCount++;
+      const distance = Math.abs(enemy.x - player.x);
+      if (distance < nearestDistance) {
+        currentTarget = enemy;
+        nearestDistance = distance;
+      }
+    }
+    const defeated = enemies.length - aliveCount;
     const health = Phaser.Math.Clamp(player.health, 0, 100);
     this.healthFill.width = 164 * (health / 100);
     this.healthFill.setFillStyle(health > 55 ? 0x48df55 : health > 25 ? 0xffbd1a : 0xf02d3a);
     this.healthText.setText(`${Math.ceil(health)}/100`);
     this.objectiveCount.setText(`${defeated} / ${enemies.length}`);
-    this.objectiveProgress.width = 240 * (defeated / Math.max(enemies.length, 1));
-    this.objectiveLabel.setText(alive.length > 0 ? `${this.levelTitle}  •  ${this.locationName}` : `${this.levelTitle}  •  AREA CLEAR`);
+    this.objectiveProgress.width = 316 * (defeated / Math.max(enemies.length, 1));
+    this.objectiveLabel.setText(aliveCount > 0 ? this.locationName : 'AREA CLEAR');
+    this.objectiveLabel.setColor(aliveCount > 0 ? '#ffffff' : '#70e6a0');
+    this.objectiveProgress.setFillStyle(aliveCount > 0 ? 0xffbd1a : 0x70e6a0);
 
     if (currentTarget) {
       const targetHealth = Phaser.Math.Clamp(currentTarget.health / Math.max(currentTarget.maxHealth, 1), 0, 1);
@@ -113,7 +154,11 @@ export class HUD {
       this.enemyHealthText.setText('0%');
     }
 
-    this.chapatisText.setText(player.chapatis.toLocaleString());
+    const totalChapatis = player.chapatis + this.dailyRewardBalance;
+    if (totalChapatis !== this.displayedChapatis) {
+      this.displayedChapatis = totalChapatis;
+      this.chapatisText.setText(totalChapatis.toLocaleString());
+    }
     this.comboNumber.setText(combo > 1 ? String(combo) : '');
     this.comboLabel.setText(combo > 1 ? 'HITS!\nAWESOME!' : '');
   }
@@ -122,15 +167,16 @@ export class HUD {
     if (variant === 'gameplay-attack-dog') return 'ATTACK DOG';
     if (variant === 'gameplay-goon-chain') return 'CHAIN GOON';
     if (variant === 'gameplay-goon-heavy') return 'TYRE-IRON HEAVY';
-    if (variant === 'gameplay-goon-club') return 'CLUB GOON';
-    if (variant === 'gameplay-goon-hoodie') return 'HOODIE GOON';
+    if (variant === 'gameplay-goon-club') return 'CBD GOON';
+    if (variant === 'gameplay-goon-hoodie') return 'NGARA GOON';
     if (variant === 'gameplay-kibera-stone-goon') return 'KIBERA STONE THROWER';
     if (variant === 'gameplay-kibera-shield-goon') return 'KIBERA SHIELD GOON';
-    return 'NAIROBI GOON';
+    return 'BOSSY GOONS';
   }
 
   private togglePause() {
-    if (this.scene.physics.world.isPaused) {
+    if (this.pausedByHud) {
+      this.pausedByHud = false;
       this.scene.physics.world.resume();
       this.scene.anims.resumeAll();
       this.pauseOverlay?.destroy();
@@ -139,6 +185,9 @@ export class HUD {
       return;
     }
 
+    // Clear/defeat pauses belong to the level, not the pause menu.
+    if (this.scene.physics.world.isPaused) return;
+    this.pausedByHud = true;
     this.scene.physics.world.pause();
     this.scene.anims.pauseAll();
     this.pauseText.setText('▶');
@@ -158,7 +207,8 @@ export class HUD {
       overlay.add(button);
     };
     makeButton(GAME_HEIGHT / 2 + 25, 'RESUME', () => this.togglePause(), true);
-    makeButton(GAME_HEIGHT / 2 + 84, 'RETURN TO MENU', () => this.onQuitToMenu?.());
+    makeButton(GAME_HEIGHT / 2 + 84, 'MAIN SCREEN', () => this.onQuitToMenu?.());
+    makeButton(GAME_HEIGHT / 2 + 143, 'EXIT GAME', () => this.scene.scene.start('ExitScene'));
     this.pauseOverlay = overlay;
   }
 
@@ -166,15 +216,16 @@ export class HUD {
     const g = this.panel;
     g.clear();
     this.drawCutPanel(g, 16, 14, 330, 96, 0x07101d, 0xff9d16, 0.94);
-    this.drawCutPanel(g, 462, 13, 326, 68, 0x07101d, 0xffbd1a, 0.94);
-    g.fillStyle(0xffbd1a, 1);
-    g.fillRect(592, 9, 66, 15);
+    // Keep the mission header inside the card, with room for a full-width progress track.
+    this.drawCutPanel(g, 462, 13, 356, 87, 0x07101d, 0xffbd1a, 0.97);
+    g.fillStyle(0xffbd1a, 0.12);
+    g.fillRect(478, 18, 324, 19);
     this.drawCutPanel(g, 850, 13, 174, 58, 0x07101d, 0xc57b24, 0.94);
     this.drawCutPanel(g, 1188, 12, 64, 62, 0x07101d, 0xffbd1a, 0.94);
     this.drawCutPanel(g, 936, 94, 278, 61, 0x07101d, 0xf0443b, 0.92);
     g.fillStyle(0x172033, 0.95);
     g.fillRect(112, 60, 164, 13);
-    g.fillRect(494, 68, 240, 5);
+    g.fillRect(482, 85, 316, 6);
     g.fillRect(951, 138, 216, 8);
   }
 
@@ -193,4 +244,3 @@ export class HUD {
     g.strokePath();
   }
 }
-

@@ -18,10 +18,10 @@ export class StoryCutsceneScene extends Phaser.Scene {
 
   preload() {
     if (!this.cache.audio.exists('story-intro')) {
-      this.load.audio('story-intro', new URL('../assets/audio/story-intro.mp3', import.meta.url).href);
+      this.load.audio('story-intro', new URL('../assets/optimized/audio/story-intro.mp3', import.meta.url).href);
     }
     if (!this.textures.exists('menu-majembe')) {
-      this.load.image('menu-majembe', new URL('../assets/menu/generated/majembe.png', import.meta.url).href);
+      this.load.image('menu-majembe', new URL('../assets/optimized/menu/generated/majembe.webp', import.meta.url).href);
     }
   }
 

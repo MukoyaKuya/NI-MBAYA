@@ -8,6 +8,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   health = 100;
   chapatis = 0;
   facing: 1 | -1 = 1;
+  hitSequence = 0;
   state: PlayerState = 'idle';
   z = 0;
   vz = 0;
@@ -106,6 +107,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   takeDamage(damage: number, knockback: number, fromX: number) {
     if (this.state === 'defeat') return;
     this.health = Math.max(0, this.health - damage);
+    this.hitSequence++;
     const direction = this.x >= fromX ? 1 : -1;
     this.setVelocity(direction * knockback, 0);
     this.vz = this.health > 0 ? 170 : 260;

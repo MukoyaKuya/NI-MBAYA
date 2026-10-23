@@ -39,7 +39,7 @@ export class CombatSystem {
     body.setAllowGravity(false);
     body.setImmovable(true);
 
-    this.scene.physics.add.overlap(hitbox, this.enemies, (_zone, target) => {
+    const overlap = this.scene.physics.add.overlap(hitbox, this.enemies, (_zone, target) => {
       const enemy = target as unknown as EnemyGoon;
       if (enemy.state === 'defeat' || hitEnemies.has(enemy)) return;
 
@@ -56,6 +56,10 @@ export class CombatSystem {
       this.scene.cameras.main.shake(kind === 'special' ? 150 : 95, kind === 'special' ? 0.009 : 0.005);
     });
 
+    // A destroyed body does not unregister its overlap collider.
+    hitbox.once(Phaser.GameObjects.Events.DESTROY, () => {
+      if (overlap.active) overlap.destroy();
+    });
     this.scene.time.delayedCall(90, () => hitbox.destroy());
   }
 

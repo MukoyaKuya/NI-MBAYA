@@ -1,3 +1,5 @@
+import { readStorage, writeStorage } from './Storage';
+
 export type Difficulty = 'easy' | 'normal' | 'hard';
 export type StoryLanguage = 'en' | 'sw';
 
@@ -20,7 +22,7 @@ const SOUND_STORAGE_KEY = 'ni-mbaya-sound-enabled';
 const STORY_LANGUAGE_STORAGE_KEY = 'ni-mbaya-story-language';
 
 export function getDifficulty(): Difficulty {
-  const stored = globalThis.localStorage?.getItem(DIFFICULTY_STORAGE_KEY) as Difficulty | null;
+  const stored = readStorage(DIFFICULTY_STORAGE_KEY) as Difficulty | null;
   return stored && stored in DIFFICULTIES ? stored : 'normal';
 }
 
@@ -29,16 +31,16 @@ export function getDifficultySettings() { return DIFFICULTIES[getDifficulty()]; 
 export function cycleDifficulty(): Difficulty {
   const order: Difficulty[] = ['easy', 'normal', 'hard'];
   const next = order[(order.indexOf(getDifficulty()) + 1) % order.length];
-  globalThis.localStorage?.setItem(DIFFICULTY_STORAGE_KEY, next);
+  writeStorage(DIFFICULTY_STORAGE_KEY, next);
   return next;
 }
 
-export function isSoundEnabled() { return globalThis.localStorage?.getItem(SOUND_STORAGE_KEY) !== 'false'; }
-export function setSoundEnabled(enabled: boolean) { globalThis.localStorage?.setItem(SOUND_STORAGE_KEY, String(enabled)); return enabled; }
+export function isSoundEnabled() { return readStorage(SOUND_STORAGE_KEY) !== 'false'; }
+export function setSoundEnabled(enabled: boolean) { writeStorage(SOUND_STORAGE_KEY, String(enabled)); return enabled; }
 export function toggleSoundEnabled() { return setSoundEnabled(!isSoundEnabled()); }
-export function getStoryLanguage(): StoryLanguage { return globalThis.localStorage?.getItem(STORY_LANGUAGE_STORAGE_KEY) === 'sw' ? 'sw' : 'en'; }
+export function getStoryLanguage(): StoryLanguage { return readStorage(STORY_LANGUAGE_STORAGE_KEY) === 'sw' ? 'sw' : 'en'; }
 export function toggleStoryLanguage(): StoryLanguage {
   const next: StoryLanguage = getStoryLanguage() === 'en' ? 'sw' : 'en';
-  globalThis.localStorage?.setItem(STORY_LANGUAGE_STORAGE_KEY, next);
+  writeStorage(STORY_LANGUAGE_STORAGE_KEY, next);
   return next;
 }

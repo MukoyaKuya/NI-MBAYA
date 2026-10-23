@@ -1,3 +1,5 @@
+import { recordDailyDefeat } from '../config/DailyChallenge';
+import { isEnemyStriking } from '../systems/EnemyMotion';
 import Phaser from 'phaser';
 import { DifficultySettings } from '../config/GameSettings';
 import { Player } from './Player';
@@ -31,6 +33,8 @@ export class EnemyGoon extends Phaser.Physics.Arcade.Sprite {
   private lockedUntil = 0;
   private attackCooldown = 1050;
   private nextDogBarkAt = 0;
+  private retreating = false;
+  private defeatRecorded = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, 'goon-idle');
@@ -72,6 +76,12 @@ export class EnemyGoon extends Phaser.Physics.Arcade.Sprite {
       return;
     }
     if (time < this.lockedUntil) return;
+    // Plant the feet through the throwing/swinging animation. Hits still interrupt.
+    if (isEnemyStriking(this, time)) {
+      this.setVelocity(0, 0);
+      this.setCombatState('attack');
+      return;
+    }
 
     const dxToPlayer = player.x - this.x;
     const dyToPlayer = player.y - this.y;
@@ -92,19 +102,26 @@ export class EnemyGoon extends Phaser.Physics.Arcade.Sprite {
     const targetY = Phaser.Math.Clamp(player.y + combatLaneOffset, 470, 620);
     const dxToTarget = targetX - this.x;
     const dyToTarget = targetY - this.y;
-    this.setFlipX(player.x < this.x);
+    // Keep facing stable when bodies share almost the same X position.
+    if (Math.abs(dxToPlayer) > 8) this.setFlipX(dxToPlayer < 0);
 
-    if (stone && distanceToPlayer < 170) {
+    if (stone) {
+      if (distanceToPlayer < 170) this.retreating = true;
+      else if (distanceToPlayer > 215) this.retreating = false;
+    }
+    if (stone && this.retreating) {
       const retreatDirection = dxToPlayer >= 0 ? -1 : 1;
       this.setVelocity(retreatDirection * this.moveSpeed, Math.abs(dyToPlayer) > 18 ? Math.sign(dyToPlayer) * this.moveSpeed * 0.32 : 0);
       this.setCombatState('walk');
       return;
     }
 
-    if (distanceToPlayer <= this.attackRange && Math.abs(dyToPlayer) <= 72) {
+    // A small exit margin prevents crowd pressure toggling attack/walk each step.
+    const engagementMargin = this.state === 'attack' ? 12 : 0;
+    if (distanceToPlayer <= this.attackRange + engagementMargin && Math.abs(dyToPlayer) <= 72 + engagementMargin) {
       this.setVelocity(0, 0);
       this.setCombatState('attack');
-      if (attackSlotAvailable && time >= this.canAttackAt) {
+      if (attackSlotAvailable && time >= this.canAttackAt && distanceToPlayer <= this.attackRange && Math.abs(dyToPlayer) <= 72) {
         const bat = this.visualVariant === 'gameplay-goon-club';
         this.lastAttackAt = time;
         if (stone) {
@@ -119,8 +136,8 @@ export class EnemyGoon extends Phaser.Physics.Arcade.Sprite {
       return;
     }
 
-    const vx = Math.abs(dxToTarget) > 14 ? Math.sign(dxToTarget) * this.moveSpeed : 0;
-    const vy = Math.abs(dyToTarget) > 10 ? Math.sign(dyToTarget) * this.moveSpeed * 0.55 : 0;
+    const vx = Math.abs(dxToTarget) > 2 ? Phaser.Math.Clamp(dxToTarget * 4, -this.moveSpeed, this.moveSpeed) : 0;
+    const vy = Math.abs(dyToTarget) > 2 ? Phaser.Math.Clamp(dyToTarget * 4, -this.moveSpeed * 0.55, this.moveSpeed * 0.55) : 0;
     this.setVelocity(vx, vy);
     this.setCombatState(vx !== 0 || vy !== 0 ? 'walk' : 'idle');
   }
@@ -140,7 +157,9 @@ export class EnemyGoon extends Phaser.Physics.Arcade.Sprite {
   }
 
   private defeat() {
-    if (this.state === 'defeat' && this.defeatedAt > 0) return;
+    if (this.defeatRecorded) return;
+    this.defeatRecorded = true;
+    recordDailyDefeat();
     this.defeatedAt = this.scene.time.now;
     this.setCombatState('defeat');
     this.setTint(0x555555);

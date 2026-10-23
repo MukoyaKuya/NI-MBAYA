@@ -27,8 +27,12 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
+      - name: Run regression tests
+        run: npm test
       - name: Build site
         run: npm run build
+      - name: Check performance budgets
+        run: npm run check:performance
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:

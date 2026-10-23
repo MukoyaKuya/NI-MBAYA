@@ -1,0 +1,476 @@
+[
+  {
+    "source": "audio/challenge.mp3",
+    "output": "optimized/audio/challenge.mp3",
+    "before": 119954,
+    "after": 60438
+  },
+  {
+    "source": "audio/dog-growl.mp3",
+    "output": "optimized/audio/dog-growl.mp3",
+    "before": 57678,
+    "after": 14880
+  },
+  {
+    "source": "audio/fight-music.mp3",
+    "output": "optimized/audio/fight-music.mp3",
+    "before": 3257573,
+    "after": 1222261
+  },
+  {
+    "source": "audio/heavy-hit.mp3",
+    "output": "optimized/audio/heavy-hit.mp3",
+    "before": 42240,
+    "after": 10988
+  },
+  {
+    "source": "audio/hero-defeat.mp3",
+    "output": "optimized/audio/hero-defeat.mp3",
+    "before": 56832,
+    "after": 14636
+  },
+  {
+    "source": "audio/menu-music.mp3",
+    "output": "optimized/audio/menu-music.mp3",
+    "before": 5767000,
+    "after": 2163296
+  },
+  {
+    "source": "audio/punch-hit-sora.mp3",
+    "output": "optimized/audio/punch-hit-sora.mp3",
+    "before": 50155,
+    "after": 12999
+  },
+  {
+    "source": "audio/select.mp3",
+    "output": "optimized/audio/select.mp3",
+    "before": 53498,
+    "after": 13835
+  },
+  {
+    "source": "audio/special-attack.mp3",
+    "output": "optimized/audio/special-attack.mp3",
+    "before": 28800,
+    "after": 7820
+  },
+  {
+    "source": "audio/story-intro.mp3",
+    "output": "optimized/audio/story-intro.mp3",
+    "before": 271338,
+    "after": 131564
+  },
+  {
+    "source": "audio/ui-hover.mp3",
+    "output": "optimized/audio/ui-hover.mp3",
+    "before": 454739,
+    "after": 114145
+  },
+  {
+    "source": "culture/generated/world-background-v1.png",
+    "output": "optimized/culture/generated/world-background-v1.webp",
+    "before": 2653814,
+    "after": 381350
+  },
+  {
+    "source": "gameplay/generated/attack-dog-attack-sheet.png",
+    "output": "optimized/gameplay/generated/attack-dog-attack-sheet.webp",
+    "before": 836352,
+    "after": 160904
+  },
+  {
+    "source": "gameplay/generated/attack-dog-defeat-sheet.png",
+    "output": "optimized/gameplay/generated/attack-dog-defeat-sheet.webp",
+    "before": 521503,
+    "after": 101468
+  },
+  {
+    "source": "gameplay/generated/attack-dog-run-sheet.png",
+    "output": "optimized/gameplay/generated/attack-dog-run-sheet.webp",
+    "before": 584968,
+    "after": 120526
+  },
+  {
+    "source": "gameplay/generated/chapati-health-pickup-sheet.png",
+    "output": "optimized/gameplay/generated/chapati-health-pickup-sheet.webp",
+    "before": 537968,
+    "after": 119528
+  },
+  {
+    "source": "gameplay/generated/gameplay-background.png",
+    "output": "optimized/gameplay/generated/gameplay-background.webp",
+    "before": 2680398,
+    "after": 387226
+  },
+  {
+    "source": "gameplay/generated/goon-chain-attack-sheet.png",
+    "output": "optimized/gameplay/generated/goon-chain-attack-sheet.webp",
+    "before": 836762,
+    "after": 198462
+  },
+  {
+    "source": "gameplay/generated/goon-chain-defeat-sheet.png",
+    "output": "optimized/gameplay/generated/goon-chain-defeat-sheet.webp",
+    "before": 783045,
+    "after": 155420
+  },
+  {
+    "source": "gameplay/generated/goon-chain-idle-sheet.png",
+    "output": "optimized/gameplay/generated/goon-chain-idle-sheet.webp",
+    "before": 822066,
+    "after": 182662
+  },
+  {
+    "source": "gameplay/generated/goon-chain-walk-sheet.png",
+    "output": "optimized/gameplay/generated/goon-chain-walk-sheet.webp",
+    "before": 626421,
+    "after": 142330
+  },
+  {
+    "source": "gameplay/generated/goon-club-attack-sheet.png",
+    "output": "optimized/gameplay/generated/goon-club-attack-sheet.webp",
+    "before": 641443,
+    "after": 159938
+  },
+  {
+    "source": "gameplay/generated/goon-club-run-sheet.png",
+    "output": "optimized/gameplay/generated/goon-club-run-sheet.webp",
+    "before": 759474,
+    "after": 176730
+  },
+  {
+    "source": "gameplay/generated/goon-club-walk-sheet.png",
+    "output": "optimized/gameplay/generated/goon-club-walk-sheet.webp",
+    "before": 682761,
+    "after": 159982
+  },
+  {
+    "source": "gameplay/generated/goon-club.png",
+    "output": "optimized/gameplay/generated/goon-club.webp",
+    "before": 1174584,
+    "after": 169076
+  },
+  {
+    "source": "gameplay/generated/goon-heavy-attack-sheet.png",
+    "output": "optimized/gameplay/generated/goon-heavy-attack-sheet.webp",
+    "before": 767685,
+    "after": 156962
+  },
+  {
+    "source": "gameplay/generated/goon-heavy-defeat-sheet.png",
+    "output": "optimized/gameplay/generated/goon-heavy-defeat-sheet.webp",
+    "before": 743595,
+    "after": 129872
+  },
+  {
+    "source": "gameplay/generated/goon-heavy-idle-sheet.png",
+    "output": "optimized/gameplay/generated/goon-heavy-idle-sheet.webp",
+    "before": 776741,
+    "after": 149532
+  },
+  {
+    "source": "gameplay/generated/goon-heavy-walk-v2-sheet.png",
+    "output": "optimized/gameplay/generated/goon-heavy-walk-v2-sheet.webp",
+    "before": 387125,
+    "after": 83598
+  },
+  {
+    "source": "gameplay/generated/goon-hoodie-attack-sheet.png",
+    "output": "optimized/gameplay/generated/goon-hoodie-attack-sheet.webp",
+    "before": 764867,
+    "after": 171464
+  },
+  {
+    "source": "gameplay/generated/goon-hoodie-run-sheet.png",
+    "output": "optimized/gameplay/generated/goon-hoodie-run-sheet.webp",
+    "before": 817498,
+    "after": 178650
+  },
+  {
+    "source": "gameplay/generated/goon-hoodie-walk-sheet.png",
+    "output": "optimized/gameplay/generated/goon-hoodie-walk-sheet.webp",
+    "before": 688261,
+    "after": 150416
+  },
+  {
+    "source": "gameplay/generated/goon-hoodie.png",
+    "output": "optimized/gameplay/generated/goon-hoodie.webp",
+    "before": 1170911,
+    "after": 154866
+  },
+  {
+    "source": "gameplay/generated/goon-red-attack-sheet.png",
+    "output": "optimized/gameplay/generated/goon-red-attack-sheet.webp",
+    "before": 717565,
+    "after": 169758
+  },
+  {
+    "source": "gameplay/generated/goon-red-run-sheet.png",
+    "output": "optimized/gameplay/generated/goon-red-run-sheet.webp",
+    "before": 735681,
+    "after": 172572
+  },
+  {
+    "source": "gameplay/generated/goon-red-walk-sheet.png",
+    "output": "optimized/gameplay/generated/goon-red-walk-sheet.webp",
+    "before": 667524,
+    "after": 154092
+  },
+  {
+    "source": "gameplay/generated/kibera-shield-goon-attack-sheet.png",
+    "output": "optimized/gameplay/generated/kibera-shield-goon-attack-sheet.webp",
+    "before": 1115903,
+    "after": 224282
+  },
+  {
+    "source": "gameplay/generated/kibera-shield-goon-idle.png",
+    "output": "optimized/gameplay/generated/kibera-shield-goon-idle.webp",
+    "before": 140528,
+    "after": 28696
+  },
+  {
+    "source": "gameplay/generated/kibera-shield-goon-sprint-sheet.png",
+    "output": "optimized/gameplay/generated/kibera-shield-goon-sprint-sheet.webp",
+    "before": 1022993,
+    "after": 195894
+  },
+  {
+    "source": "gameplay/generated/kibera-shield-goon-walk-sheet.png",
+    "output": "optimized/gameplay/generated/kibera-shield-goon-walk-sheet.webp",
+    "before": 910253,
+    "after": 178406
+  },
+  {
+    "source": "gameplay/generated/kibera-stone-goon-idle.png",
+    "output": "optimized/gameplay/generated/kibera-stone-goon-idle.webp",
+    "before": 143414,
+    "after": 33900
+  },
+  {
+    "source": "gameplay/generated/kibera-stone-goon-sprint-sheet.png",
+    "output": "optimized/gameplay/generated/kibera-stone-goon-sprint-sheet.webp",
+    "before": 797441,
+    "after": 165968
+  },
+  {
+    "source": "gameplay/generated/kibera-stone-goon-throw-sheet.png",
+    "output": "optimized/gameplay/generated/kibera-stone-goon-throw-sheet.webp",
+    "before": 1000111,
+    "after": 228662
+  },
+  {
+    "source": "gameplay/generated/kibera-stone-goon-walk-sheet.png",
+    "output": "optimized/gameplay/generated/kibera-stone-goon-walk-sheet.webp",
+    "before": 679703,
+    "after": 157894
+  },
+  {
+    "source": "gameplay/generated/level3-nairobi-rooftop-background.png",
+    "output": "optimized/gameplay/generated/level3-nairobi-rooftop-background.webp",
+    "before": 2178391,
+    "after": 256364
+  },
+  {
+    "source": "gameplay/generated/level4-kibera-background.png",
+    "output": "optimized/gameplay/generated/level4-kibera-background.webp",
+    "before": 2622308,
+    "after": 386556
+  },
+  {
+    "source": "gameplay/generated/mbavu-defeat-fall-fullboots-sheet.png",
+    "output": "optimized/gameplay/generated/mbavu-defeat-fall-fullboots-sheet.webp",
+    "before": 466074,
+    "after": 91170
+  },
+  {
+    "source": "gameplay/generated/mbavu-defeat.png",
+    "output": "optimized/gameplay/generated/mbavu-defeat.webp",
+    "before": 697186,
+    "after": 123976
+  },
+  {
+    "source": "gameplay/generated/mbavu-feint-1.png",
+    "output": "optimized/gameplay/generated/mbavu-feint-1.webp",
+    "before": 909204,
+    "after": 157124
+  },
+  {
+    "source": "gameplay/generated/mbavu-feint-2.png",
+    "output": "optimized/gameplay/generated/mbavu-feint-2.webp",
+    "before": 870847,
+    "after": 152432
+  },
+  {
+    "source": "gameplay/generated/mbavu-feint-3.png",
+    "output": "optimized/gameplay/generated/mbavu-feint-3.webp",
+    "before": 913554,
+    "after": 159294
+  },
+  {
+    "source": "gameplay/generated/mbavu-feint-4.png",
+    "output": "optimized/gameplay/generated/mbavu-feint-4.webp",
+    "before": 892792,
+    "after": 150310
+  },
+  {
+    "source": "gameplay/generated/mbavu-flying-kick-canonical.png",
+    "output": "optimized/gameplay/generated/mbavu-flying-kick-canonical.webp",
+    "before": 411119,
+    "after": 80452
+  },
+  {
+    "source": "gameplay/generated/mbavu-idle.png",
+    "output": "optimized/gameplay/generated/mbavu-idle.webp",
+    "before": 996981,
+    "after": 146458
+  },
+  {
+    "source": "gameplay/generated/mbavu-kick.png",
+    "output": "optimized/gameplay/generated/mbavu-kick.webp",
+    "before": 879526,
+    "after": 135174
+  },
+  {
+    "source": "gameplay/generated/mbavu-punch.png",
+    "output": "optimized/gameplay/generated/mbavu-punch.webp",
+    "before": 1181692,
+    "after": 174906
+  },
+  {
+    "source": "gameplay/generated/mbavu-run-sheet.png",
+    "output": "optimized/gameplay/generated/mbavu-run-sheet.webp",
+    "before": 486483,
+    "after": 132368
+  },
+  {
+    "source": "gameplay/generated/mjaka-high-kick.png",
+    "output": "optimized/gameplay/generated/mjaka-high-kick.webp",
+    "before": 521809,
+    "after": 84062
+  },
+  {
+    "source": "gameplay/generated/mjaka-palm-strike.png",
+    "output": "optimized/gameplay/generated/mjaka-palm-strike.webp",
+    "before": 527311,
+    "after": 86778
+  },
+  {
+    "source": "gameplay/generated/mjaka-rush-kick.png",
+    "output": "optimized/gameplay/generated/mjaka-rush-kick.webp",
+    "before": 771189,
+    "after": 119042
+  },
+  {
+    "source": "gameplay/generated/nairobi-cbd-background.png",
+    "output": "optimized/gameplay/generated/nairobi-cbd-background.webp",
+    "before": 1688446,
+    "after": 285266
+  },
+  {
+    "source": "gameplay/generated/nairobi-goon.png",
+    "output": "optimized/gameplay/generated/nairobi-goon.webp",
+    "before": 1254732,
+    "after": 171066
+  },
+  {
+    "source": "gameplay/generated/nairobi-matatu-conductor.png",
+    "output": "optimized/gameplay/generated/nairobi-matatu-conductor.webp",
+    "before": 105168,
+    "after": 21822
+  },
+  {
+    "source": "menu/generated/majembe.png",
+    "output": "optimized/menu/generated/majembe.webp",
+    "before": 1148472,
+    "after": 165676
+  },
+  {
+    "source": "menu/generated/mbavu.png",
+    "output": "optimized/menu/generated/mbavu.webp",
+    "before": 1104045,
+    "after": 154144
+  },
+  {
+    "source": "menu/generated/mjaka.png",
+    "output": "optimized/menu/generated/mjaka.webp",
+    "before": 947321,
+    "after": 138346
+  },
+  {
+    "source": "menu/v2/button-arcade.png",
+    "output": "optimized/menu/v2/button-arcade.webp",
+    "before": 75679,
+    "after": 21886
+  },
+  {
+    "source": "menu/v2/button-boss-rush.png",
+    "output": "optimized/menu/v2/button-boss-rush.webp",
+    "before": 74127,
+    "after": 18526
+  },
+  {
+    "source": "menu/v2/button-options.png",
+    "output": "optimized/menu/v2/button-options.webp",
+    "before": 82148,
+    "after": 25796
+  },
+  {
+    "source": "menu/v2/button-story.png",
+    "output": "optimized/menu/v2/button-story.webp",
+    "before": 82998,
+    "after": 23944
+  },
+  {
+    "source": "menu/v2/final-battle-card.png",
+    "output": "optimized/menu/v2/final-battle-card.webp",
+    "before": 134449,
+    "after": 40482
+  },
+  {
+    "source": "menu/v2/footer-socials.png",
+    "output": "optimized/menu/v2/footer-socials.webp",
+    "before": 35564,
+    "after": 12500
+  },
+  {
+    "source": "menu/v2/hero-status-panel.png",
+    "output": "optimized/menu/v2/hero-status-panel.webp",
+    "before": 53838,
+    "after": 7806
+  },
+  {
+    "source": "menu/v2/menu-background-clean.png",
+    "output": "optimized/menu/v2/menu-background-clean.webp",
+    "before": 2996295,
+    "after": 361136
+  },
+  {
+    "source": "menu/v2/menu-tagline.png",
+    "output": "optimized/menu/v2/menu-tagline.webp",
+    "before": 142564,
+    "after": 37154
+  },
+  {
+    "source": "menu/v2/ni-mbaya-logo.png",
+    "output": "optimized/menu/v2/ni-mbaya-logo.webp",
+    "before": 327352,
+    "after": 79282
+  },
+  {
+    "source": "menu/v2/top-achievements.png",
+    "output": "optimized/menu/v2/top-achievements.webp",
+    "before": 25203,
+    "after": 8402
+  },
+  {
+    "source": "menu/v2/top-exit.png",
+    "output": "optimized/menu/v2/top-exit.webp",
+    "before": 21249,
+    "after": 6346
+  },
+  {
+    "source": "menu/v2/top-settings.png",
+    "output": "optimized/menu/v2/top-settings.webp",
+    "before": 25078,
+    "after": 8156
+  }
+]

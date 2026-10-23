@@ -13,7 +13,7 @@
         place-items: center;
         overflow: hidden;
         background: radial-gradient(circle at 50% 45%, #fff 0, #fbf7ed 42%, #eee2ca 100%);
-        transition: opacity 200ms ease, visibility 200ms ease;
+        transition: opacity 150ms ease, visibility 150ms ease;
       }
       #brand-intro.is-leaving {
         opacity: 0;
@@ -36,7 +36,7 @@
         opacity: 0;
         transform: scale(.96);
         mix-blend-mode: multiply;
-        animation: brand-logo-reveal 400ms 0ms cubic-bezier(.2, .8, .2, 1) forwards;
+        animation: brand-logo-reveal 850ms 180ms cubic-bezier(.2, .8, .2, 1) forwards;
       }
       .brand-intro__skip {
         position: absolute;
@@ -51,20 +51,6 @@
         text-transform: uppercase;
         cursor: pointer;
         opacity: .65;
-      }
-      .brand-intro__retry {
-        position: absolute;
-        left: 50%;
-        bottom: 58px;
-        transform: translateX(-50%);
-        border: 1px solid #6a3d22;
-        border-radius: 6px;
-        padding: 9px 14px;
-        color: #6a3d22;
-        background: rgba(255, 255, 255, .72);
-        font: 700 12px/1 system-ui, sans-serif;
-        letter-spacing: .1em;
-        cursor: pointer;
       }
       @keyframes brand-logo-reveal {
         to { opacity: 1; transform: scale(1); }
@@ -102,6 +88,7 @@
         #brand-intro, #game { visibility: hidden; pointer-events: none; }
       }
     </style>
+    <link rel="preload" as="image" href="/src/assets/optimized/menu/v2/menu-background-clean.webp" />
   </head>
   <body>
     <div id="portrait-guard" role="status" aria-live="polite">
@@ -115,7 +102,6 @@
     <div id="brand-intro" data-started-at="0" role="status" aria-label="Sababisha Africa presents NI MBAYA">
       <img class="brand-intro__logo" src="/src/assets/intro/sababisha-africa-logo.jpeg" alt="Sababisha Africa" />
       <div class="brand-intro__loading" aria-live="polite">Loading NI MBAYA · 0%</div>
-      <button class="brand-intro__retry" type="button" hidden>RELOAD GAME</button>
       <button class="brand-intro__skip" type="button">Skip intro</button>
     </div>
     <div id="game"></div>
@@ -126,19 +112,6 @@
         intro.dataset.skipped = 'true';
         window.dispatchEvent(new Event('brand-intro-skip'));
       });
-      intro.querySelector('.brand-intro__retry').addEventListener('click', () => window.location.reload());
-      const showStartupFailure = () => {
-        if (!intro.isConnected || intro.dataset.bootComplete === 'true') return;
-        intro.querySelector('.brand-intro__loading').textContent = 'Game could not start. Check your connection, then reload.';
-        intro.querySelector('.brand-intro__retry').hidden = false;
-      };
-      window.addEventListener('error', showStartupFailure);
-      window.addEventListener('unhandledrejection', showStartupFailure);
-      window.setTimeout(() => {
-        if (!intro.isConnected || intro.dataset.bootComplete === 'true') return;
-        intro.querySelector('.brand-intro__loading').textContent = 'Still loading. Check your connection, then reload.';
-        intro.querySelector('.brand-intro__retry').hidden = false;
-      }, 12000);
     </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
