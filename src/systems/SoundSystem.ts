@@ -8,6 +8,7 @@ type ToneShape = OscillatorType;
 export class SoundSystem {
   private static context?: AudioContext;
   private static master?: GainNode;
+  private noiseBuffers = new Map<number, AudioBuffer>();
   private music?: Phaser.Sound.BaseSound;
   private victorySound?: Phaser.Sound.BaseSound;
   private defeatSound?: Phaser.Sound.BaseSound;
@@ -179,7 +180,7 @@ export class SoundSystem {
   private requestFightMusic() {
     if (this.fightMusicRequested) return;
     this.fightMusicRequested = true;
-    this.scene.load.audio('fight-music', new URL('../assets/audio/fight-music.mp3', import.meta.url).href);
+    this.scene.load.audio('fight-music', new URL('../assets/optimized/audio/fight-music.mp3', import.meta.url).href);
     if (!this.scene.load.isLoading()) this.scene.load.start();
   }
 
@@ -229,10 +230,14 @@ export class SoundSystem {
     if (!SoundSystem.master || context.state === 'closed') return;
     const now = context.currentTime + delay;
     const frameCount = Math.ceil(context.sampleRate * duration);
-    const buffer = context.createBuffer(1, frameCount, context.sampleRate);
-    const samples = buffer.getChannelData(0);
-    for (let i = 0; i < samples.length; i += 1) {
-      samples[i] = (Math.random() * 2 - 1) * (1 - i / samples.length);
+    let buffer = this.noiseBuffers.get(frameCount);
+    if (!buffer) {
+      buffer = context.createBuffer(1, frameCount, context.sampleRate);
+      const samples = buffer.getChannelData(0);
+      for (let i = 0; i < samples.length; i += 1) {
+        samples[i] = (Math.random() * 2 - 1) * (1 - i / samples.length);
+      }
+      this.noiseBuffers.set(frameCount, buffer);
     }
     const source = context.createBufferSource();
     const filter = context.createBiquadFilter();

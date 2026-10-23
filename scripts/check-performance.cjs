@@ -1,0 +1,13 @@
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const root = path.resolve(__dirname, '..');
+const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => entry.isDirectory() ? walk(path.join(dir, entry.name)) : [path.join(dir, entry.name)]);
+const boot = fs.readFileSync(path.join(root, 'src/scenes/BootScene.ts'), 'utf8');
+const urls = [...boot.matchAll(/new URL\('([^']+)'/g)].map((match) => path.resolve(root, 'src/scenes', match[1]));
+const bootBytes = urls.reduce((sum, file) => sum + fs.statSync(file).size, 0);
+const distBytes = walk(path.join(root, 'dist')).reduce((sum, file) => sum + fs.statSync(file).size, 0);
+const baseline = JSON.parse(fs.readFileSync(path.join(__dirname, 'performance-baseline.json')));
+assert.ok(bootBytes < 1_200_000, `Startup assets exceeded 1.2 MB: ${bootBytes}`);
+assert.ok(distBytes < 20_000_000, `Production build exceeded 20 MB: ${distBytes}`);
+console.log(JSON.stringify({bootBytes, distBytes, startupReductionPercent: +(100 * (1 - bootBytes / baseline.bootAssetBytes)).toFixed(1), buildReductionPercent: +(100 * (1 - distBytes / baseline.distBytes)).toFixed(1)}, null, 2));

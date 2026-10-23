@@ -1,3 +1,4 @@
+import { getDailyChallenge, DAILY_TARGET, DAILY_REWARD } from '../config/DailyChallenge';
 import Phaser from 'phaser';
 import { cycleDifficulty, getDifficultySettings, isSoundEnabled } from '../config/GameSettings';
 import { getJourneySave } from '../config/GameProgress';
@@ -9,9 +10,9 @@ const SOURCE_HEIGHT = 941;
 const SX = GAME_WIDTH / SOURCE_WIDTH;
 const SY = GAME_HEIGHT / SOURCE_HEIGHT;
 const FIGHTER_ART = [
-  ['menu-mbavu', new URL('../assets/menu/generated/mbavu.png', import.meta.url).href],
-  ['menu-mjaka', new URL('../assets/menu/generated/mjaka.png', import.meta.url).href],
-  ['menu-majembe', new URL('../assets/menu/generated/majembe.png', import.meta.url).href],
+  ['menu-mbavu', new URL('../assets/optimized/menu/generated/mbavu.webp', import.meta.url).href],
+  ['menu-mjaka', new URL('../assets/optimized/menu/generated/mjaka.webp', import.meta.url).href],
+  ['menu-majembe', new URL('../assets/optimized/menu/generated/majembe.webp', import.meta.url).href],
 ] as const;
 
 type HoverButtonConfig = {
@@ -42,10 +43,10 @@ export class MainMenuScene extends Phaser.Scene {
     this.addHoverButton({ key: 'menu-v2-button-arcade', box: [610, 558, 1044, 641], onClick: () => this.showComingSoon('ARCADE MODE'), hoverScale: 1.045, hoverLift: 2 });
     this.addHoverButton({ key: 'menu-v2-button-boss-rush', box: [612, 644, 1048, 730], onClick: () => this.showComingSoon('BOSS RUSH'), hoverScale: 1.045, hoverLift: 2 });
     this.addHoverButton({ key: 'menu-v2-button-options', box: [612, 736, 1048, 824], onClick: () => this.scene.start('OptionsScene'), hoverScale: 1.045, hoverLift: 2 });
-    this.addHoverButton({ key: 'menu-v2-daily-challenge-card', box: [24, 730, 306, 902], onClick: () => this.cameras.main.shake(80, 0.003), hoverScale: 1.035 });
+    this.createDailyChallengeCard();
     this.addHoverButton({ key: 'menu-v2-final-battle-card', box: [1315, 748, 1658, 908], onClick: () => this.scene.start('LevelScene'), hoverScale: 1.035 });
     this.addHoverButton({ key: 'menu-v2-hero-status-panel', box: [24, 24, 342, 132], onClick: () => this.cameras.main.shake(80, 0.003), hoverScale: 1.025 });
-    this.addHoverButton({ key: 'menu-v2-top-achievements', box: [1332, 26, 1430, 132], onClick: () => this.scene.start('CultureScene'), hoverScale: 1.06 });
+    this.addHoverButton({ key: 'menu-v2-top-achievements', box: [1332, 26, 1430, 132], onClick: () => this.scene.start('AchievementsScene'), hoverScale: 1.06 });
     this.addHoverButton({ key: 'menu-v2-top-settings', box: [1436, 26, 1535, 132], onClick: () => this.scene.start('OptionsScene'), hoverScale: 1.06 });
     this.addHoverButton({ key: 'menu-v2-top-exit', box: [1542, 26, 1640, 132], onClick: () => this.cameras.main.fadeOut(220, 0, 0, 0), hoverScale: 1.06 });
 
@@ -53,21 +54,60 @@ export class MainMenuScene extends Phaser.Scene {
     this.input.keyboard?.once('keydown-ENTER', () => this.openCharacterSelect());
     this.input.keyboard?.once('keydown-C', () => this.scene.start('CultureScene'));
     this.createBottomAction();
+    performance.mark('ni-mbaya:menu-ready');
+  }
+
+  private createDailyChallengeCard() {
+    const width = 216;
+    const height = 132;
+    const card = this.add.container(18 + width / 2, 558 + height / 2).setDepth(12);
+    const content = this.add.container(-width / 2, -height / 2);
+    const panel = this.add.graphics();
+    panel.fillStyle(0x050b12, 0.97).fillRoundedRect(0, 0, width, height, 7);
+    panel.lineStyle(2, 0xffc51d).strokeRoundedRect(0, 0, width, height, 7);
+    panel.lineStyle(1, 0x775c1e).lineBetween(12, 32, width - 12, 32);
+    const title = this.add.text(12, 11, 'DAILY CHALLENGE', { fontFamily: 'Impact, Arial Black, sans-serif', fontSize: '18px', color: '#ffc51d', fontStyle: 'italic' });
+    const goal = this.add.text(12, 41, `DEFEAT ${DAILY_TARGET} ENEMIES`, { fontFamily: 'Arial Black, sans-serif', fontSize: '12px', color: '#ffffff' });
+    const reward = this.add.text(12, 62, `REWARD: ${DAILY_REWARD} CHAPATIS`, { fontFamily: 'Arial Black, sans-serif', fontSize: '11px', color: '#ffcf42' });
+    const status = this.add.text(12, 83, '', { fontFamily: 'Arial Black, sans-serif', fontSize: '10px', color: '#a3adbc' });
+    const track = this.add.rectangle(12, 113, 144, 7, 0x253142).setOrigin(0, 0.5);
+    const fill = this.add.rectangle(12, 113, 0, 7, 0xffc51d).setOrigin(0, 0.5);
+    const count = this.add.text(204, 113, '', { fontFamily: 'Arial Black, sans-serif', fontSize: '11px', color: '#ffffff' }).setOrigin(1, 0.5);
+    content.add([panel, title, goal, reward, status, track, fill, count]);
+    card.add(content);
+    let previous = '';
+    const refresh = () => {
+      const daily = getDailyChallenge();
+      const state = `${daily.date}:${daily.defeats}:${daily.claimed}`;
+      if (state === previous) return;
+      previous = state;
+      fill.width = 144 * daily.defeats / DAILY_TARGET;
+      count.setText(`${daily.defeats}/${DAILY_TARGET}`);
+      status.setText(daily.claimed ? 'REWARD CLAIMED' : daily.defeats === DAILY_TARGET ? 'READY TO CLAIM' : 'VIEW TODAY’S CHALLENGE');
+      status.setColor(daily.defeats === DAILY_TARGET ? '#ffc51d' : '#a3adbc');
+    };
+    refresh();
+    this.time.addEvent({ delay: 1000, loop: true, callback: refresh });
+    card.setSize(width, height).setInteractive({ useHandCursor: true });
+    card.on('pointerover', () => card.setAlpha(0.88));
+    card.on('pointerout', () => card.setAlpha(1));
+    card.on('pointerdown', () => { this.playSelectSound(); this.scene.start('DailyChallengeScene'); });
   }
 
   private createBottomAction() {
     const save = getJourneySave();
-    const actionLabel = save ? `CONTINUE • LEVEL ${save.levelId}` : 'C  ABOUT NI MBAYA  •  WORLD & CREDITS';
-    const actionWidth = save ? 330 : 416;
+    const actionLabel = save ? `CONTINUE • LEVEL ${save.levelId}` : 'CREDITS';
+    const actionWidth = save ? 330 : 150;
+    const actionHeight = save ? 36 : 28;
     const button = this.add.container(GAME_WIDTH / 2, 652).setDepth(35);
     const panel = this.add.graphics();
     panel.fillStyle(0x050505, 0.9).lineStyle(2, 0xffc423, 0.95);
-    panel.fillRoundedRect(-actionWidth / 2, -18, actionWidth, 36, 8).strokeRoundedRect(-actionWidth / 2, -18, actionWidth, 36, 8);
+    panel.fillRoundedRect(-actionWidth / 2, -actionHeight / 2, actionWidth, actionHeight, 6).strokeRoundedRect(-actionWidth / 2, -actionHeight / 2, actionWidth, actionHeight, 6);
     const text = this.add.text(0, 0, actionLabel, {
-      fontFamily: 'Arial Black, Impact, sans-serif', fontSize: save ? '17px' : '15px', color: '#ffc423',
+      fontFamily: 'Arial Black, Impact, sans-serif', fontSize: save ? '17px' : '13px', color: '#ffc423',
       stroke: '#000000', strokeThickness: 3, fontStyle: 'italic',
     }).setOrigin(0.5);
-    button.add([panel, text]).setSize(actionWidth, 36).setInteractive({ useHandCursor: true });
+    button.add([panel, text]).setSize(actionWidth, actionHeight).setInteractive({ useHandCursor: true });
     button.on('pointerover', () => {
       this.playHoverSound();
       this.tweens.add({ targets: button, scale: 1.04, duration: 90 });
@@ -136,12 +176,13 @@ export class MainMenuScene extends Phaser.Scene {
   }
 
   private loadMenuMusicAfterMenuIsVisible() {
+    if (!isSoundEnabled()) return;
     if (this.cache.audio.exists('menu-music')) {
       this.startMenuMusic();
       return;
     }
 
-    this.load.audio('menu-music', new URL('../assets/audio/menu-music.mp3', import.meta.url).href);
+    this.load.audio('menu-music', new URL('../assets/optimized/audio/menu-music.mp3', import.meta.url).href);
     this.load.once(Phaser.Loader.Events.COMPLETE, () => {
       if (this.scene.manager.getScenes(true).includes(this) && this.cache.audio.exists('menu-music')) {
         this.startMenuMusic();
@@ -239,6 +280,7 @@ export class MainMenuScene extends Phaser.Scene {
     this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x050507, 0.08).setDepth(-19);
     this.addImageInSourceBox('menu-v2-ni-mbaya-logo', [495, 12, 1225, 238], 2);
     this.addImageInSourceBox('menu-v2-tagline', [640, 248, 1088, 398], 2);
+    this.addImageInSourceBox('menu-v2-footer-socials', [608, 884, 944, 930], 5);
 
     const frame = this.add.graphics().setDepth(30);
     frame.lineStyle(4, 0xd8d1c8, 0.85);

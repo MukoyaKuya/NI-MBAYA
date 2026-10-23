@@ -1,3 +1,4 @@
+import { getDailyRewardBalance } from '../config/DailyChallenge';
 import Phaser from 'phaser';
 import { getStoryLanguage, isSoundEnabled } from '../config/GameSettings';
 import { copyFor, FIGHTER_BIOS } from '../config/WorldContent';
@@ -7,11 +8,10 @@ const GAME_HEIGHT = 720;
 const CARD_Y = 336;
 const CARD_WIDTH = 276;
 const CARD_HEIGHT = 486;
-const CARD_X = [302, 640, 978];
+const CARD_X = [450, 830];
 const FIGHTER_ART = [
-  ['menu-mbavu', new URL('../assets/menu/generated/mbavu.png', import.meta.url).href],
-  ['menu-mjaka', new URL('../assets/menu/generated/mjaka.png', import.meta.url).href],
-  ['menu-majembe', new URL('../assets/menu/generated/majembe.png', import.meta.url).href],
+  ['menu-mbavu', new URL('../assets/optimized/menu/generated/mbavu.webp', import.meta.url).href],
+  ['menu-majembe', new URL('../assets/optimized/menu/generated/majembe.webp', import.meta.url).href],
 ] as const;
 
 type CharacterSelectData = {
@@ -27,7 +27,7 @@ type FighterDefinition = {
   name: string;
   role: string;
   artKey: string;
-  gameCharacter?: 'MBAVU DESTROYER' | 'MJAKA FINE';
+  gameCharacter?: 'MBAVU DESTROYER';
   locked: boolean;
   power: number;
   speed: number;
@@ -46,11 +46,6 @@ const FIGHTERS: FighterDefinition[] = [
     id: 'majembe', name: 'MAJEMBE', role: 'STREET FIGHTER', artKey: 'menu-mbavu',
     gameCharacter: 'MBAVU DESTROYER', locked: false, power: 4, speed: 4,
     portraitWidth: 230, portraitHeight: 350, portraitY: -66,
-  },
-  {
-    id: 'mjaka', name: 'MJAKA FINE', role: 'RUSH FIGHTER', artKey: 'menu-mjaka',
-    gameCharacter: 'MJAKA FINE', locked: false, power: 3, speed: 5,
-    portraitWidth: 218, portraitHeight: 350, portraitY: -66,
   },
   {
     id: 'mbavu', name: 'MBAVU', role: 'DEFEAT HIM TO UNLOCK', artKey: 'menu-majembe',
@@ -75,14 +70,17 @@ export class CharacterSelectScene extends Phaser.Scene {
   }
 
   preload() {
+    if (!this.textures.exists('gameplay-chapati-health-pickup-sheet')) {
+      this.load.spritesheet('gameplay-chapati-health-pickup-sheet', new URL('../assets/optimized/gameplay/generated/chapati-health-pickup-sheet.webp', import.meta.url).href, { frameWidth: 384, frameHeight: 384 });
+    }
     FIGHTER_ART.forEach(([key, url]) => {
       if (!this.textures.exists(key)) this.load.image(key, url);
     });
   }
 
   create(data: CharacterSelectData = {}) {
-    this.startData = data;
-    this.selectedIndex = data.character === 'MJAKA FINE' ? 1 : 0;
+    this.startData = { ...data, character: 'MBAVU DESTROYER' };
+    this.selectedIndex = 0;
     this.cards = [];
     this.cameras.main.setBackgroundColor('#030507');
     this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'menu-v2-background')
@@ -122,14 +120,14 @@ export class CharacterSelectScene extends Phaser.Scene {
     walletBg.fillStyle(0x07101d, 0.94).lineStyle(2, 0xd99b18, 0.9);
     walletBg.fillRoundedRect(-92, -26, 184, 52, 8).strokeRoundedRect(-92, -26, 184, 52, 8);
     const chapati = this.add.image(-62, 0, 'gameplay-chapati-health-pickup-sheet', 0).setDisplaySize(39, 39);
-    const amount = this.add.text(12, 0, (this.startData.chapatis ?? 0).toLocaleString(), {
+    const amount = this.add.text(12, 0, ((this.startData.chapatis ?? 0) + getDailyRewardBalance()).toLocaleString(), {
       fontFamily: 'Arial Black', fontSize: '22px', color: '#ffffff', fontStyle: 'italic',
     }).setOrigin(0.5);
     wallet.add([walletBg, chapati, amount]);
   }
 
   private createFighterCard(definition: FighterDefinition, index: number) {
-    const container = this.add.container(CARD_X[Math.min(index, 2)], CARD_Y).setDepth(10);
+    const container = this.add.container(CARD_X[Math.min(index, CARD_X.length - 1)], CARD_Y).setDepth(10);
     const portrait = this.add.image(0, definition.portraitY, definition.artKey)
       .setDisplaySize(definition.portraitWidth, definition.portraitHeight);
     if (definition.locked) portrait.setTint(0xb8b8bd).setAlpha(1);

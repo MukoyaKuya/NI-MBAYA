@@ -1,3 +1,5 @@
+import { readStorage, writeStorage, removeStorage } from './Storage';
+
 export type ControlAction = 'left' | 'right' | 'up' | 'down' | 'jump' | 'punch' | 'kick' | 'special';
 
 export const CONTROL_ACTIONS: ControlAction[] = ['left', 'right', 'up', 'down', 'jump', 'punch', 'kick', 'special'];
@@ -42,7 +44,7 @@ export function formatKeyName(key: string) {
 }
 
 export function getControlKeys(): Record<ControlAction, string> {
-  const stored = globalThis.localStorage?.getItem(STORAGE_KEY);
+  const stored = readStorage(STORAGE_KEY);
   if (!stored) return { ...DEFAULT_CONTROL_KEYS };
 
   try {
@@ -54,7 +56,7 @@ export function getControlKeys(): Record<ControlAction, string> {
       parsed.right = 'RIGHT';
       parsed.up = 'UP';
       parsed.down = 'DOWN';
-      globalThis.localStorage?.setItem(STORAGE_KEY, JSON.stringify(parsed));
+      writeStorage(STORAGE_KEY, JSON.stringify(parsed));
     }
     return CONTROL_ACTIONS.reduce<Record<ControlAction, string>>((keys, action) => {
       keys[action] = typeof parsed[action] === 'string' && parsed[action]
@@ -70,12 +72,12 @@ export function getControlKeys(): Record<ControlAction, string> {
 export function setControlKey(action: ControlAction, key: string) {
   const keys = getControlKeys();
   keys[action] = key;
-  globalThis.localStorage?.setItem(STORAGE_KEY, JSON.stringify(keys));
+  writeStorage(STORAGE_KEY, JSON.stringify(keys));
   return keys;
 }
 
 export function resetControlKeys() {
-  globalThis.localStorage?.removeItem(STORAGE_KEY);
+  removeStorage(STORAGE_KEY);
   return getControlKeys();
 }
 

@@ -1,3 +1,9 @@
+import { isEnemyStriking, isEnemyWalking, getEnemyTextureFlip, getEnemyExitMotion } from '../systems/EnemyMotion';
+import { getEnemyDefeatPose } from '../systems/EnemyDefeatMotion';
+import { getCleanEnemyRunTexture, getCleanPlayerFallTexture, getCleanChapatiTexture } from '../systems/EnemyRunTexture';
+import { separateEnemyCrowd } from '../systems/CrowdSystem';
+import { StageRenderer } from '../systems/StageRenderer';
+import { HealthPickupSystem } from '../systems/HealthPickupSystem';
 import Phaser from 'phaser';
 import { getDifficultySettings, getStoryLanguage } from '../config/GameSettings';
 import { loadBattleAnimationAssets, loadCoreGameplayAssets, loadDeferredLevelAssets } from '../config/DeferredLevelAssets';
@@ -19,10 +25,12 @@ type EnemyVisual = {
   baseWidth: number;
   baseHeight: number;
   defeatStarted: boolean;
+  fall?: { direction: number; startY: number; width: number; height: number };
   victoryDirection: 1 | -1;
   victoryLaneY: number;
   victoryGone: boolean;
   renderedAttackAt: number;
+  walking: boolean;
 };
 
 type PlayerArtSpec = {
@@ -67,7 +75,7 @@ const PLAYER_ART: Record<string, PlayerArtSpec> = {
   defeat: { key: 'gameplay-mbavu-defeat', width: 260, height: 174, yOffset: 36, xOffset: 0 },
 };
 
-const PLAYER_DEFEAT_FALL_DISPLAY = { width: 360, height: 270, yOffset: 126 };
+const PLAYER_DEFEAT_FALL_DISPLAY = { width: 360, height: 270, yOffset: 70 };
 const MAX_SIMULTANEOUS_ENEMY_ATTACKS = 2;
 const ENEMY_ATTACK_SLOT_WINDOW = 900;
 const MJAKA_ART: Record<string, PlayerArtSpec> = {
@@ -160,10 +168,12 @@ export class LevelScene extends Phaser.Scene {
   private playerShadow!: Phaser.GameObjects.Image;
   private currentPlayerArtKey = '';
   private playerDefeatStarted = false;
+  private renderedPlayerHit = -1;
   private enemies!: Phaser.Physics.Arcade.Group;
   private enemyList: EnemyGoon[] = [];
   private enemyVisuals: EnemyVisual[] = [];
   private combat!: CombatSystem;
+  private healthPickups!: HealthPickupSystem;
   private sounds!: SoundSystem;
   private hud!: HUD;
   private defeatAftermathStarted = false;
@@ -172,10 +182,6 @@ export class LevelScene extends Phaser.Scene {
   private level!: LevelDefinition;
   private levelCleared = false;
   private transitioningLevel = false;
-  private chapatiPickup?: Phaser.GameObjects.Sprite;
-  private chapatiShadow?: Phaser.GameObjects.Ellipse;
-  private chapatiSpawned = false;
-  private chapatiLanded = false;
   private selectedCharacter: PlayableCharacter = 'MBAVU DESTROYER';
   private touchControls?: TouchControls;
   private startData: LevelStartData = {};
@@ -185,13 +191,13 @@ export class LevelScene extends Phaser.Scene {
   }
 
   init(data: LevelStartData = {}) {
-    this.startData = data;
+    this.startData = { ...data, character: 'MBAVU DESTROYER' };
   }
 
   preload() {
     const levelId = this.startData.levelId ?? 1;
-    const character = this.startData.character === 'MJAKA FINE' ? 'MJAKA FINE' : 'MBAVU DESTROYER';
-    const fighterKey = character === 'MJAKA FINE' ? 'menu-mjaka' : 'gameplay-mbavu-idle';
+    const character = 'MBAVU DESTROYER';
+    const fighterKey = 'gameplay-mbavu-idle';
     const needsCoreAssets = !this.textures.exists(fighterKey)
       || !this.textures.exists('gameplay-chapati-health-pickup-sheet');
     const needsLevelAssets = !this.textures.exists(getLevelDefinition(levelId).backgroundKey)
@@ -204,39 +210,39 @@ export class LevelScene extends Phaser.Scene {
   create(data: LevelStartData = this.startData) {
     document.getElementById('level-loading-overlay')?.remove();
     this.level = getLevelDefinition(data.levelId ?? 1);
-    this.selectedCharacter = data.character === 'MJAKA FINE' ? 'MJAKA FINE' : 'MBAVU DESTROYER';
+    this.selectedCharacter = 'MBAVU DESTROYER';
     this.levelCleared = false;
     this.transitioningLevel = false;
+    this.playerDefeatStarted = false;
+    this.renderedPlayerHit = -1;
     this.defeatAftermathStarted = false;
     this.defeatOverlayShown = false;
     this.defeatAftermathElapsed = 0;
     this.enemyList = [];
     this.enemyVisuals = [];
-    this.chapatiPickup = undefined;
-    this.chapatiShadow = undefined;
-    this.chapatiSpawned = false;
-    this.chapatiLanded = false;
 
     // A previous clear or defeat can leave the shared Arcade world paused.
     // Always resume it when this scene is started or replayed.
     this.physics.world.resume();
+    this.anims.resumeAll();
     this.physics.world.setBounds(0, 0, GAME_WIDTH, GAME_HEIGHT);
-    this.drawGeneratedStage();
+    new StageRenderer(this).draw(this.level);
 
     this.player = new Player(this, 560, GROUND_Y - 64);
     this.player.health = Phaser.Math.Clamp(data.health ?? 100, 1, 100);
     this.player.chapatis = data.chapatis ?? 0;
     this.player.setDepth(10).setVisible(false);
     this.playerShadow = this.add.image(this.player.x, this.player.y, 'shadow').setDepth(2);
-    const initialArt = this.selectedCharacter === 'MJAKA FINE' ? 'menu-mjaka' : 'gameplay-mbavu-idle';
+    const initialArt = 'gameplay-mbavu-idle';
     this.playerArt = this.add.sprite(this.player.x, this.player.y, initialArt).setDepth(18);
     this.createSceneAnimations();
 
     this.enemies = this.physics.add.group({ classType: EnemyGoon, runChildUpdate: false });
     this.level.enemies.forEach((config, index) => this.createEnemy(config, index));
-    this.physics.add.collider(this.enemies, this.enemies);
+    // CrowdSystem provides soft foot-space avoidance without a second collision solver.
 
     this.sounds = new SoundSystem(this);
+    this.healthPickups = new HealthPickupSystem(this, this.player, this.enemyList, this.sounds);
     this.events.on('sfx:player-hurt', this.handlePlayerHurt, this);
     this.events.on('sfx:dog-bark', this.handleDogBark, this);
     this.events.on('enemy:stone-throw', this.handleStoneThrow, this);
@@ -262,35 +268,39 @@ export class LevelScene extends Phaser.Scene {
     this.loadBattleAnimationsInBackground();
 
     this.cameras.main.setBounds(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    performance.mark('ni-mbaya:level-ready');
   }
 
   update(time: number, delta: number) {
     // Defeat aftermath must continue even while combat physics is paused.
-    if (this.physics.world.isPaused && this.player?.state !== 'defeat') return;
+    if (this.physics.world.isPaused && this.player?.state !== 'defeat') {
+      // Clearing combat must not freeze the final enemy halfway through a fall.
+      if (this.levelCleared) this.syncGeneratedArt(time);
+      return;
+    }
     if (this.touchControls) this.player.setTouchIntent(this.touchControls.intent);
     this.player.update(time, delta);
 
     if (this.player.state === 'defeat') {
       this.updateDefeatAftermath(time, delta);
     } else {
-      let attackSlots = Math.max(
-        0,
-        MAX_SIMULTANEOUS_ENEMY_ATTACKS - this.enemyList.filter((enemy) =>
-          enemy.lastAttackAt > 0 && time - enemy.lastAttackAt < ENEMY_ATTACK_SLOT_WINDOW,
-        ).length,
-      );
+      let recentAttackCount = 0;
+      for (const enemy of this.enemyList) {
+        if (enemy.lastAttackAt > 0 && time - enemy.lastAttackAt < ENEMY_ATTACK_SLOT_WINDOW) recentAttackCount++;
+      }
+      let attackSlots = Math.max(0, MAX_SIMULTANEOUS_ENEMY_ATTACKS - recentAttackCount);
       this.enemyList.forEach((enemy) => {
         const previousAttackAt = enemy.lastAttackAt;
         enemy.update(time, this.player, attackSlots > 0);
         if (enemy.lastAttackAt !== previousAttackAt) attackSlots = Math.max(0, attackSlots - 1);
       });
-      this.separateActiveEnemies();
+      separateEnemyCrowd(this.enemyList, time);
       this.combat.update(time);
     }
 
     this.hud.update(this.player, this.enemyList, this.combat.combo);
     this.syncGeneratedArt(time);
-    this.updateChapatiPickup();
+    this.healthPickups.update();
     this.touchControls?.postUpdate();
 
     if (this.player.state !== 'defeat' && !this.levelCleared && this.enemyList.length > 0 && this.enemyList.every((enemy) => enemy.state === 'defeat')) {
@@ -334,153 +344,6 @@ export class LevelScene extends Phaser.Scene {
     document.body.append(overlay);
     this.load.on(Phaser.Loader.Events.PROGRESS, (progress: number) => {
       overlay.textContent = `PREPARING THE STREETS OF NAIROBI · ${Math.round(progress * 100)}%`;
-    });
-  }
-
-  private drawGeneratedStage() {
-    this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, this.level.backgroundKey)
-      .setDisplaySize(GAME_WIDTH, GAME_HEIGHT)
-      .setDepth(0);
-    this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.07).setDepth(2);
-    if (this.level.id <= 2) this.createBackgroundTraffic();
-    this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT - 8, GAME_WIDTH, 16, 0x050505, 0.76).setDepth(79);
-  }
-
-  private createBackgroundTraffic() {
-    const nearMatatu = this.add.image(-240, 455, this.getMatatuTextureKey())
-      .setDisplaySize(335, 116)
-      .setDepth(5)
-      .setAlpha(0.88);
-
-    this.tweens.add({
-      targets: nearMatatu,
-      x: GAME_WIDTH + 250,
-      duration: 9200,
-      delay: 900,
-      repeat: -1,
-      repeatDelay: 4200,
-      ease: 'Sine.InOut',
-      onRepeat: () => {
-        nearMatatu.y = Phaser.Math.Between(438, 462);
-        nearMatatu.setAlpha(Phaser.Math.FloatBetween(0.78, 0.92));
-      },
-    });
-
-    this.tweens.add({
-      targets: nearMatatu,
-      y: nearMatatu.y - 3,
-      duration: 520,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.InOut',
-    });
-
-  }
-
-  private getMatatuTextureKey() {
-    const sourceKey = 'nairobi-matatu-conductor';
-    if (this.textures.exists(sourceKey)) return sourceKey;
-
-    // A cached or interrupted image request must never expose Phaser's green
-    // missing-texture marker in the street. Keep a readable matatu on screen
-    // until the real artwork is available on the next load.
-    const fallbackKey = 'nairobi-matatu-fallback';
-    if (!this.textures.exists(fallbackKey)) {
-      const art = this.add.graphics();
-      art.fillStyle(0x10141b, 0.95).fillRoundedRect(8, 18, 344, 84, 12);
-      art.fillStyle(0xe04a25, 1).fillRoundedRect(12, 22, 336, 74, 10);
-      art.fillStyle(0xffbf1a, 1).fillRect(18, 76, 324, 18);
-      art.fillStyle(0x1ab8ba, 1).fillRoundedRect(28, 34, 222, 28, 4);
-      art.fillStyle(0x18222f, 1).fillRoundedRect(264, 30, 62, 56, 6);
-      art.lineStyle(3, 0xf4f0d8, 0.9).strokeRoundedRect(12, 22, 336, 74, 10);
-      for (let x = 58; x < 244; x += 40) art.lineStyle(2, 0x10141b, 0.8).lineBetween(x, 35, x, 61);
-      art.fillStyle(0x090b10, 1).fillCircle(78, 101, 18).fillCircle(290, 101, 18);
-      art.fillStyle(0xc8c8c8, 1).fillCircle(78, 101, 7).fillCircle(290, 101, 7);
-      art.generateTexture(fallbackKey, 360, 128);
-      art.destroy();
-    }
-    return fallbackKey;
-  }
-
-  private updateChapatiPickup() {
-    if (this.player.state === 'defeat') return;
-
-    const defeatedCount = this.enemyList.filter((enemy) => enemy.state === 'defeat').length;
-    if (!this.chapatiSpawned && defeatedCount >= 3) {
-      this.spawnChapatiPickup();
-    }
-
-    if (!this.chapatiPickup || !this.chapatiLanded) return;
-    const closeEnough = Math.abs(this.player.x - this.chapatiPickup.x) < 64
-      && Math.abs(this.player.y - this.chapatiPickup.y) < 92;
-    if (!closeEnough) return;
-
-    const healed = Math.min(30, 100 - this.player.health);
-    this.player.health = Math.min(100, this.player.health + 30);
-    const pickupX = this.chapatiPickup.x;
-    const pickupY = this.chapatiPickup.y;
-    this.chapatiPickup.destroy();
-    this.chapatiShadow?.destroy();
-    this.chapatiPickup = undefined;
-    this.chapatiShadow = undefined;
-    this.cameras.main.flash(150, 255, 196, 46, false);
-    this.sounds.playPickup();
-
-    const label = this.add.text(pickupX, pickupY - 58, healed > 0 ? `+${healed} HEALTH` : 'HEALTH FULL', {
-      fontFamily: 'Arial Black',
-      fontSize: '22px',
-      color: '#ffe36a',
-      stroke: '#3b1600',
-      strokeThickness: 5,
-      fontStyle: 'italic',
-    }).setOrigin(0.5).setDepth(1200);
-    this.tweens.add({
-      targets: label,
-      y: label.y - 45,
-      alpha: 0,
-      duration: 850,
-      ease: 'Cubic.Out',
-      onComplete: () => label.destroy(),
-    });
-  }
-
-  private spawnChapatiPickup() {
-    this.chapatiSpawned = true;
-    this.chapatiLanded = false;
-    const x = Phaser.Math.Clamp(this.player.x + (this.player.facing > 0 ? 145 : -145), 110, GAME_WIDTH - 110);
-    const landingY = GROUND_Y - 38;
-    this.chapatiShadow = this.add.ellipse(x, GROUND_Y - 8, 72, 20, 0x000000, 0.32)
-      .setDepth(GROUND_Y - 3)
-      .setScale(0.25)
-      .setAlpha(0.08);
-    this.chapatiPickup = this.add.sprite(x, 155, 'gameplay-chapati-health-pickup-sheet')
-      .setDisplaySize(92, 92)
-      .setDepth(GROUND_Y - 1)
-      .play('chapati-health-spin', true);
-
-    this.tweens.add({
-      targets: this.chapatiPickup,
-      y: landingY,
-      duration: 1050,
-      ease: 'Bounce.Out',
-      onUpdate: () => {
-        if (!this.chapatiPickup || !this.chapatiShadow) return;
-        const progress = Phaser.Math.Clamp((this.chapatiPickup.y - 155) / (landingY - 155), 0, 1);
-        this.chapatiShadow.setScale(0.25 + progress * 0.75).setAlpha(0.08 + progress * 0.24);
-      },
-      onComplete: () => {
-        this.chapatiLanded = true;
-        if (this.chapatiPickup) {
-          this.tweens.add({
-            targets: this.chapatiPickup,
-            y: landingY - 8,
-            duration: 520,
-            yoyo: true,
-            repeat: -1,
-            ease: 'Sine.InOut',
-          });
-        }
-      },
     });
   }
 
@@ -589,64 +452,60 @@ export class LevelScene extends Phaser.Scene {
 
   private showLevelClearOverlay(storyUnlocked: boolean) {
     const nextLevel = LEVELS.find((level) => level.id === this.level.id + 1);
-    this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x030305, 0.48)
-      .setScrollFactor(0)
-      .setDepth(1890);
+    this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x030305, 0.22)
+      .setScrollFactor(0).setDepth(1890);
 
-    const banner = this.add.container(GAME_WIDTH / 2, 292).setScrollFactor(0).setDepth(1900).setAlpha(0).setScale(0.86);
-    const bg = this.add.graphics();
-    bg.fillStyle(0x050505, 0.9);
-    bg.lineStyle(4, 0xffc51d, 0.95);
-    bg.fillRoundedRect(-250, -72, 500, 144, 8);
-    bg.strokeRoundedRect(-250, -72, 500, 144, 8);
-    const title = this.add.text(0, -24, 'LEVEL CLEAR!', {
-      fontFamily: 'Arial Black',
-      fontSize: '44px',
-      color: '#ffc51d',
-      stroke: '#050505',
-      strokeThickness: 6,
-      fontStyle: 'italic',
+    // Clipped corners and diagonal accents match the game's combat HUD.
+    const panel = (width: number, height: number, gold = false) => {
+      const g = this.add.graphics();
+      const x = -width / 2, y = -height / 2, cut = 22;
+      const coordinates = [x + cut, y, x + width - cut, y, x + width, y + cut,
+        x + width, y + height - cut, x + width - cut, y + height,
+        x + cut, y + height, x, y + height - cut, x, y + cut];
+      const points = Array.from({ length: coordinates.length / 2 }, (_, i) => ({ x: coordinates[i * 2], y: coordinates[i * 2 + 1] }));
+      g.fillStyle(gold ? 0xffd21b : 0x07090c, 0.96).fillPoints(points, true);
+      g.lineStyle(9, 0x030405).strokePoints(points, true);
+      g.lineStyle(3, 0xffd21b).strokePoints(points, true);
+      g.lineStyle(5, gold ? 0x111111 : 0xffd21b);
+      g.lineBetween(x + 7, y + 36, x + 36, y + 7);
+      g.lineBetween(x + width - 36, y + height - 7, x + width - 7, y + height - 36);
+      return g;
+    };
+    const banner = this.add.container(GAME_WIDTH / 2, 328)
+      .setScrollFactor(0).setDepth(1900).setAlpha(0).setScale(0.92);
+    const bg = panel(760, 194);
+    bg.lineStyle(2, 0xffd21b).lineBetween(-348, 32, 348, 32);
+    const title = this.add.text(0, -30, 'LEVEL CLEAR!', {
+      fontFamily: 'Impact, Arial Black, sans-serif', fontSize: '94px',
+      color: '#ffda16', fontStyle: 'italic', stroke: '#080808', strokeThickness: 2,
     }).setOrigin(0.5);
-    const subtitle = this.add.text(0, 34, storyUnlocked ? 'NAIROBI STORY UNLOCKED!' : (nextLevel ? 'READY FOR THE NEXT GOONS?' : 'ALL LEVELS CLEARED'), {
-      fontFamily: 'Arial Black',
-      fontSize: '22px',
-      color: '#ffffff',
-      stroke: '#050505',
-      strokeThickness: 4,
-      fontStyle: 'italic',
+    const subtitle = this.add.text(0, 64, storyUnlocked ? 'NAIROBI STORY UNLOCKED!' : (nextLevel ? 'AREA SECURED. KEEP MOVING!' : 'ALL LOCATIONS CONQUERED!'), {
+      fontFamily: 'Arial Black, sans-serif', fontSize: '28px', color: '#ffffff', fontStyle: 'italic',
     }).setOrigin(0.5);
     banner.add([bg, title, subtitle]);
 
-    if (storyUnlocked) {
-      const story = LOCATION_STORIES[this.level.id];
-      const card = this.add.container(GAME_WIDTH / 2, 438).setScrollFactor(0).setDepth(1901).setAlpha(0);
-      const cardBg = this.add.graphics();
-      cardBg.fillStyle(0x07101d, 0.96).lineStyle(2, 0xffc51d, 0.9).fillRoundedRect(-390, -52, 780, 104, 10).strokeRoundedRect(-390, -52, 780, 104, 10);
-      const cardTitle = this.add.text(0, -26, copyFor(getStoryLanguage(), story.title), { fontFamily: 'Arial Black', fontSize: '18px', color: '#ffc51d', fontStyle: 'italic' }).setOrigin(0.5);
-      const cardBody = this.add.text(0, 12, copyFor(getStoryLanguage(), story.body), { fontFamily: 'Arial, sans-serif', fontSize: '15px', color: '#eef4ff', align: 'center', wordWrap: { width: 720 }, lineSpacing: 3 }).setOrigin(0.5);
-      card.add([cardBg, cardTitle, cardBody]);
-      this.tweens.add({ targets: card, alpha: 1, duration: 260, delay: 180 });
-    }
+    const story = LOCATION_STORIES[this.level.id];
+    const card = this.add.container(GAME_WIDTH / 2, 499).setScrollFactor(0).setDepth(1901).setAlpha(0);
+    const cardBg = panel(840, 108);
+    const cardTitle = this.add.text(0, -29, copyFor(getStoryLanguage(), story.title), {
+      fontFamily: 'Arial Black, sans-serif', fontSize: '22px', color: '#ffda16', fontStyle: 'italic',
+    }).setOrigin(0.5);
+    const cardBody = this.add.text(0, 15, copyFor(getStoryLanguage(), story.body), {
+      fontFamily: 'Arial, sans-serif', fontSize: '17px', color: '#f5f5f5', align: 'center',
+      wordWrap: { width: 750 }, lineSpacing: 4,
+    }).setOrigin(0.5);
+    card.add([cardBg, cardTitle, cardBody]);
+    this.tweens.add({ targets: card, alpha: 1, duration: 260, delay: 180 });
 
-
-    const button = this.add.container(GAME_WIDTH / 2, storyUnlocked ? 575 : 418)
-      .setScrollFactor(0)
-      .setDepth(1902)
-      .setAlpha(0)
-      .setScale(0.8);
-    const buttonBg = this.add.graphics();
-    buttonBg.fillStyle(0xffc51d, 1);
-    buttonBg.lineStyle(4, 0x050505, 1);
-    buttonBg.fillRoundedRect(-118, -34, 236, 68, 8);
-    buttonBg.strokeRoundedRect(-118, -34, 236, 68, 8);
-    const buttonText = this.add.text(0, 0, nextLevel ? 'NEXT' : 'MAIN MENU', {
-      fontFamily: 'Arial Black',
-      fontSize: nextLevel ? '32px' : '25px',
-      color: '#111111',
-      fontStyle: 'italic',
+    const button = this.add.container(GAME_WIDTH / 2, 620)
+      .setScrollFactor(0).setDepth(1902).setAlpha(0).setScale(0.9);
+    const buttonBg = panel(304, 74, true);
+    const buttonText = this.add.text(0, -1, nextLevel ? 'NEXT' : 'MAIN MENU', {
+      fontFamily: 'Arial Black, sans-serif', fontSize: nextLevel ? '42px' : '30px',
+      color: '#080808', fontStyle: 'italic',
     }).setOrigin(0.5);
     button.add([buttonBg, buttonText]);
-    button.setSize(236, 68).setInteractive({ useHandCursor: true });
+    button.setSize(304, 74).setInteractive({ useHandCursor: true });
     button.on('pointerover', () => {
       this.sounds.playUiHover();
       this.tweens.add({ targets: button, scale: 1.07, duration: 100, ease: 'Back.Out' });
@@ -698,6 +557,10 @@ export class LevelScene extends Phaser.Scene {
     enemy.configure(config.offset, config.variant, config.speed, getDifficultySettings(), (index - 2) * 18);
     enemy.setDepth(9).setVisible(false);
     this.enemies.add(enemy);
+    // Arcade groups overwrite body defaults when a member is added, including
+    // the constructor's gravity setting. Arena depth is controlled by the AI;
+    // world gravity must never pull a goon down between those updates.
+    (enemy.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
     this.enemyList.push(enemy);
 
     const dog = config.variant === 'gameplay-attack-dog';
@@ -705,14 +568,14 @@ export class LevelScene extends Phaser.Scene {
     const stone = config.variant === 'gameplay-kibera-stone-goon';
     const shield = config.variant === 'gameplay-kibera-shield-goon';
     const larger = index === 3 || heavy;
-    const width = stone ? 176 : shield ? 196 : dog ? 174 : heavy ? 205 : larger ? 158 : 138;
-    const height = stone ? 190 : shield ? 212 : dog ? 116 : heavy ? 205 : larger ? 237 : 207;
+    const width = stone ? 176 : shield ? 196 : dog ? 174 : heavy ? 270 : larger ? 158 : 138;
+    const height = stone ? 190 : shield ? 212 : dog ? 116 : heavy ? 270 : larger ? 237 : 207;
     const artYOffset = dog ? 42 : stone || shield ? height * 0.48 : 84;
     const shadow = this.add.image(config.x, GROUND_Y, 'shadow').setDepth(2);
     const art = this.add.sprite(config.x, GROUND_Y - artYOffset, config.variant)
       .setDisplaySize(width, height)
       .setDepth(config.x < this.player.x ? 13 : 15);
-    art.setFlipX(config.x < this.player.x);
+    art.setFlipX(getEnemyTextureFlip(config.x > this.player.x, config.variant));
     const victoryDirection: 1 | -1 = index % 2 === 0 ? -1 : 1;
     const victoryLaneY = GROUND_Y - 64 + (index - 2) * 7;
     this.enemyVisuals.push({
@@ -726,12 +589,28 @@ export class LevelScene extends Phaser.Scene {
       victoryLaneY,
       victoryGone: false,
       renderedAttackAt: 0,
+      walking: false,
     });
   }
 
   private syncGeneratedArt(time: number) {
     const spec = this.getPlayerArtSpec(time);
-    if (this.selectedCharacter === 'MBAVU DESTROYER' && this.player.state === 'walk' && this.anims.exists('mbavu-run')) {
+    const hitAnimating = this.player.state === 'hit' && this.anims.exists('mbavu-hit-reaction');
+    const falling = this.player.state === 'defeat' && this.anims.exists('mbavu-defeat-fall');
+    if (falling) {
+      if (!this.playerDefeatStarted) {
+        this.playerDefeatStarted = true;
+        this.currentPlayerArtKey = 'mbavu-defeat-fall';
+        this.tweens.killTweensOf(this.playerArt);
+        this.playerArt.play('mbavu-defeat-fall', false);
+      }
+    } else if (hitAnimating) {
+      if (this.currentPlayerArtKey !== 'mbavu-hit-reaction' || this.renderedPlayerHit !== this.player.hitSequence) {
+        this.currentPlayerArtKey = 'mbavu-hit-reaction';
+        this.renderedPlayerHit = this.player.hitSequence;
+        this.playerArt.play('mbavu-hit-reaction', false);
+      }
+    } else if (this.player.state === 'walk' && this.anims.exists('mbavu-run')) {
       if (this.currentPlayerArtKey !== 'gameplay-mbavu-run-animation') {
         this.currentPlayerArtKey = 'gameplay-mbavu-run-animation';
         this.playerArt.play('mbavu-run', true);
@@ -748,12 +627,7 @@ export class LevelScene extends Phaser.Scene {
     const playerShadowScale = 1.3 * (1 - this.player.z / 600);
     this.playerShadow.setScale(playerShadowScale, playerShadowScale * 0.5).setAlpha(0.35 * (1 - this.player.z / 600));
 
-    if (this.player.state === 'defeat' && this.selectedCharacter === 'MBAVU DESTROYER' && this.anims.exists('mbavu-defeat-fall')) {
-      if (!this.playerDefeatStarted) {
-        this.playerDefeatStarted = true;
-        this.tweens.killTweensOf(this.playerArt);
-        this.playerArt.play('mbavu-defeat-fall', true);
-      }
+    if (falling) {
       const defeatX = Phaser.Math.Clamp(
         this.player.x,
         PLAYER_DEFEAT_FALL_DISPLAY.width / 2 + 18,
@@ -764,15 +638,17 @@ export class LevelScene extends Phaser.Scene {
         .setPosition(defeatX, this.player.y - PLAYER_DEFEAT_FALL_DISPLAY.yOffset)
         .setFlipX(this.player.facing < 0)
         .setAlpha(0.92)
-        .setAngle(0);
+        .setAngle(0)
+        .setTint(0xffffff);
     } else {
       this.playerDefeatStarted = false;
       this.playerArt
-        .setDisplaySize(spec.width, spec.height)
-        .setPosition(this.player.x + spec.xOffset * this.player.facing, this.player.y - spec.yOffset - this.player.z + bob + attackLift)
+        .setDisplaySize(hitAnimating ? 360 : spec.width, hitAnimating ? 270 : spec.height)
+        .setPosition(this.player.x + (hitAnimating ? 0 : spec.xOffset * this.player.facing), this.player.y - (hitAnimating ? 70 : spec.yOffset) - this.player.z + bob + attackLift)
         .setFlipX(this.player.facing < 0)
         .setAlpha(1)
-        .setAngle(this.getPlayerAngle());
+        .setAngle(hitAnimating ? 0 : this.getPlayerAngle());
+      this.playerArt.setTint(hitAnimating ? 0xffc3b5 : 0xffffff);
     }
 
     this.playerShadow.setDepth(this.player.y - 2);
@@ -794,9 +670,12 @@ export class LevelScene extends Phaser.Scene {
   private createSceneAnimations() {
     const createEightFrameAnimation = (key: string, texture: string, frameRate: number, repeat: number) => {
       if (this.anims.exists(key) || !this.textures.exists(texture)) return;
+      const animationTexture = texture === 'gameplay-chapati-health-pickup-sheet'
+        ? getCleanChapatiTexture(this.textures)
+        : getCleanEnemyRunTexture(this.textures, texture);
       this.anims.create({
         key,
-        frames: this.anims.generateFrameNumbers(texture, { start: 0, end: 7 }),
+        frames: this.anims.generateFrameNumbers(animationTexture, { start: 0, end: 7 }),
         frameRate,
         repeat,
       });
@@ -810,7 +689,14 @@ export class LevelScene extends Phaser.Scene {
     createEightFrameAnimation('goon-chain-attack', 'gameplay-goon-chain-attack-sheet', 13, 0);
     createEightFrameAnimation('goon-chain-defeat', 'gameplay-goon-chain-defeat-sheet', 10, 0);
     createEightFrameAnimation('goon-heavy-idle', 'gameplay-goon-heavy', 5, -1);
-    createEightFrameAnimation('goon-heavy-walk', 'gameplay-goon-heavy-walk-sheet', 8, -1);
+    if (!this.anims.exists('goon-heavy-walk') && this.textures.exists('gameplay-goon-heavy-walk-sheet')) {
+      this.anims.create({
+        key: 'goon-heavy-walk',
+        frames: this.anims.generateFrameNumbers('gameplay-goon-heavy-walk-sheet', { start: 0, end: 3 }),
+        frameRate: 6,
+        repeat: -1,
+      });
+    }
     createEightFrameAnimation('goon-heavy-attack', 'gameplay-goon-heavy-attack-sheet', 11, 0);
     createEightFrameAnimation('goon-heavy-defeat', 'gameplay-goon-heavy-defeat-sheet', 9, 0);
     createEightFrameAnimation('kibera-stone-walk', 'gameplay-kibera-stone-goon-walk-sheet', 10, -1);
@@ -829,10 +715,19 @@ export class LevelScene extends Phaser.Scene {
       });
     }
 
+    if (!this.anims.exists('mbavu-hit-reaction') && this.textures.exists('gameplay-mbavu-defeat-fall-sheet')) {
+      this.anims.create({
+        key: 'mbavu-hit-reaction',
+        frames: [0, 1, 2, 1, 0].map(frame => ({ key: getCleanPlayerFallTexture(this.textures), frame })),
+        frameRate: 20,
+        repeat: 0,
+      });
+    }
+
     if (!this.anims.exists('mbavu-defeat-fall') && this.textures.exists('gameplay-mbavu-defeat-fall-sheet')) {
       this.anims.create({
         key: 'mbavu-defeat-fall',
-        frames: this.anims.generateFrameNumbers('gameplay-mbavu-defeat-fall-sheet', { start: 0, end: 7 }),
+        frames: this.anims.generateFrameNumbers(getCleanPlayerFallTexture(this.textures), { start: 0, end: 7 }),
         frameRate: 10,
         repeat: 0,
       });
@@ -891,32 +786,9 @@ export class LevelScene extends Phaser.Scene {
         repeat: -1,
       });
     }
-    if (!this.anims.exists('goon-red-run') && this.textures.exists('gameplay-goon-red-run-sheet')) {
-      this.anims.create({
-        key: 'goon-red-run',
-        frames: this.anims.generateFrameNumbers('gameplay-goon-red-run-sheet', { start: 0, end: 7 }),
-        frameRate: 14,
-        repeat: -1,
-      });
-    }
-
-    if (!this.anims.exists('goon-hoodie-run') && this.textures.exists('gameplay-goon-hoodie-run-sheet')) {
-      this.anims.create({
-        key: 'goon-hoodie-run',
-        frames: this.anims.generateFrameNumbers('gameplay-goon-hoodie-run-sheet', { start: 0, end: 7 }),
-        frameRate: 14,
-        repeat: -1,
-      });
-    }
-
-    if (!this.anims.exists('goon-club-run') && this.textures.exists('gameplay-goon-club-run-sheet')) {
-      this.anims.create({
-        key: 'goon-club-run',
-        frames: this.anims.generateFrameNumbers('gameplay-goon-club-run-sheet', { start: 0, end: 7 }),
-        frameRate: 14,
-        repeat: -1,
-      });
-    }
+    createEightFrameAnimation('goon-red-run', 'gameplay-goon-red-run-sheet', 14, -1);
+    createEightFrameAnimation('goon-hoodie-run', 'gameplay-goon-hoodie-run-sheet', 14, -1);
+    createEightFrameAnimation('goon-club-run', 'gameplay-goon-club-run-sheet', 14, -1);
   }
 
   private updateDefeatAftermath(time: number, delta: number) {
@@ -926,17 +798,24 @@ export class LevelScene extends Phaser.Scene {
       this.defeatAftermathElapsed = 0;
       this.cameras.main.shake(220, 0.006);
       this.enemyList.forEach((enemy) => enemy.setVelocity(0, 0));
+      this.enemyVisuals.forEach((visual) => {
+        // Depart from the combat position, toward the nearest edge. Moving to a
+        // predetermined lane made the actors jump when the player fell.
+        visual.victoryDirection = visual.enemy.x < GAME_WIDTH / 2 ? -1 : 1;
+        visual.victoryLaneY = visual.enemy.y;
+        visual.enemy.z = 0;
+      });
       this.physics.world.pause();
     }
 
     this.defeatAftermathElapsed += delta;
-    const dt = delta / 1000;
-    this.enemyVisuals.forEach((visual, index) => {
+    const dt = Math.min(delta, 50) / 1000;
+    this.enemyVisuals.forEach((visual) => {
       const { enemy } = visual;
       if (enemy.state === 'defeat' || visual.victoryGone) return;
 
-      enemy.x += visual.victoryDirection * (225 + index * 20) * dt;
-      enemy.y = visual.victoryLaneY;
+      const motion = getEnemyExitMotion(enemy.visualVariant, this.defeatAftermathElapsed);
+      enemy.x += visual.victoryDirection * motion.speed * dt;
 
       const exitedLeft = visual.victoryDirection < 0 && enemy.x < -180;
       const exitedRight = visual.victoryDirection > 0 && enemy.x > GAME_WIDTH + 180;
@@ -947,32 +826,9 @@ export class LevelScene extends Phaser.Scene {
       }
     });
 
-    if (!this.defeatOverlayShown && this.defeatAftermathElapsed > 1550) {
+    const fallStillPlaying = this.playerArt.anims.currentAnim?.key === 'mbavu-defeat-fall' && this.playerArt.anims.isPlaying;
+    if (!this.defeatOverlayShown && this.defeatAftermathElapsed > 1550 && !fallStillPlaying) {
       this.showDefeatedOverlay();
-    }
-  }
-
-  private separateActiveEnemies() {
-    for (let i = 0; i < this.enemyList.length; i += 1) {
-      const a = this.enemyList[i];
-      if (a.state === 'defeat') continue;
-      for (let j = i + 1; j < this.enemyList.length; j += 1) {
-        const b = this.enemyList[j];
-        if (b.state === 'defeat') continue;
-
-        const dx = b.x - a.x;
-        const dy = b.y - a.y;
-        const minX = 74;
-        const minY = 28;
-        if (Math.abs(dx) >= minX || Math.abs(dy) >= minY) continue;
-
-        const pushX = ((minX - Math.abs(dx)) / 2) * (dx >= 0 ? 1 : -1);
-        const pushY = ((minY - Math.abs(dy)) / 2) * (dy >= 0 ? 1 : -1) * 0.45;
-        a.x = Phaser.Math.Clamp(a.x - pushX, 70, GAME_WIDTH - 70);
-        b.x = Phaser.Math.Clamp(b.x + pushX, 70, GAME_WIDTH - 70);
-        a.y = Phaser.Math.Clamp(a.y - pushY, 468, 620);
-        b.y = Phaser.Math.Clamp(b.y + pushY, 468, 620);
-      }
     }
   }
 
@@ -1054,6 +910,8 @@ export class LevelScene extends Phaser.Scene {
 
       art.setVisible(true);
       shadow.setVisible(true);
+      const motion = getEnemyExitMotion(enemy.visualVariant, this.defeatAftermathElapsed);
+      art.anims.timeScale = motion.timeScale;
       const runAnim = this.getEnemyRunAnimationKey(enemy.visualVariant);
       if (runAnim && this.anims.exists(runAnim) && (art.anims.currentAnim?.key !== runAnim || !art.anims.isPlaying)) {
         art.play(runAnim, true);
@@ -1061,17 +919,13 @@ export class LevelScene extends Phaser.Scene {
         art.stop();
         art.setTexture(enemy.visualVariant);
       }
-      enemy.y = visual.victoryLaneY;
-      const runPhase = time / 95 + index * 0.8;
-      const stride = Math.sin(runPhase);
-      const lift = Math.abs(stride) * 4;
       shadow.setPosition(enemy.x, visual.victoryLaneY).setDepth(visual.victoryLaneY - 2).setAlpha(0.28);
-      const enemyShadowScale = (baseWidth / 138) * (1.12 + Math.abs(stride) * 0.08);
+      const enemyShadowScale = (baseWidth / 138) * 1.18;
       shadow.setScale(enemyShadowScale, enemyShadowScale * 0.44);
       art
-        .setPosition(enemy.x + visual.victoryDirection * 10, visual.victoryLaneY - (dog ? 42 : kiberaGoon ? baseHeight * 0.48 : 86) - enemy.z - lift)
-        .setDisplaySize(dog || kiberaGoon ? baseWidth : baseWidth * 1.86, dog || kiberaGoon ? baseHeight : baseHeight * 1.34)
-        .setFlipX(visual.victoryDirection < 0)
+        .setPosition(enemy.x, visual.victoryLaneY - (dog ? 42 : kiberaGoon ? baseHeight * 0.48 : heavy ? 120 : 68))
+        .setDisplaySize(dog || heavy || kiberaGoon || motion.walking ? baseWidth : baseWidth * 1.55, dog || heavy || kiberaGoon || motion.walking ? baseHeight : baseHeight * 1.22)
+        .setFlipX(getEnemyTextureFlip(visual.victoryDirection < 0, art.texture.key))
         .setAlpha(1)
         .setTint(0xffffff)
         .setAngle(0)
@@ -1080,20 +934,39 @@ export class LevelScene extends Phaser.Scene {
     }
 
     if (enemy.state === 'defeat') {
+      art.anims.timeScale = 1;
       if (!visual.defeatStarted) {
         visual.defeatStarted = true;
+        art.setAlpha(1).clearTint();
         const defeatAnim = this.getEnemyDefeatAnimationKey(enemy.visualVariant);
         if (defeatAnim && this.anims.exists(defeatAnim)) {
           art.play(defeatAnim, false).setAngle(0);
           if (dog) art.setDisplaySize(260, 164);
           else if (enemy.visualVariant === 'gameplay-goon-heavy') art.setDisplaySize(270, 270);
           else if (enemy.visualVariant === 'gameplay-goon-chain') art.setDisplaySize(300, 230);
-        } else if (kiberaGoon) {
-          art.setTexture(enemy.visualVariant).setDisplaySize(baseWidth, baseHeight).setAngle(enemy.x < this.player.x ? -78 : 78);
         } else {
-          art.setTexture(enemy.visualVariant).setDisplaySize(baseHeight, baseWidth).setAngle(enemy.x < this.player.x ? -72 : 72);
+          // Use a full-body walking frame rather than stretching a portrait or
+          // freezing an oversized attack frame. Preserve the standing proportions.
+          const walkAnim = this.getEnemyWalkAnimationKey(enemy.visualVariant);
+          const restTexture = this.anims.exists(walkAnim)
+            ? this.anims.get(walkAnim).frames[0].textureKey : enemy.visualVariant;
+          art.stop();
+          const width = kiberaGoon ? baseWidth : baseWidth * 1.55;
+          const height = kiberaGoon ? baseHeight : baseHeight * 1.22;
+          visual.fall = { direction: enemy.x < this.player.x ? -1 : 1, startY: art.y, width, height };
+          art.setTexture(restTexture, 0).setDisplaySize(width, height).setAngle(0);
         }
-        this.tweens.add({ targets: [art, shadow], alpha: 0, delay: 850, duration: 620, ease: 'Sine.In', onComplete: () => { art.setVisible(false); shadow.setVisible(false); } });
+        // Let even the heavy's eight-frame fall finish, then hold the body
+        // on the road before fading. Never fade while it is still falling.
+        this.tweens.add({ targets: [art, shadow], alpha: 0, delay: 1600, duration: 600, ease: 'Sine.In', onComplete: () => { art.setVisible(false); shadow.setVisible(false); } });
+      }
+      if (visual.fall) {
+        const fall = visual.fall;
+        const pose = getEnemyDefeatPose(time - enemy.defeatedAt, fall.width, fall.height, fall.startY, enemy.y + 34, fall.direction);
+        const x = Phaser.Math.Clamp(enemy.x + pose.offsetX, pose.halfWidth + 12, GAME_WIDTH - pose.halfWidth - 12);
+        art.setPosition(x, pose.y).setAngle(pose.angle).setDepth(enemy.y - 1);
+        shadow.setPosition(x, enemy.y + 28).setDepth(enemy.y - 2);
+        return;
       }
       const generatedDefeat = Boolean(this.getEnemyDefeatAnimationKey(enemy.visualVariant) && this.anims.exists(this.getEnemyDefeatAnimationKey(enemy.visualVariant)));
       const defeatOffsetY = dog ? 65 : kiberaGoon ? baseHeight * 0.42 : enemy.visualVariant === 'gameplay-goon-heavy' ? 120 : enemy.visualVariant === 'gameplay-goon-chain' ? 102 : 34;
@@ -1105,19 +978,24 @@ export class LevelScene extends Phaser.Scene {
     }
 
     const hit = enemy.state === 'hit';
-    const walking = enemy.state === 'walk';
+    const walking = isEnemyWalking(enemy, time, visual.walking);
+    visual.walking = walking;
     const fighting = enemy.state === 'attack';
     const texture = enemy.visualVariant;
     const attackDirection: 1 | -1 = enemy.x < this.player.x ? 1 : -1;
     const walkPhase = time / 120 + index * 0.75;
     const walkStride = walking ? Math.sin(walkPhase) : 0;
-    const walkLift = walking ? Math.abs(walkStride) * 3 : 0;
-    const walkX = walking ? Math.cos(walkPhase) * 2 : 0;
-    const strikeWindow = stone ? 720 : shield ? 820 : dog ? 660 : enemy.visualVariant === 'gameplay-goon-club' ? 680 : 520;
-    const striking = enemy.lastAttackAt > 0 && time - enemy.lastAttackAt < strikeWindow;
+    const striking = isEnemyStriking(enemy, time);
+    const body = enemy.body as Phaser.Physics.Arcade.Body;
+    art.anims.timeScale = walking
+      ? Phaser.Math.Clamp(Math.hypot(body.velocity.x, body.velocity.y) / enemy.moveSpeed, 0.25, 1.4)
+      : 1;
 
+    const walkAnim = this.getEnemyWalkAnimationKey(enemy.visualVariant);
+    const legacyPortrait = enemy.visualVariant === 'gameplay-goon' || enemy.visualVariant === 'gameplay-goon-club' || enemy.visualVariant === 'gameplay-goon-hoodie';
+    const restTexture = legacyPortrait && walkAnim && this.anims.exists(walkAnim)
+      ? this.anims.get(walkAnim).frames[0].textureKey : texture;
     if (walking) {
-      const walkAnim = this.getEnemyWalkAnimationKey(enemy.visualVariant);
       if (walkAnim && this.anims.exists(walkAnim) && (art.anims.currentAnim?.key !== walkAnim || !art.anims.isPlaying)) art.play(walkAnim, true);
       else if (!walkAnim) {
         art.stop();
@@ -1134,28 +1012,29 @@ export class LevelScene extends Phaser.Scene {
       }
     } else {
       if (art.anims.isPlaying) art.stop();
-      if (art.texture.key !== texture || dog) art.setTexture(texture, 0);
+      if (art.texture.key !== restTexture || dog || legacyPortrait) art.setTexture(restTexture, 0);
     }
 
     shadow.setPosition(enemy.x, enemy.y);
     const enemyShadowScale = (baseWidth / 138) * 1.18 * (1 - enemy.z / 600) * (walking ? 0.98 + Math.abs(walkStride) * 0.06 : 1);
     shadow.setScale(enemyShadowScale, enemyShadowScale * 0.5).setAlpha(0.35 * (1 - enemy.z / 600));
 
-    const walkWidth = dog || kiberaGoon ? baseWidth : heavy ? 240 : baseWidth * 1.55;
-    const walkHeight = dog || kiberaGoon ? baseHeight : heavy ? 240 : baseHeight * 1.22;
+    const walkWidth = legacyPortrait ? baseWidth * 1.55 : baseWidth;
+    const walkHeight = legacyPortrait ? baseHeight * 1.22 : baseHeight;
+    const usingWalkPose = walking || (!striking && restTexture !== texture);
     const attackWidth = stone ? 205 : shield ? 224 : dog ? 270 : heavy ? 270 : enemy.visualVariant === 'gameplay-goon-club' ? baseWidth * 2.1 : baseWidth * 1.9;
     const attackHeight = stone ? 218 : shield ? 236 : dog ? 150 : heavy ? 270 : baseHeight * (enemy.visualVariant === 'gameplay-goon-club' ? 1.32 : 1.28);
     const attackOffset = stone ? 24 : shield ? 32 : dog ? 38 : heavy ? 30 : enemy.visualVariant === 'gameplay-goon-club' ? 34 : 24;
-    const artYOffset = dog ? 42 : kiberaGoon ? (striking ? attackHeight : baseHeight) * 0.48 : heavy ? (striking ? 120 : walking ? 106 : 91) : 68;
-    const guardBob = fighting && !striking ? Math.sin(time / 130 + index) * 1.5 : 0;
+    const artYOffset = dog ? 42 : kiberaGoon ? (striking ? attackHeight : baseHeight) * 0.48 : heavy ? 120 : 68;
+    const guardBob = fighting && !striking && !walking ? Math.sin(time / 130 + index) * 1.5 : 0;
 
     art
       .setPosition(
-        enemy.x + (striking ? attackDirection * attackOffset : walkX),
-        enemy.y - artYOffset - enemy.z - walkLift + (striking ? (dog || heavy || kiberaGoon ? 0 : 8) : guardBob),
+        enemy.x + (striking ? attackDirection * attackOffset : 0),
+        enemy.y - artYOffset - enemy.z + (striking ? (dog || heavy || kiberaGoon ? 0 : 8) : guardBob),
       )
-      .setDisplaySize(striking ? attackWidth : walking ? walkWidth : baseWidth, striking ? attackHeight : walking ? walkHeight : baseHeight)
-      .setFlipX(striking ? attackDirection < 0 : walking ? enemy.x > this.player.x : enemy.x < this.player.x)
+      .setDisplaySize(striking ? attackWidth : usingWalkPose ? walkWidth : baseWidth, striking ? attackHeight : usingWalkPose ? walkHeight : baseHeight)
+      .setFlipX(getEnemyTextureFlip(enemy.flipX, art.texture.key))
       .setAlpha(hit ? 0.76 : 1)
       .setTint(hit ? 0xffcccc : 0xffffff)
       .setAngle(0);
@@ -1212,7 +1091,6 @@ export class LevelScene extends Phaser.Scene {
     return 0;
   }
 }
-
 
 
 

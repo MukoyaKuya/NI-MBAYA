@@ -1,3 +1,6 @@
+import { DailyChallengeScene } from '../scenes/DailyChallengeScene';
+import { AchievementsScene } from '../scenes/AchievementsScene';
+import { ExitScene } from '../scenes/ExitScene';
 import Phaser from 'phaser';
 import { BootScene } from '../scenes/BootScene';
 import { MainMenuScene } from '../scenes/MainMenuScene';
@@ -21,6 +24,8 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
   backgroundColor: '#0f1720',
   pixelArt: false,
   scale: {
+    fullscreenTarget: 'game',
+    // Keep artwork and pointer coordinates proportional at every window size.
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
     autoRound: true,
@@ -32,5 +37,5 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
       debug: false,
     },
   },
-  scene: [BootScene, MainMenuScene, CharacterSelectScene, OptionsScene, CultureScene, StoryCollectionScene, StoryCutsceneScene, HowToPlayScene, LevelScene],
+  scene: [BootScene, MainMenuScene, CharacterSelectScene, OptionsScene, CultureScene, StoryCollectionScene, StoryCutsceneScene, HowToPlayScene, LevelScene, ExitScene, AchievementsScene, DailyChallengeScene],
 };

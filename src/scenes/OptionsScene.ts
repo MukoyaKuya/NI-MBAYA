@@ -23,6 +23,8 @@ export class OptionsScene extends Phaser.Scene {
   }
 
   create() {
+    this.rows = [];
+    this.waitingForKey = undefined;
     this.sound.mute = !isSoundEnabled();
     this.startMenuMusic();
     this.drawBackground();
@@ -31,10 +33,21 @@ export class OptionsScene extends Phaser.Scene {
     this.createControlRows();
     this.createFooterActions();
 
+    const refreshScreenMode = () => this.refreshRows();
+    const fullscreenFailed = () => this.showStatus('FULL SCREEN UNAVAILABLE IN THIS BROWSER');
+    this.scale.on(Phaser.Scale.Events.ENTER_FULLSCREEN, refreshScreenMode);
+    this.scale.on(Phaser.Scale.Events.LEAVE_FULLSCREEN, refreshScreenMode);
+    this.scale.on(Phaser.Scale.Events.FULLSCREEN_FAILED, fullscreenFailed);
+    this.scale.on(Phaser.Scale.Events.FULLSCREEN_UNSUPPORTED, fullscreenFailed);
+
     this.input.keyboard?.on('keydown-ESC', () => this.goBack());
     this.input.keyboard?.on('keydown', (event: KeyboardEvent) => this.captureKey(event));
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.input.keyboard?.off('keydown');
+      this.scale.off(Phaser.Scale.Events.ENTER_FULLSCREEN, refreshScreenMode);
+      this.scale.off(Phaser.Scale.Events.LEAVE_FULLSCREEN, refreshScreenMode);
+      this.scale.off(Phaser.Scale.Events.FULLSCREEN_FAILED, fullscreenFailed);
+      this.scale.off(Phaser.Scale.Events.FULLSCREEN_UNSUPPORTED, fullscreenFailed);
       this.menuMusic = undefined;
     });
   }
@@ -69,13 +82,13 @@ export class OptionsScene extends Phaser.Scene {
   }
 
   private createSystemRows() {
-    this.addOptionRow(205, 'DIFFICULTY', getDifficultySettings().label.toUpperCase(), () => {
+    this.addOptionRow(180, 'DIFFICULTY', getDifficultySettings().label.toUpperCase(), () => {
       cycleDifficulty();
       this.refreshRows();
       this.showStatus('DIFFICULTY UPDATED');
     });
 
-    this.addOptionRow(275, 'SOUND', isSoundEnabled() ? 'ON' : 'OFF', () => {
+    this.addOptionRow(240, 'SOUND', isSoundEnabled() ? 'ON' : 'OFF', () => {
       const enabled = toggleSoundEnabled();
       this.sound.mute = !enabled;
       if (enabled) this.startMenuMusic();
@@ -84,10 +97,14 @@ export class OptionsScene extends Phaser.Scene {
       this.showStatus(enabled ? 'SOUND ON' : 'SOUND OFF');
     });
 
-    this.addOptionRow(345, 'STORY LANGUAGE', getStoryLanguage() === 'sw' ? 'KISWAHILI' : 'ENGLISH', () => {
+    this.addOptionRow(300, 'STORY LANGUAGE', getStoryLanguage() === 'sw' ? 'KISWAHILI' : 'ENGLISH', () => {
       const language = toggleStoryLanguage();
       this.refreshRows();
       this.showStatus(language === 'sw' ? 'LUGHA: KISWAHILI' : 'LANGUAGE: ENGLISH');
+    });
+    this.addOptionRow(360, 'SCREEN MODE', this.scale.isFullscreen ? 'FULL SCREEN' : 'NORMAL SCREEN', () => {
+      if (this.scale.isFullscreen) this.scale.stopFullscreen();
+      else this.scale.startFullscreen();
     });
   }
 
@@ -211,6 +228,7 @@ export class OptionsScene extends Phaser.Scene {
       else if (row.label.text === 'DIFFICULTY') row.value.setText(getDifficultySettings().label.toUpperCase());
       else if (row.label.text === 'SOUND') row.value.setText(isSoundEnabled() ? 'ON' : 'OFF');
       else if (row.label.text === 'STORY LANGUAGE') row.value.setText(getStoryLanguage() === 'sw' ? 'KISWAHILI' : 'ENGLISH');
+      else if (row.label.text === 'SCREEN MODE') row.value.setText(this.scale.isFullscreen ? 'FULL SCREEN' : 'NORMAL SCREEN');
     });
   }
 
