@@ -18,8 +18,6 @@ export class BootScene extends Phaser.Scene {
 
     // Later-stage art is loaded only when that chapter starts. This keeps the
     // first playable screen fast enough for mobile connections.
-    this.load.audio('ui-hover', new URL('../assets/optimized/audio/ui-hover.mp3', import.meta.url).href);
-    this.load.audio('select', new URL('../assets/optimized/audio/select.mp3', import.meta.url).href);
     this.load.image('menu-v2-background', new URL('../assets/optimized/menu/v2/menu-background-clean.webp', import.meta.url).href);
     this.load.image('menu-v2-hero-status-panel', new URL('../assets/optimized/menu/v2/hero-status-panel.webp', import.meta.url).href);
     this.load.image('menu-v2-ni-mbaya-logo', new URL('../assets/optimized/menu/v2/ni-mbaya-logo.webp', import.meta.url).href);

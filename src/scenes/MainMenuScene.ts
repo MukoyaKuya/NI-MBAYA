@@ -177,8 +177,16 @@ export class MainMenuScene extends Phaser.Scene {
 
   private loadMenuMusicAfterMenuIsVisible() {
     if (!isSoundEnabled()) return;
+    let queuedSounds = false;
+    for (const [key, url] of [
+      ['ui-hover', new URL('../assets/optimized/audio/ui-hover.mp3', import.meta.url).href],
+      ['select', new URL('../assets/optimized/audio/select.mp3', import.meta.url).href],
+    ]) {
+      if (!this.cache.audio.exists(key)) { this.load.audio(key, url); queuedSounds = true; }
+    }
     if (this.cache.audio.exists('menu-music')) {
       this.startMenuMusic();
+      if (queuedSounds) this.load.start();
       return;
     }
 

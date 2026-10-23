@@ -47,12 +47,14 @@ export function installPerformanceMonitor(game: Phaser.Game) {
     const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
     return {
       capturedAt: new Date().toISOString(),
-      fps: Math.round(game.loop.actualFps || 0),
+      visibility: document.visibilityState,
+      fps: document.hidden ? null : Math.round(game.loop.actualFps || 0),
       longTasks, longestTaskMs: Math.round(longestTaskMs),
       milestones: performance.getEntriesByType('mark').filter(mark => mark.name.startsWith('ni-mbaya:')).map(mark => ({ name: mark.name, sinceNavigationMs: Math.round(mark.startTime) })),
       loads,
       slowestRequests: resources.filter(resource => resource.name.startsWith(location.origin)).sort((a, b) => b.duration - a.duration).slice(0, 10).map(resource => ({
         file: new URL(resource.name).pathname.split('/').pop(),
+        initiator: resource.initiatorType,
         durationMs: Math.round(resource.duration),
         waitMs: Math.round(resource.responseStart - resource.requestStart),
         downloadMs: Math.round(resource.responseEnd - resource.responseStart),
@@ -63,10 +65,10 @@ export function installPerformanceMonitor(game: Phaser.Game) {
   const render = () => {
     if (!visible) return;
     const data = report();
-    output.textContent = `FPS: ${data.fps}\nLong tasks (>50ms): ${longTasks}\nLongest task: ${data.longestTaskMs}ms\n\nREADY TIMES (since page opened)\n`
+    output.textContent = `FPS: ${data.fps ?? 'paused (tab hidden)'}\nLong tasks (>50ms): ${longTasks}\nLongest task: ${data.longestTaskMs}ms\n\nREADY TIMES (since page opened)\n`
       + data.milestones.map(mark => `${mark.name.replace('ni-mbaya:', '')}: ${(mark.sinceNavigationMs / 1000).toFixed(1)}s`).join('\n')
       + '\n\nASSET LOADS\n' + loads.map(load => `${load.scene}: ${load.durationMs === undefined ? 'loading…' : (load.durationMs / 1000).toFixed(1) + 's'}${load.failed.length ? ' FAILED: ' + load.failed.join(', ') : ''}`).join('\n')
-      + '\n\nSLOWEST REQUESTS\n' + data.slowestRequests.map(resource => `${(resource.durationMs / 1000).toFixed(1)}s · ${resource.file}\n  wait ${resource.waitMs}ms / download ${resource.downloadMs}ms`).join('\n')
+      + '\n\nSLOWEST REQUESTS\n' + data.slowestRequests.map(resource => `${(resource.durationMs / 1000).toFixed(1)}s · ${resource.file}\n  ${resource.initiator} / ${(resource.transferBytes / 1024).toFixed(0)} KB transferred\n  wait ${resource.waitMs}ms / download ${resource.downloadMs}ms`).join('\n')
       + '\n\nNo data is uploaded. Download this report to share it.';
   };
   const attach = () => { if (visible) (document.fullscreenElement ?? document.body).append(panel); };

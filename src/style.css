@@ -28,8 +28,8 @@ body {
   inset: -30px;
   z-index: -1;
   pointer-events: none;
-  background: url('./assets/optimized/menu/v2/menu-background-clean.webp') center / cover no-repeat;
-  filter: blur(24px) brightness(0.4);
+  /* Do not download the arena a second time just to decorate the margins. */
+  background: radial-gradient(ellipse at 50% 10%, #25132e, #17151c 50%, #101012 85%);
 }
 
 canvas {
