@@ -1025,8 +1025,10 @@ export class LevelScene extends Phaser.Scene {
     const walkWidth = legacyPortrait ? baseWidth * 1.55 : baseWidth;
     const walkHeight = legacyPortrait ? baseHeight * 1.22 : baseHeight;
     const usingWalkPose = walking || (!striking && restTexture !== texture);
-    const attackWidth = stone ? 205 : shield ? 224 : dog ? 270 : heavy ? 270 : enemy.visualVariant === 'gameplay-goon-club' ? baseWidth * 2.1 : baseWidth * 1.9;
-    const attackHeight = stone ? 218 : shield ? 236 : dog ? 150 : heavy ? 270 : baseHeight * (enemy.visualVariant === 'gameplay-goon-club' ? 1.32 : 1.28);
+    // Legacy walk and attack sheets share 384px cells. Keep their scale fixed;
+    // the drawn swing already supplies the extra reach without growing the body.
+    const attackWidth = legacyPortrait ? walkWidth : stone ? 205 : shield ? 224 : dog ? 270 : heavy ? 270 : baseWidth * 1.9;
+    const attackHeight = legacyPortrait ? walkHeight : stone ? 218 : shield ? 236 : dog ? 150 : heavy ? 270 : baseHeight * 1.28;
     const attackOffset = stone ? 24 : shield ? 32 : dog ? 38 : heavy ? 30 : enemy.visualVariant === 'gameplay-goon-club' ? 34 : 24;
     const artYOffset = dog ? 42 : kiberaGoon ? (striking ? attackHeight : baseHeight) * 0.48 : heavy ? 120 : 68;
     const guardBob = fighting && !striking && !walking ? Math.sin(time / 130 + index) * 1.5 : 0;
@@ -1034,7 +1036,7 @@ export class LevelScene extends Phaser.Scene {
     art
       .setPosition(
         enemy.x + (striking ? attackDirection * attackOffset : 0),
-        enemy.y - artYOffset - enemy.z + (striking ? (dog || heavy || kiberaGoon ? 0 : 8) : guardBob),
+        enemy.y - artYOffset - enemy.z + (striking ? (dog || heavy || kiberaGoon || legacyPortrait ? 0 : 8) : guardBob),
       )
       .setDisplaySize(striking ? attackWidth : usingWalkPose ? walkWidth : baseWidth, striking ? attackHeight : usingWalkPose ? walkHeight : baseHeight)
       .setFlipX(getEnemyTextureFlip(enemy.flipX, art.texture.key))

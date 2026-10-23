@@ -656,6 +656,40 @@ test('defeat departures preserve combat lanes, natural scale and forward facing'
   }
 });
 
+test('red, club and hoodie goons keep their walking size and ground position throughout attacks', () => {
+  const phaser = { Scene: class {}, Physics: { Arcade: { Sprite: class {} } }, Math: { Clamp: (n, min, max) => Math.max(min, Math.min(max, n)) } };
+  const { LevelScene } = loadSource('src/scenes/LevelScene.ts', { phaser, '../config/GameConfig': {} });
+  for (const variant of ['gameplay-goon', 'gameplay-goon-club', 'gameplay-goon-hoodie']) {
+    for (const facing of [-1, 1]) {
+      const calls = {};
+      const art = { texture: { key: variant }, anims: {}, play(key) { this.texture.key = key; this.anims.currentAnim = { key }; this.anims.isPlaying = true; return this; }, stop() { this.anims.isPlaying = false; return this; }, setTexture(key) { this.texture.key = key; return this; } };
+      for (const name of ['setPosition', 'setDisplaySize', 'setFlipX', 'setAlpha', 'setTint', 'setAngle', 'setDepth']) art[name] = (...args) => { calls[name] = args; return art; };
+      const shadow = {};
+      for (const name of ['setPosition', 'setDepth', 'setAlpha', 'setScale']) shadow[name] = () => shadow;
+      const enemy = { x: 400, y: 540, z: 0, state: 'chase', visualVariant: variant, moveSpeed: 100, flipX: facing < 0, lastAttackAt: 0, body: { velocity: { x: 100 * facing, y: 0 } } };
+      const visual = { enemy, art, shadow, baseWidth: 138, baseHeight: 207 };
+      const scene = Object.assign(Object.create(LevelScene.prototype), {
+        player: { x: 400 + 50 * facing, state: 'idle' },
+        anims: { exists: () => true, get: () => ({ frames: [{ textureKey: 'walk-sheet' }] }) },
+      });
+      scene.syncEnemyVisual(visual, 0, 1000);
+      const walkingSize = calls.setDisplaySize;
+      const walkingY = calls.setPosition[1];
+      enemy.state = 'attack'; enemy.lastAttackAt = 1100; enemy.body.velocity.x = 0;
+      for (const time of [1100, 1250, 1500]) {
+        scene.syncEnemyVisual(visual, 0, time);
+        assert.deepEqual(calls.setDisplaySize, walkingSize, `${variant} must not grow when striking`);
+        assert.equal(calls.setPosition[1], walkingY, `${variant} must not drop below its walking ground plane`);
+        assert.equal(calls.setFlipX[0], facing < 0);
+      }
+      enemy.state = 'idle';
+      scene.syncEnemyVisual(visual, 0, 2000);
+      assert.deepEqual(calls.setDisplaySize, walkingSize);
+      assert.equal(calls.setPosition[1], walkingY);
+    }
+  }
+});
+
 test('heavy walk uses the four distinct contact and passing frames in a loop', () => {
   const phaser = { Scene: class {}, Physics: { Arcade: { Sprite: class {} } } };
   const { LevelScene } = loadSource('src/scenes/LevelScene.ts', { phaser, '../config/GameConfig': {} });
