@@ -1,6 +1,7 @@
 import { isEnemyStriking, isEnemyWalking, getEnemyTextureFlip, getEnemyExitMotion } from '../systems/EnemyMotion';
 import { getEnemyDefeatPose } from '../systems/EnemyDefeatMotion';
 import { getCleanEnemyRunTexture, getCleanPlayerFallTexture, getCleanChapatiTexture } from '../systems/EnemyRunTexture';
+import { trackAssetLoading } from '../systems/PerformanceMonitor';
 import { separateEnemyCrowd } from '../systems/CrowdSystem';
 import { StageRenderer } from '../systems/StageRenderer';
 import { HealthPickupSystem } from '../systems/HealthPickupSystem';
@@ -195,6 +196,7 @@ export class LevelScene extends Phaser.Scene {
   }
 
   preload() {
+    trackAssetLoading(this);
     const levelId = this.startData.levelId ?? 1;
     const character = 'MBAVU DESTROYER';
     const fighterKey = 'gameplay-mbavu-idle';
@@ -315,6 +317,7 @@ export class LevelScene extends Phaser.Scene {
 
   private loadBattleAnimationsInBackground() {
     if (!loadBattleAnimationAssets(this, this.level.id, this.selectedCharacter)) return;
+    trackAssetLoading(this, 'LevelScene (background)');
     const activateLoadedAnimations = () => {
       if (this.scene.isActive()) this.createSceneAnimations();
     };

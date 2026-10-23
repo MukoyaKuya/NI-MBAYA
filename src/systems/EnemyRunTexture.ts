@@ -1,4 +1,5 @@
 import type Phaser from 'phaser';
+import { SPRITE_FRAGMENT_RUNS } from './SpriteFragmentRuns';
 
 const RUN_SHEETS = new Set([
   'gameplay-goon-red-run-sheet', 'gameplay-goon-hoodie-run-sheet',
@@ -78,10 +79,20 @@ function getCleanSheet(textures: Phaser.Textures.TextureManager, key: string, fr
   const context = canvas.getContext('2d', { willReadFrequently: true });
   if (!context) return key;
   context.drawImage(source, 0, 0);
-  for (let x = 0; x < canvas.width; x += frameWidth) {
-    const frame = context.getImageData(x, 0, frameWidth, frameHeight);
-    removeDetachedPixels(frame.data, frameWidth, frameHeight);
-    context.putImageData(frame, x, 0);
+  const spans = SPRITE_FRAGMENT_RUNS[key];
+  if (spans) {
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+    for (let span = 0; span < spans.length; span += 2) {
+      const end = spans[span] + spans[span + 1];
+      for (let pixel = spans[span]; pixel < end; pixel++) pixels.data[pixel * 4 + 3] = 0;
+    }
+    context.putImageData(pixels, 0, 0);
+  } else {
+    for (let x = 0; x < canvas.width; x += frameWidth) {
+      const frame = context.getImageData(x, 0, frameWidth, frameHeight);
+      removeDetachedPixels(frame.data, frameWidth, frameHeight);
+      context.putImageData(frame, x, 0);
+    }
   }
   const texture = textures.addCanvas(cleanKey, canvas);
   if (!texture) return key;

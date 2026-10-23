@@ -89,11 +89,6 @@ const loadAudio = (scene: Phaser.Scene, key: string, path: string) => {
  * the first punch could be thrown.
  */
 export function loadCoreGameplayAssets(scene: Phaser.Scene, levelId: number, character: string) {
-  loadAudio(scene, 'special-attack', 'audio/special-attack.mp3');
-  loadAudio(scene, 'punch-hit', 'audio/punch-hit-sora.mp3');
-  loadAudio(scene, 'heavy-hit', 'audio/heavy-hit.mp3');
-  loadAudio(scene, 'challenge-win', 'audio/challenge.mp3');
-  loadAudio(scene, 'hero-defeat', 'audio/hero-defeat.mp3');
   loadSheet(scene, 'gameplay-chapati-health-pickup-sheet', 'gameplay/generated/chapati-health-pickup-sheet.png', 384);
 
   if (character === 'MJAKA FINE') {
@@ -156,6 +151,13 @@ export function loadDeferredLevelAssets(scene: Phaser.Scene, levelId: number) {
 export function loadBattleAnimationAssets(scene: Phaser.Scene, levelId: number, character: string) {
   let queued = false;
   const add = (didQueue: boolean) => { queued = didQueue || queued; };
+  // Combat has procedural audio fallbacks. Slow sound requests must not keep
+  // a playable arena behind its loading screen.
+  add(loadAudio(scene, 'special-attack', 'audio/special-attack.mp3'));
+  add(loadAudio(scene, 'punch-hit', 'audio/punch-hit-sora.mp3'));
+  add(loadAudio(scene, 'heavy-hit', 'audio/heavy-hit.mp3'));
+  add(loadAudio(scene, 'challenge-win', 'audio/challenge.mp3'));
+  add(loadAudio(scene, 'hero-defeat', 'audio/hero-defeat.mp3'));
 
   if (character !== 'MJAKA FINE') {
     add(loadImage(scene, 'gameplay-mbavu-feint-1', 'gameplay/generated/mbavu-feint-1.png'));

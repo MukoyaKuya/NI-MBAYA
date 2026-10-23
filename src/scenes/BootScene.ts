@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { trackAssetLoading } from '../systems/PerformanceMonitor';
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -6,6 +7,7 @@ export class BootScene extends Phaser.Scene {
   }
 
   preload() {
+    trackAssetLoading(this);
     const loadingLabel = document.querySelector<HTMLElement>('.brand-intro__loading');
     this.load.on(Phaser.Loader.Events.PROGRESS, (progress: number) => {
       if (loadingLabel) loadingLabel.textContent = `Loading NI MBAYA · ${Math.round(progress * 100)}%`;
