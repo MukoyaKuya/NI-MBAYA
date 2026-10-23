@@ -1,4 +1,5 @@
 import type Phaser from 'phaser';
+import { getStreamingMusicStatus } from './StreamingMusic';
 
 const loads: { scene: string; startedMs: number; durationMs?: number; failed: string[] }[] = [];
 
@@ -48,6 +49,7 @@ export function installPerformanceMonitor(game: Phaser.Game) {
     return {
       capturedAt: new Date().toISOString(),
       visibility: document.visibilityState,
+      music: getStreamingMusicStatus(),
       fps: document.hidden ? null : Math.round(game.loop.actualFps || 0),
       longTasks, longestTaskMs: Math.round(longestTaskMs),
       milestones: performance.getEntriesByType('mark').filter(mark => mark.name.startsWith('ni-mbaya:')).map(mark => ({ name: mark.name, sinceNavigationMs: Math.round(mark.startTime) })),
@@ -65,7 +67,7 @@ export function installPerformanceMonitor(game: Phaser.Game) {
   const render = () => {
     if (!visible) return;
     const data = report();
-    output.textContent = `FPS: ${data.fps ?? 'paused (tab hidden)'}\nLong tasks (>50ms): ${longTasks}\nLongest task: ${data.longestTaskMs}ms\n\nREADY TIMES (since page opened)\n`
+    output.textContent = `FPS: ${data.fps ?? 'paused (tab hidden)'}\nLong tasks (>50ms): ${longTasks}\nLongest task: ${data.longestTaskMs}ms\nMusic: ${data.music.track ?? 'none'} · ${'playing' in data.music && data.music.playing ? 'playing' : 'paused/loading'}${'error' in data.music && data.music.error ? ' · ' + data.music.error : ''}\n\nREADY TIMES (since page opened)\n`
       + data.milestones.map(mark => `${mark.name.replace('ni-mbaya:', '')}: ${(mark.sinceNavigationMs / 1000).toFixed(1)}s`).join('\n')
       + '\n\nASSET LOADS\n' + loads.map(load => `${load.scene}: ${load.durationMs === undefined ? 'loading…' : (load.durationMs / 1000).toFixed(1) + 's'}${load.failed.length ? ' FAILED: ' + load.failed.join(', ') : ''}`).join('\n')
       + '\n\nSLOWEST REQUESTS\n' + data.slowestRequests.map(resource => `${(resource.durationMs / 1000).toFixed(1)}s · ${resource.file}\n  ${resource.initiator} / ${(resource.transferBytes / 1024).toFixed(0)} KB transferred\n  wait ${resource.waitMs}ms / download ${resource.downloadMs}ms`).join('\n')

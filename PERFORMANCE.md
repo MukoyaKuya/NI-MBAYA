@@ -30,3 +30,17 @@ node scripts/prepare-sprite-cleanup.cjs --check
 This development tool requires Python with Pillow. Its check compares all
 seven generated masks against the original fragment-removal algorithm.
 Normal builds and gameplay do not require Python.
+
+## Smaller backgrounds and streamed music
+
+`npm run optimize:startup` prepares 1280x720-or-smaller WebP backgrounds at
+quality 72 and mono 48kbps music, retaining the original files for editing.
+Tracks keep their complete duration. The hover effect is limited to 0.6s;
+the game already stops it after 0.48s. Sprite sheets are excluded from this
+profile so their geometry, alpha and precomputed cleanup masks stay intact.
+The command requires Python/Pillow and ffmpeg.
+
+Background music uses streaming HTML audio rather than waiting for Phaser
+to download and decode an entire track. A click/tap/keypress may be required
+by the browser's autoplay policy. Options Sound applies to streaming music
+as well as combat effects. The F8 report includes music playback/error state.

@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { startStreamingMusic } from '../systems/StreamingMusic';
 import { CONTROL_ACTIONS, CONTROL_LABELS, ControlAction, formatKeyName, getControlKeys, normalizeKeyName, resetControlKeys, setControlKey } from '../config/Controls';
 import { cycleDifficulty, getDifficultySettings, getStoryLanguage, isSoundEnabled, toggleSoundEnabled, toggleStoryLanguage } from '../config/GameSettings';
 
@@ -240,9 +241,7 @@ export class OptionsScene extends Phaser.Scene {
   }
 
   private startMenuMusic() {
-    if (!isSoundEnabled() || !this.cache.audio.exists('menu-music')) return;
-    this.menuMusic = this.sound.get('menu-music') ?? this.sound.add('menu-music', { loop: true, volume: 0.24 });
-    if (!this.menuMusic.isPlaying) this.menuMusic.play();
+    startStreamingMusic('menu-music', new URL('../assets/optimized/audio/menu-music.mp3', import.meta.url).href, 0.24);
   }
 
   private playSelectSound() {

@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { stopStreamingMusic } from '../systems/StreamingMusic';
 import { getStoryLanguage, isSoundEnabled } from '../config/GameSettings';
 
 type StoryStartData = { character?: string; chapatis?: number; health?: number };
@@ -112,6 +113,7 @@ export class StoryCutsceneScene extends Phaser.Scene {
     // The menu soundtrack is shared across scenes. Stop it before the comic
     // score begins so the two tracks cannot play on top of each other.
     const menuMusic = this.sound.get('menu-music');
+    stopStreamingMusic('menu-music');
     menuMusic?.stop();
     menuMusic?.destroy();
     this.storyAudio = this.sound.add('story-intro', { volume: 0.48 });

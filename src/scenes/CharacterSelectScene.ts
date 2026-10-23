@@ -1,5 +1,6 @@
 import { getDailyRewardBalance } from '../config/DailyChallenge';
 import Phaser from 'phaser';
+import { startStreamingMusic } from '../systems/StreamingMusic';
 import { getStoryLanguage, isSoundEnabled } from '../config/GameSettings';
 import { copyFor, FIGHTER_BIOS } from '../config/WorldContent';
 
@@ -349,6 +350,7 @@ export class CharacterSelectScene extends Phaser.Scene {
 
   private startMenuAudio() {
     this.sound.mute = !isSoundEnabled();
+    startStreamingMusic('menu-music', new URL('../assets/optimized/audio/menu-music.mp3', import.meta.url).href, 0.24);
     if (!this.cache.audio.exists('menu-music') || !isSoundEnabled()) return;
     this.playMenuMusic();
 

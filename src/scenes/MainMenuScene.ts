@@ -1,5 +1,6 @@
 import { getDailyChallenge, DAILY_TARGET, DAILY_REWARD } from '../config/DailyChallenge';
 import Phaser from 'phaser';
+import { startStreamingMusic } from '../systems/StreamingMusic';
 import { cycleDifficulty, getDifficultySettings, isSoundEnabled } from '../config/GameSettings';
 import { getJourneySave } from '../config/GameProgress';
 
@@ -24,9 +25,7 @@ type HoverButtonConfig = {
 };
 
 export class MainMenuScene extends Phaser.Scene {
-  private menuMusic?: Phaser.Sound.BaseSound;
   private hoverSound?: Phaser.Sound.BaseSound;
-  private audioUnlockPrompt?: Phaser.GameObjects.Container;
   private lastHoverAt = -1000;
   private fighterArtReady = false;
 
@@ -35,6 +34,12 @@ export class MainMenuScene extends Phaser.Scene {
   }
 
   create() {
+    startStreamingMusic('menu-music', new URL('../assets/optimized/audio/menu-music.mp3', import.meta.url).href, 0.24);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.hoverSound?.stop();
+      this.hoverSound?.destroy();
+      this.hoverSound = undefined;
+    });
     this.cameras.main.setBackgroundColor('#050507');
     this.drawLayeredBackdrop();
     this.loadFighterArtAfterMenuIsVisible();
@@ -123,32 +128,6 @@ export class MainMenuScene extends Phaser.Scene {
       else this.scene.start('CultureScene');
     });
   }
-  private startMenuMusic() {
-    if (!this.cache.audio.exists('menu-music')) return;
-    this.playMenuMusic();
-
-    const resumeMusic = () => {
-      this.playMenuMusic();
-      this.hideAudioUnlockPrompt();
-    };
-
-    if (this.sound.locked) {
-      this.showAudioUnlockPrompt(resumeMusic);
-      this.sound.once(Phaser.Sound.Events.UNLOCKED, () => {
-        if (this.isMenuSceneActive()) resumeMusic();
-      });
-    }
-
-    this.input.keyboard?.once('keydown', resumeMusic);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.hoverSound?.stop();
-      this.hoverSound?.destroy();
-      this.hideAudioUnlockPrompt();
-      this.menuMusic = undefined;
-      this.hoverSound = undefined;
-    });
-  }
-
   private loadFighterArtAfterMenuIsVisible() {
     FIGHTER_ART.forEach(([key, url]) => {
       if (!this.textures.exists(key)) this.load.image(key, url);
@@ -184,60 +163,7 @@ export class MainMenuScene extends Phaser.Scene {
     ]) {
       if (!this.cache.audio.exists(key)) { this.load.audio(key, url); queuedSounds = true; }
     }
-    if (this.cache.audio.exists('menu-music')) {
-      this.startMenuMusic();
-      if (queuedSounds) this.load.start();
-      return;
-    }
-
-    this.load.audio('menu-music', new URL('../assets/optimized/audio/menu-music.mp3', import.meta.url).href);
-    this.load.once(Phaser.Loader.Events.COMPLETE, () => {
-      if (this.scene.manager.getScenes(true).includes(this) && this.cache.audio.exists('menu-music')) {
-        this.startMenuMusic();
-      }
-    });
-    this.load.start();
-  }
-
-  private playMenuMusic() {
-    this.menuMusic = this.sound.get('menu-music') ?? this.sound.add('menu-music', { loop: true, volume: 0.24 });
-    if (!this.menuMusic.isPlaying) this.menuMusic.play();
-  }
-
-  private showAudioUnlockPrompt(onUnlockIntent: () => void) {
-    if (this.audioUnlockPrompt) return;
-
-    const prompt = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT - 76).setDepth(2000);
-    const blocker = this.add.zone(-GAME_WIDTH / 2, -GAME_HEIGHT + 76, GAME_WIDTH, GAME_HEIGHT)
-      .setOrigin(0)
-      .setInteractive({ useHandCursor: true });
-    const panel = this.add.graphics();
-    panel.fillStyle(0x050505, 0.84);
-    panel.lineStyle(3, 0xffc423, 0.9);
-    panel.fillRoundedRect(-190, -28, 380, 56, 8);
-    panel.strokeRoundedRect(-190, -28, 380, 56, 8);
-    const text = this.add.text(0, 0, 'CLICK ANYWHERE TO START', {
-      fontFamily: 'Arial Black, Impact, sans-serif',
-      fontSize: '20px',
-      color: '#ffc423',
-      stroke: '#000000',
-      strokeThickness: 4,
-    }).setOrigin(0.5);
-
-    prompt.add([blocker, panel, text]);
-    blocker.on('pointerdown', onUnlockIntent);
-    this.audioUnlockPrompt = prompt;
-  }
-
-  private hideAudioUnlockPrompt() {
-    this.audioUnlockPrompt?.destroy();
-    this.audioUnlockPrompt = undefined;
-  }
-
-  private isMenuSceneActive() {
-    return this.scene.manager.getScenes(true).some((scene) => (
-      scene.scene.key === 'MainMenuScene' || scene.scene.key === 'CharacterSelectScene'
-    ));
+    if (queuedSounds) this.load.start();
   }
 
   private playHoverSound() {
