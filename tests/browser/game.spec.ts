@@ -30,7 +30,8 @@ test('arena renders, keyboard moves, pause preserves timers and attack recovery'
   await page.keyboard.up('ArrowRight');
   expect(await page.evaluate(() => (window as any).__game.scene.getScene('LevelScene').player.x)).toBeGreaterThan(x);
   await page.keyboard.press('p');
-  expect(await page.evaluate(() => (window as any).__game.scene.getScene('LevelScene').physics.world.isPaused)).toBe(true);
+  // Observe the keyboard event being handled before checking the paused timers.
+  await expect.poll(() => page.evaluate(() => (window as any).__game.scene.getScene('LevelScene').physics.world.isPaused)).toBe(true);
   const result = await page.evaluate(async () => {
     const scene = (window as any).__game.scene.getScene('LevelScene');
     const now = (window as any).__getGameplayTime;
