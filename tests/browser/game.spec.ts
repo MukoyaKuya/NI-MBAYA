@@ -108,8 +108,9 @@ test('a keyboard jump avoids grounded melee and landing restores vulnerability',
     const scene = (window as any).__game.scene.getScene('LevelScene');
     scene.enemyList.forEach((enemy: any) => enemy.canAttackAt = Infinity);
   });
-  await page.keyboard.press('Space');
-  const snapshot = await page.waitForFunction(() => {
+  // Observe before pressing, and hold the key across a game frame. A zero-delay
+  // keydown/keyup can otherwise finish before Phaser polls input on CI.
+  const snapshotPromise = page.waitForFunction(() => {
     const scene = (window as any).__game.scene.getScene('LevelScene');
     const player = scene.player;
     if (player.z <= 60) return false;
@@ -132,6 +133,9 @@ test('a keyboard jump avoids grounded melee and landing restores vulnerability',
     attack();
     return { altitude, airborneHealth, groundedHealth: player.health };
   });
+  await page.keyboard.down('Space');
+  const snapshot = await snapshotPromise;
+  await page.keyboard.up('Space');
   const result = await snapshot.jsonValue() as { altitude: number; airborneHealth: number; groundedHealth: number };
   expect(result.altitude).toBeGreaterThan(40);
   expect(result.airborneHealth).toBe(100);
