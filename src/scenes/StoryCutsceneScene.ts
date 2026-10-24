@@ -7,7 +7,7 @@ type StoryStartData = { character?: string; chapatis?: number; health?: number }
 const GAME_WIDTH = 1280;
 const GAME_HEIGHT = 720;
 
-type ComicPanel = { chapter: string; caption: string; background: string; accent: number; art?: string; artX?: number; artScale?: number };
+type ComicPanel = { chapter: string; background: string; accent: number };
 
 export class StoryCutsceneScene extends Phaser.Scene {
   private startData: StoryStartData = {};
@@ -18,14 +18,16 @@ export class StoryCutsceneScene extends Phaser.Scene {
   constructor() { super('StoryCutsceneScene'); }
 
   preload() {
-    if (!this.textures.exists('story-chapter1-taken-background')) {
-      this.load.image('story-chapter1-taken-background', new URL('../assets/optimized/story/chapter-1-taken-background.webp', import.meta.url).href);
-    }
+    const backgrounds = [
+      ['story-chapter1-taken-background', '../assets/optimized/story/chapter-1-taken-background.webp'],
+      ['story-chapter2-blocked-background', '../assets/optimized/story/chapter-2-city-blocked-background.webp'],
+      ['story-chapter3-rescue-background', '../assets/optimized/story/chapter-3-rescue-background.webp'],
+    ] as const;
+    backgrounds.forEach(([key, path]) => {
+      if (!this.textures.exists(key)) this.load.image(key, new URL(path, import.meta.url).href);
+    });
     if (!this.cache.audio.exists('story-intro')) {
       this.load.audio('story-intro', new URL('../assets/optimized/audio/story-intro.mp3', import.meta.url).href);
-    }
-    if (!this.textures.exists('menu-majembe')) {
-      this.load.image('menu-majembe', new URL('../assets/optimized/menu/generated/majembe.webp', import.meta.url).href);
     }
   }
 
@@ -43,55 +45,25 @@ export class StoryCutsceneScene extends Phaser.Scene {
     const sw = getStoryLanguage() === 'sw';
     return sw
       ? [
-        { chapter: 'SURA 1 — WATEKWA', caption: 'Mbavu Destroyer amemteka Mjaka Mfine, mpenzi wako, na kutoweka naye katika maficho yake jijini.', background: 'menu-v2-background', accent: 0xe1443f, art: 'menu-mjaka', artX: 960, artScale: 1.08 },
-        { chapter: 'SURA 2 — JIJI LIMEZUILIWA', caption: 'Ili kukupunguza kasi, ametuma goons kote Nairobi kukuwinda na kukuzuia usimfikie.', background: 'menu-v2-background', accent: 0xffbd1a, art: 'menu-majembe', artX: 925, artScale: 1.05 },
-        { chapter: 'SURA 3 — UOKOAJI', caption: 'Mtafute Mbavu Destroyer na umwokoe mpenzi wako. Hakikisha unamfundisha somo ambalo hatalisahau kamwe.', background: 'menu-v2-background', accent: 0x4fa6ff, art: 'menu-majembe', artX: 930, artScale: 1.08 },
+        { chapter: 'SURA 1 — WATEKWA', background: 'story-chapter1-taken-background', accent: 0xe1443f },
+        { chapter: 'SURA 2 — JIJI LIMEZUILIWA', background: 'story-chapter2-blocked-background', accent: 0xe1443f },
+        { chapter: 'SURA 3 — UOKOAJI', background: 'story-chapter3-rescue-background', accent: 0xe1443f },
       ]
       : [
-        { chapter: 'CHAPTER 1 — TAKEN', caption: 'Mbavu Destroyer has kidnapped Mjaka Mfine, your girlfriend, and disappeared with her into his hideout in the city.', background: 'menu-v2-background', accent: 0xe1443f, art: 'menu-mjaka', artX: 960, artScale: 1.08 },
-        { chapter: 'CHAPTER 2 — THE CITY IS BLOCKED', caption: 'To slow you down, he has sent goons across Nairobi to hunt you and stop you from getting to him.', background: 'menu-v2-background', accent: 0xffbd1a, art: 'menu-majembe', artX: 925, artScale: 1.05 },
-        { chapter: 'CHAPTER 3 — THE RESCUE', caption: 'Go find Mbavu Destroyer and save your girlfriend. Ensure you teach him a lesson he will never forget.', background: 'menu-v2-background', accent: 0x4fa6ff, art: 'menu-majembe', artX: 930, artScale: 1.08 },
+        { chapter: 'CHAPTER 1 — TAKEN', background: 'story-chapter1-taken-background', accent: 0xe1443f },
+        { chapter: 'CHAPTER 2 — THE CITY IS BLOCKED', background: 'story-chapter2-blocked-background', accent: 0xe1443f },
+        { chapter: 'CHAPTER 3 — THE RESCUE', background: 'story-chapter3-rescue-background', accent: 0xe1443f },
       ];
   }
 
   private showPanel() {
     this.children.removeAll();
     const panel = this.panels()[this.panelIndex];
-    if (this.panelIndex === 0) {
-      this.showChapterOne(panel);
-      return;
-    }
-    this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, panel.background).setDisplaySize(GAME_WIDTH, GAME_HEIGHT).setDepth(-4);
-    this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x020305, 0.48).setDepth(-3);
-    this.add.rectangle(GAME_WIDTH / 2, 82, GAME_WIDTH, 164, 0x020305, 0.82).setDepth(-2);
-
-    const frame = this.add.graphics().setDepth(20);
-    frame.lineStyle(8, panel.accent, 0.95).strokeRect(22, 22, GAME_WIDTH - 44, GAME_HEIGHT - 44);
-    frame.lineStyle(2, 0xf7e9b6, 0.92).strokeRect(32, 32, GAME_WIDTH - 64, GAME_HEIGHT - 64);
-    for (let x = 46; x < GAME_WIDTH - 38; x += 26) frame.lineStyle(1, panel.accent, 0.18).lineBetween(x, 39, x + 18, 25);
-
-    this.add.text(72, 65, panel.chapter, { fontFamily: 'Arial Black, Impact, sans-serif', fontSize: '34px', color: '#ffc51d', stroke: '#050505', strokeThickness: 7, fontStyle: 'italic' }).setOrigin(0, 0.5).setDepth(21);
-    this.add.text(GAME_WIDTH - 74, 65, `${this.panelIndex + 1}/3`, { fontFamily: 'Arial Black', fontSize: '20px', color: '#ffffff', stroke: '#050505', strokeThickness: 5 }).setOrigin(1, 0.5).setDepth(21);
-
-    if (panel.art) {
-      const character = this.add.image(panel.artX ?? 930, 658, panel.art).setDepth(5).setAlpha(0).setOrigin(0.5, 1);
-      // These menu illustrations are authored as large key art. Cap them to
-      // a comic-panel height rather than rendering at their native scale.
-      character.setScale(Math.min(panel.artScale ?? 0.62, 490 / character.height));
-      this.tweens.add({ targets: character, alpha: 1, x: character.x - 24, duration: 420, ease: 'Cubic.Out' });
-    }
-    this.add.rectangle(0, 0, 650, GAME_HEIGHT, 0x020305, 0.4).setOrigin(0).setDepth(2);
-    const captionPanel = this.add.graphics().setDepth(12);
-    captionPanel.fillStyle(0x07101d, 0.95).lineStyle(3, panel.accent, 0.9);
-    captionPanel.fillRoundedRect(76, 390, 635, 188, 12).strokeRoundedRect(76, 390, 635, 188, 12);
-    const captionText = this.add.text(112, 432, panel.caption, { fontFamily: 'Arial, sans-serif', fontSize: '27px', color: '#f5f7fb', wordWrap: { width: 555 }, lineSpacing: 8, stroke: '#050505', strokeThickness: 4 }).setDepth(13).setAlpha(0).setOrigin(0, 0);
-    this.tweens.add({ targets: captionText, alpha: 1, duration: 380, delay: 160, ease: 'Sine.Out' });
-
-    this.createButton(GAME_WIDTH - 215, 638, this.panelIndex === 2 ? (getStoryLanguage() === 'sw' ? 'ANZA PAMBANO' : 'START THE FIGHT') : (getStoryLanguage() === 'sw' ? 'ENDELEA' : 'NEXT'));
+    this.showStoryPanel(panel);
   }
 
-  private showChapterOne(panel: ComicPanel) {
-    this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'story-chapter1-taken-background')
+  private showStoryPanel(panel: ComicPanel) {
+    this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, panel.background)
       .setDisplaySize(GAME_WIDTH, GAME_HEIGHT).setDepth(-4);
     // Keep the story copy crisp and legible over the generated dark alley.
     this.add.rectangle(1102, 360, 356, GAME_HEIGHT, 0x05070b, 0.18).setDepth(-3);
@@ -111,23 +83,24 @@ export class StoryCutsceneScene extends Phaser.Scene {
 
     const progress = this.add.graphics().setDepth(10);
     for (let i = 0; i < 3; i++) {
-      progress.fillStyle(i === 0 ? 0xffc51d : 0x55585d, 1).fillRoundedRect(1182 + i * 28, 117, 22, 8, 4);
+      progress.fillStyle(i <= this.panelIndex ? 0xffc51d : 0x55585d, 1).fillRoundedRect(1182 + i * 28, 117, 22, 8, 4);
     }
     progress.lineStyle(2, panel.accent, 0.95).lineBetween(938, 121, 1162, 121);
 
     const sw = getStoryLanguage() === 'sw';
-    const lines: Array<Array<[string, string]>> = sw ? [
-      [['Mbavu Destroyer', '#ffc51d'], [' amemteka', '#f5f7fb']],
-      [['Mjaka Mfine', '#ffc51d'], [', mpenzi wako,', '#f5f7fb']],
-      [['na kutoweka naye katika', '#f5f7fb']],
-      [['maficho yake jijini.', '#f5f7fb']],
-    ] : [
-      [['Mbavu Destroyer', '#ffc51d'], [' has', '#f5f7fb']],
-      [['kidnapped ', '#f5f7fb'], ['Mjaka Mfine,', '#ffc51d']],
-      [['your girlfriend, and', '#f5f7fb']],
-      [['disappeared with her', '#f5f7fb']],
-      [['into his hideout in the city.', '#f5f7fb']],
+    const highlight = '#ffc51d';
+    const body = '#f5f7fb';
+    const englishLines: Array<Array<[string, string]>>[] = [
+      [[['Mbavu Destroyer', highlight], [' has', body]], [['kidnapped ', body], ['Mjaka Mfine,', highlight]], [['your girlfriend, and', body]], [['disappeared with her', body]], [['into his hideout in the city.', body]]],
+      [[['To slow you down, he has', body]], [['sent ', body], ['goons', highlight], [' across ', body], ['Nairobi', highlight]], [['to hunt you and stop you', body]], [['from getting to him.', body]]],
+      [[['Go find ', body], ['Mbavu Destroyer', highlight]], [['and save your girlfriend.', body]], [['Ensure you teach him a', body]], [['lesson he will never forget.', body]]],
     ];
+    const swahiliLines: Array<Array<[string, string]>>[] = [
+      [[['Mbavu Destroyer', highlight], [' amemteka', body]], [['Mjaka Mfine', highlight], [', mpenzi wako,', body]], [['na kutoweka naye katika', body]], [['maficho yake jijini.', body]]],
+      [[['Ili kukupunguza kasi,', body]], [['ametuma ', body], ['goons', highlight], [' kote ', body], ['Nairobi', highlight]], [['kukuwinda na kukuzuia', body]], [['usimfikie.', body]]],
+      [[['Mtafute ', body], ['Mbavu Destroyer', highlight]], [['na umwokoe mpenzi wako.', body]], [['Hakikisha unamfundisha', body]], [['somo ambalo', body]], [['hatalisahau kamwe.', body]]],
+    ];
+    const lines = (sw ? swahiliLines : englishLines)[this.panelIndex];
     const copyY = sw ? 252 : 236;
     lines.forEach((segments, row) => {
       let x = 930;
@@ -145,7 +118,11 @@ export class StoryCutsceneScene extends Phaser.Scene {
       if (rowWidth > 335) rowObjects.forEach((part) => part.setScale(335 / rowWidth, 1));
     });
 
-    this.createButton(GAME_WIDTH - 215, 638, getStoryLanguage() === 'sw' ? 'ENDELEA' : 'NEXT', true);
+    const swahili = getStoryLanguage() === 'sw';
+    const buttonLabel = this.panelIndex === 2
+      ? (swahili ? 'ANZA PAMBANO' : 'START THE FIGHT')
+      : (swahili ? 'ENDELEA' : 'NEXT');
+    this.createButton(GAME_WIDTH - 215, 638, buttonLabel, true);
   }
 
   private createButton(x: number, y: number, label: string, withArrow = false) {
