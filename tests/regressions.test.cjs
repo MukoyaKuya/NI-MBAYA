@@ -746,3 +746,63 @@ test('adding an enemy to the physics group cannot re-enable falling gravity', ()
     assert.equal(y, 540);
   }
 });
+
+
+test('gameplay clock freezes deadlines and resumes without counting paused wall time', () => {
+  const clock = loadSource('src/systems/GameplayClock.ts');
+  const scene = { time: { now: 1000, paused: false }, tweens: { pauseAll() {}, resumeAll() {} } };
+  clock.pauseGameplay(scene);
+  scene.time.now = 6000;
+  assert.equal(clock.getGameplayTime(scene), 1000);
+  assert.equal(scene.time.paused, true);
+  clock.resumeGameplay(scene);
+  scene.time.now = 6100;
+  assert.equal(clock.getGameplayTime(scene), 1100);
+  assert.equal(scene.time.paused, false);
+});
+
+test('grounded melee cannot damage a high jumping player but still uses its attack cooldown', () => {
+  for (const altitude of [0, 40, 41, 120]) {
+    const enemy = enemyAI('gameplay-goon', 450);
+    enemy.canAttackAt = 0;
+    enemy.attackDamage = 8;
+    enemy.attackCooldown = 1000;
+    enemy.z = 0;
+    enemy.scene.events = { emit() {} };
+    enemy.scene.cameras = { main: { shake() {} } };
+    let hits = 0;
+    enemy.update(1000, { x: 500, y: 540, z: altitude, takeDamage() { hits++; } });
+    assert.equal(hits, altitude <= 40 ? 1 : 0);
+    assert.equal(enemy.canAttackAt, 2000);
+  }
+});
+
+
+test('enemy stones pass an airborne player and hit after landing', () => {
+  class Vector2 {
+    constructor(x, y) { this.x = x; this.y = y; }
+    lengthSq() { return this.x * this.x + this.y * this.y; }
+    set(x, y) { this.x = x; this.y = y; }
+    normalize() { const length = Math.sqrt(this.lengthSq()); this.x /= length; this.y /= length; }
+  }
+  const { throwEnemyStone } = loadSource('src/systems/EnemyProjectiles.ts', { phaser: { Math: { Vector2 } } });
+  let launch, hit, hits = 0;
+  const stone = { active: true, body: { setAllowGravity() {} }, destroy() { this.active = false; } };
+  for (const name of ['setDepth', 'setVelocity', 'setAngularVelocity', 'setCircle']) stone[name] = () => stone;
+  const overlap = { active: true, destroy() { this.active = false; } };
+  const scene = {
+    time: { delayedCall(ms, callback) { if (ms === 380) launch = callback; } },
+    physics: { add: { image: () => stone, overlap(a, b, callback) { hit = callback; return overlap; } } },
+    events: { emit() {} }, cameras: { main: { shake() {} } },
+  };
+  const enemy = { active: true, state: 'attack', lastAttackAt: 1, x: 0, y: 540, z: 0, attackDamage: 10 };
+  const player = { state: 'jump', x: 100, y: 540, z: 80, takeDamage() { hits++; } };
+  throwEnemyStone(scene, enemy, player);
+  launch(); hit();
+  assert.equal(hits, 0);
+  assert.equal(stone.active, true);
+  player.z = 0; hit();
+  assert.equal(hits, 1);
+  assert.equal(stone.active, false);
+  assert.equal(overlap.active, false);
+});

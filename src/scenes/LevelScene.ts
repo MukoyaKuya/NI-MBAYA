@@ -1,6 +1,10 @@
+import { PLAYER_ART, PLAYER_DEFEAT_FALL_DISPLAY, PLAYER_FEINT_FRAMES, MJAKA_ART, type PlayerArtSpec } from '../config/PlayerArt';
+import { throwEnemyStone } from '../systems/EnemyProjectiles';
 import { isEnemyStriking, isEnemyWalking, getEnemyTextureFlip, getEnemyExitMotion } from '../systems/EnemyMotion';
 import { getEnemyDefeatPose } from '../systems/EnemyDefeatMotion';
-import { getCleanEnemyRunTexture, getCleanPlayerFallTexture, getCleanChapatiTexture } from '../systems/EnemyRunTexture';
+import { createLevelAnimations } from '../systems/LevelAnimations';
+import { LEVELS, getLevelDefinition, type LevelDefinition } from '../config/Levels';
+import { getGameplayTime } from '../systems/GameplayClock';
 import { trackAssetLoading } from '../systems/PerformanceMonitor';
 import { separateEnemyCrowd } from '../systems/CrowdSystem';
 import { StageRenderer } from '../systems/StageRenderer';
@@ -34,14 +38,6 @@ type EnemyVisual = {
   walking: boolean;
 };
 
-type PlayerArtSpec = {
-  key: string;
-  width: number;
-  height: number;
-  yOffset: number;
-  xOffset: number;
-};
-
 type LevelStartData = {
   levelId?: number;
   character?: string;
@@ -49,119 +45,8 @@ type LevelStartData = {
   health?: number;
 };
 
-type EnemySpawn = {
-  x: number;
-  offset: number;
-  variant: EnemyVisualVariant;
-  speed: number;
-};
-
-type LevelDefinition = {
-  id: number;
-  title: string;
-  location: string;
-  backgroundKey: string;
-  reward: number;
-  enemies: EnemySpawn[];
-};
-
-const PLAYER_ART: Record<string, PlayerArtSpec> = {
-  idle: { key: 'gameplay-mbavu-idle', width: 168, height: 252, yOffset: 68, xOffset: 0 },
-  walk: { key: 'gameplay-mbavu-run-sheet', width: 190, height: 285, yOffset: 84, xOffset: 4 },
-  punch: { key: 'gameplay-mbavu-punch', width: 205, height: 286, yOffset: 82, xOffset: 22 },
-  kick: { key: 'gameplay-mbavu-standing-kick', width: 205, height: 286, yOffset: 82, xOffset: 30 },
-  special: { key: 'gameplay-mbavu-kick', width: 365, height: 244, yOffset: 120, xOffset: 58 },
-  jump: { key: 'gameplay-mbavu-kick', width: 315, height: 210, yOffset: 130, xOffset: 30 },
-  hit: { key: 'gameplay-mbavu-idle', width: 168, height: 252, yOffset: 68, xOffset: -10 },
-  defeat: { key: 'gameplay-mbavu-defeat', width: 260, height: 174, yOffset: 36, xOffset: 0 },
-};
-
-const PLAYER_DEFEAT_FALL_DISPLAY = { width: 360, height: 270, yOffset: 70 };
 const MAX_SIMULTANEOUS_ENEMY_ATTACKS = 2;
 const ENEMY_ATTACK_SLOT_WINDOW = 900;
-const MJAKA_ART: Record<string, PlayerArtSpec> = {
-  idle: { key: 'menu-mjaka', width: 176, height: 276, yOffset: 82, xOffset: 0 },
-  walk: { key: 'menu-mjaka', width: 176, height: 276, yOffset: 82, xOffset: 0 },
-  punch: { key: 'gameplay-mjaka-palm-strike', width: 214, height: 267, yOffset: 78, xOffset: 24 },
-  kick: { key: 'gameplay-mjaka-high-kick', width: 250, height: 267, yOffset: 78, xOffset: 42 },
-  special: { key: 'gameplay-mjaka-rush-kick', width: 330, height: 233, yOffset: 108, xOffset: 58 },
-  jump: { key: 'menu-mjaka', width: 176, height: 276, yOffset: 92, xOffset: 0 },
-  hit: { key: 'menu-mjaka', width: 176, height: 276, yOffset: 82, xOffset: -8 },
-  defeat: { key: 'menu-mjaka', width: 176, height: 276, yOffset: 82, xOffset: 0 },
-};
-
-const PLAYER_FEINT_FRAMES: PlayerArtSpec[] = [
-  { ...PLAYER_ART.idle, key: 'gameplay-mbavu-idle', xOffset: 0, width: 168, height: 252, yOffset: 68 },
-  { ...PLAYER_ART.idle, key: 'gameplay-mbavu-feint-1', xOffset: -2, width: 170, height: 250, yOffset: 67 },
-  { ...PLAYER_ART.idle, key: 'gameplay-mbavu-feint-2', xOffset: 2, width: 166, height: 256, yOffset: 70 },
-  { ...PLAYER_ART.idle, key: 'gameplay-mbavu-feint-3', xOffset: -4, width: 172, height: 248, yOffset: 66 },
-  { ...PLAYER_ART.idle, key: 'gameplay-mbavu-feint-4', xOffset: 1, width: 168, height: 254, yOffset: 69 },
-];
-
-const LEVELS: LevelDefinition[] = [
-  {
-    id: 1,
-    title: 'LEVEL 1',
-    location: 'NAIROBI CBD',
-    backgroundKey: 'nairobi-cbd-background',
-    reward: 250,
-    enemies: [
-      { x: 210, offset: -315, variant: 'gameplay-goon-hoodie', speed: 118 },
-      { x: 355, offset: -190, variant: 'gameplay-goon-club', speed: 126 },
-      { x: 820, offset: 175, variant: 'gameplay-goon', speed: 132 },
-      { x: 1000, offset: 305, variant: 'gameplay-goon-club', speed: 122 },
-      { x: 1140, offset: 430, variant: 'gameplay-goon-hoodie', speed: 112 },
-    ],
-  },
-  {
-    id: 2,
-    title: 'LEVEL 2',
-    location: 'DOWNTOWN BACKSTREET',
-    backgroundKey: 'gameplay-background',
-    reward: 400,
-    enemies: [
-      { x: 180, offset: -350, variant: 'gameplay-goon', speed: 136 },
-      { x: 310, offset: -245, variant: 'gameplay-goon-hoodie', speed: 128 },
-      { x: 465, offset: -135, variant: 'gameplay-goon-club', speed: 132 },
-      { x: 900, offset: 160, variant: 'gameplay-goon', speed: 142 },
-      { x: 1060, offset: 285, variant: 'gameplay-goon-club', speed: 136 },
-      { x: 1190, offset: 415, variant: 'gameplay-goon-hoodie', speed: 126 },
-    ],
-  },
-  {
-    id: 3,
-    title: 'LEVEL 3',
-    location: 'NAIROBI ROOFTOPS',
-    backgroundKey: 'level3-nairobi-rooftop-background',
-    reward: 650,
-    enemies: [
-      { x: 150, offset: -390, variant: 'gameplay-goon-chain', speed: 146 },
-      { x: 320, offset: -250, variant: 'gameplay-attack-dog', speed: 176 },
-      { x: 485, offset: -120, variant: 'gameplay-goon-heavy', speed: 108 },
-      { x: 870, offset: 155, variant: 'gameplay-goon-chain', speed: 150 },
-      { x: 1040, offset: 300, variant: 'gameplay-attack-dog', speed: 180 },
-      { x: 1190, offset: 440, variant: 'gameplay-goon-heavy', speed: 112 },
-    ],
-  },
-  {
-    id: 4,
-    title: 'LEVEL 4',
-    location: 'KIBERA',
-    backgroundKey: 'level4-kibera-background',
-    reward: 900,
-    enemies: [
-      { x: 150, offset: -410, variant: 'gameplay-kibera-stone-goon', speed: 132 },
-      { x: 330, offset: -270, variant: 'gameplay-kibera-shield-goon', speed: 96 },
-      { x: 500, offset: -125, variant: 'gameplay-kibera-stone-goon', speed: 138 },
-      { x: 850, offset: 145, variant: 'gameplay-kibera-shield-goon', speed: 100 },
-      { x: 1040, offset: 305, variant: 'gameplay-kibera-stone-goon', speed: 142 },
-      { x: 1190, offset: 455, variant: 'gameplay-kibera-shield-goon', speed: 98 },
-    ],
-  },
-];
-
-const getLevelDefinition = (levelId: number) => LEVELS.find((level) => level.id === levelId) ?? LEVELS[0];
-
 
 export class LevelScene extends Phaser.Scene {
   private player!: Player;
@@ -273,7 +158,8 @@ export class LevelScene extends Phaser.Scene {
     performance.mark('ni-mbaya:level-ready');
   }
 
-  update(time: number, delta: number) {
+  update(_time: number, delta: number) {
+    const time = getGameplayTime(this);
     // Defeat aftermath must continue even while combat physics is paused.
     if (this.physics.world.isPaused && this.player?.state !== 'defeat') {
       // Clearing combat must not freeze the final enemy halfway through a fall.
@@ -417,40 +303,7 @@ export class LevelScene extends Phaser.Scene {
   }
 
   private handleStoneThrow(enemy: EnemyGoon) {
-    const attackAt = enemy.lastAttackAt;
-    this.time.delayedCall(380, () => {
-      if (!enemy.active || enemy.state !== 'attack' || enemy.lastAttackAt !== attackAt || this.player.state === 'defeat') return;
-
-      const startX = enemy.x + (this.player.x >= enemy.x ? 42 : -42);
-      const startY = enemy.y - 54;
-      const targetY = this.player.y - 46;
-      const direction = new Phaser.Math.Vector2(this.player.x - startX, targetY - startY);
-      if (direction.lengthSq() === 0) direction.set(1, 0);
-      direction.normalize();
-
-      const stone = this.physics.add.image(startX, startY, 'stone-projectile')
-        .setDepth(Math.max(enemy.y, this.player.y) + 2)
-        .setVelocity(direction.x * 470, direction.y * 470)
-        .setAngularVelocity(direction.x >= 0 ? 760 : -760);
-      stone.setCircle(10);
-      (stone.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
-
-      const overlap = this.physics.add.overlap(stone, this.player, () => {
-        if (!stone.active || this.player.state === 'defeat') return;
-        this.player.takeDamage(enemy.attackDamage, 230, enemy.x);
-        this.events.emit('sfx:player-hurt', false);
-        this.cameras.main.shake(75, 0.003);
-        if (overlap.active) overlap.destroy();
-        stone.destroy();
-      });
-
-      this.time.delayedCall(1450, () => {
-        // The impact callback may already have removed this overlap. Phaser's
-        // Collider.destroy() is not idempotent and throws when called twice.
-        if (overlap.active) overlap.destroy();
-        if (stone.active) stone.destroy();
-      });
-    });
+    throwEnemyStone(this, enemy, this.player);
   }
 
   private showLevelClearOverlay(storyUnlocked: boolean) {
@@ -671,127 +524,7 @@ export class LevelScene extends Phaser.Scene {
   }
 
   private createSceneAnimations() {
-    const createEightFrameAnimation = (key: string, texture: string, frameRate: number, repeat: number) => {
-      if (this.anims.exists(key) || !this.textures.exists(texture)) return;
-      const animationTexture = texture === 'gameplay-chapati-health-pickup-sheet'
-        ? getCleanChapatiTexture(this.textures)
-        : getCleanEnemyRunTexture(this.textures, texture);
-      this.anims.create({
-        key,
-        frames: this.anims.generateFrameNumbers(animationTexture, { start: 0, end: 7 }),
-        frameRate,
-        repeat,
-      });
-    };
-    createEightFrameAnimation('chapati-health-spin', 'gameplay-chapati-health-pickup-sheet', 12, -1);
-    createEightFrameAnimation('attack-dog-run', 'gameplay-attack-dog-run-sheet', 13, -1);
-    createEightFrameAnimation('attack-dog-attack', 'gameplay-attack-dog', 12, 0);
-    createEightFrameAnimation('attack-dog-defeat', 'gameplay-attack-dog-defeat-sheet', 10, 0);
-    createEightFrameAnimation('goon-chain-idle', 'gameplay-goon-chain', 6, -1);
-    createEightFrameAnimation('goon-chain-walk', 'gameplay-goon-chain-walk-sheet', 10, -1);
-    createEightFrameAnimation('goon-chain-attack', 'gameplay-goon-chain-attack-sheet', 13, 0);
-    createEightFrameAnimation('goon-chain-defeat', 'gameplay-goon-chain-defeat-sheet', 10, 0);
-    createEightFrameAnimation('goon-heavy-idle', 'gameplay-goon-heavy', 5, -1);
-    if (!this.anims.exists('goon-heavy-walk') && this.textures.exists('gameplay-goon-heavy-walk-sheet')) {
-      this.anims.create({
-        key: 'goon-heavy-walk',
-        frames: this.anims.generateFrameNumbers('gameplay-goon-heavy-walk-sheet', { start: 0, end: 3 }),
-        frameRate: 6,
-        repeat: -1,
-      });
-    }
-    createEightFrameAnimation('goon-heavy-attack', 'gameplay-goon-heavy-attack-sheet', 11, 0);
-    createEightFrameAnimation('goon-heavy-defeat', 'gameplay-goon-heavy-defeat-sheet', 9, 0);
-    createEightFrameAnimation('kibera-stone-walk', 'gameplay-kibera-stone-goon-walk-sheet', 10, -1);
-    createEightFrameAnimation('kibera-stone-sprint', 'gameplay-kibera-stone-goon-sprint-sheet', 14, -1);
-    createEightFrameAnimation('kibera-stone-throw', 'gameplay-kibera-stone-goon-throw-sheet', 12, 0);
-    createEightFrameAnimation('kibera-shield-walk', 'gameplay-kibera-shield-goon-walk-sheet', 8, -1);
-    createEightFrameAnimation('kibera-shield-sprint', 'gameplay-kibera-shield-goon-sprint-sheet', 13, -1);
-    createEightFrameAnimation('kibera-shield-combo', 'gameplay-kibera-shield-goon-attack-sheet', 11, 0);
-
-    if (!this.anims.exists('mbavu-run') && this.textures.exists('gameplay-mbavu-run-sheet')) {
-      this.anims.create({
-        key: 'mbavu-run',
-        frames: this.anims.generateFrameNumbers('gameplay-mbavu-run-sheet', { start: 0, end: 7 }),
-        frameRate: 14,
-        repeat: -1,
-      });
-    }
-
-    if (!this.anims.exists('mbavu-hit-reaction') && this.textures.exists('gameplay-mbavu-defeat-fall-sheet')) {
-      this.anims.create({
-        key: 'mbavu-hit-reaction',
-        frames: [0, 1, 2, 1, 0].map(frame => ({ key: getCleanPlayerFallTexture(this.textures), frame })),
-        frameRate: 20,
-        repeat: 0,
-      });
-    }
-
-    if (!this.anims.exists('mbavu-defeat-fall') && this.textures.exists('gameplay-mbavu-defeat-fall-sheet')) {
-      this.anims.create({
-        key: 'mbavu-defeat-fall',
-        frames: this.anims.generateFrameNumbers(getCleanPlayerFallTexture(this.textures), { start: 0, end: 7 }),
-        frameRate: 10,
-        repeat: 0,
-      });
-    }
-
-    if (!this.anims.exists('goon-red-attack') && this.textures.exists('gameplay-goon-red-attack-sheet')) {
-      this.anims.create({
-        key: 'goon-red-attack',
-        frames: this.anims.generateFrameNumbers('gameplay-goon-red-attack-sheet', { start: 0, end: 7 }),
-        frameRate: 14,
-        repeat: 0,
-      });
-    }
-
-    if (!this.anims.exists('goon-hoodie-attack') && this.textures.exists('gameplay-goon-hoodie-attack-sheet')) {
-      this.anims.create({
-        key: 'goon-hoodie-attack',
-        frames: this.anims.generateFrameNumbers('gameplay-goon-hoodie-attack-sheet', { start: 0, end: 7 }),
-        frameRate: 14,
-        repeat: 0,
-      });
-    }
-
-    if (!this.anims.exists('goon-club-attack') && this.textures.exists('gameplay-goon-club-attack-sheet')) {
-      this.anims.create({
-        key: 'goon-club-attack',
-        frames: this.anims.generateFrameNumbers('gameplay-goon-club-attack-sheet', { start: 0, end: 7 }),
-        frameRate: 13,
-        repeat: 0,
-      });
-    }
-
-    if (!this.anims.exists('goon-red-walk') && this.textures.exists('gameplay-goon-red-walk-sheet')) {
-      this.anims.create({
-        key: 'goon-red-walk',
-        frames: this.anims.generateFrameNumbers('gameplay-goon-red-walk-sheet', { start: 0, end: 7 }),
-        frameRate: 10,
-        repeat: -1,
-      });
-    }
-
-    if (!this.anims.exists('goon-hoodie-walk') && this.textures.exists('gameplay-goon-hoodie-walk-sheet')) {
-      this.anims.create({
-        key: 'goon-hoodie-walk',
-        frames: this.anims.generateFrameNumbers('gameplay-goon-hoodie-walk-sheet', { start: 0, end: 7 }),
-        frameRate: 10,
-        repeat: -1,
-      });
-    }
-
-    if (!this.anims.exists('goon-club-walk') && this.textures.exists('gameplay-goon-club-walk-sheet')) {
-      this.anims.create({
-        key: 'goon-club-walk',
-        frames: this.anims.generateFrameNumbers('gameplay-goon-club-walk-sheet', { start: 0, end: 7 }),
-        frameRate: 10,
-        repeat: -1,
-      });
-    }
-    createEightFrameAnimation('goon-red-run', 'gameplay-goon-red-run-sheet', 14, -1);
-    createEightFrameAnimation('goon-hoodie-run', 'gameplay-goon-hoodie-run-sheet', 14, -1);
-    createEightFrameAnimation('goon-club-run', 'gameplay-goon-club-run-sheet', 14, -1);
+    createLevelAnimations(this);
   }
 
   private updateDefeatAftermath(time: number, delta: number) {

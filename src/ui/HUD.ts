@@ -1,3 +1,4 @@
+import { pauseGameplay, resumeGameplay } from '../systems/GameplayClock';
 import { getDailyChallenge, getDailyRewardBalance, DAILY_TARGET } from '../config/DailyChallenge';
 import Phaser from 'phaser';
 import { EnemyGoon, EnemyVisualVariant } from '../entities/EnemyGoon';
@@ -97,6 +98,7 @@ export class HUD {
     scene.input.keyboard?.on('keydown-P', this.togglePause, this);
     scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       if (this.pausedByHud) {
+        resumeGameplay(scene);
         scene.physics.world?.resume();
         scene.anims.resumeAll();
         this.pausedByHud = false;
@@ -177,6 +179,7 @@ export class HUD {
   private togglePause() {
     if (this.pausedByHud) {
       this.pausedByHud = false;
+      resumeGameplay(this.scene);
       this.scene.physics.world.resume();
       this.scene.anims.resumeAll();
       this.pauseOverlay?.destroy();
@@ -188,6 +191,7 @@ export class HUD {
     // Clear/defeat pauses belong to the level, not the pause menu.
     if (this.scene.physics.world.isPaused) return;
     this.pausedByHud = true;
+    pauseGameplay(this.scene);
     this.scene.physics.world.pause();
     this.scene.anims.pauseAll();
     this.pauseText.setText('▶');

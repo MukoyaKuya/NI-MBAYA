@@ -3,3 +3,6 @@ dist/
 .vite-dev*.log
 *.local
 dist-pages/
+
+/test-results/
+/playwright-report/

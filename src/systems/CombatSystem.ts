@@ -1,3 +1,4 @@
+import { getGameplayTime } from '../systems/GameplayClock';
 import Phaser from 'phaser';
 import { ATTACK_DATA, AttackKind } from '../config/Controls';
 import { EnemyGoon } from '../entities/EnemyGoon';
@@ -51,7 +52,7 @@ export class CombatSystem {
       enemy.takeDamage(data.damage, data.knockback, this.player.x);
       this.sounds.playImpact(kind, enemy.health <= 0);
       this.combo += 1;
-      this.comboExpiresAt = this.scene.time.now + 1500;
+      this.comboExpiresAt = getGameplayTime(this.scene) + 1500;
       this.createHitSpark(enemy.x, enemy.y - 38 - enemy.z, kind);
       this.scene.cameras.main.shake(kind === 'special' ? 150 : 95, kind === 'special' ? 0.009 : 0.005);
     });
