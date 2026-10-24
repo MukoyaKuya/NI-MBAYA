@@ -18,6 +18,9 @@ export class StoryCutsceneScene extends Phaser.Scene {
   constructor() { super('StoryCutsceneScene'); }
 
   preload() {
+    if (!this.textures.exists('story-chapter1-taken-background')) {
+      this.load.image('story-chapter1-taken-background', new URL('../assets/optimized/story/chapter-1-taken-background.webp', import.meta.url).href);
+    }
     if (!this.cache.audio.exists('story-intro')) {
       this.load.audio('story-intro', new URL('../assets/optimized/audio/story-intro.mp3', import.meta.url).href);
     }
@@ -54,6 +57,10 @@ export class StoryCutsceneScene extends Phaser.Scene {
   private showPanel() {
     this.children.removeAll();
     const panel = this.panels()[this.panelIndex];
+    if (this.panelIndex === 0) {
+      this.showChapterOne(panel);
+      return;
+    }
     this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, panel.background).setDisplaySize(GAME_WIDTH, GAME_HEIGHT).setDepth(-4);
     this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x020305, 0.48).setDepth(-3);
     this.add.rectangle(GAME_WIDTH / 2, 82, GAME_WIDTH, 164, 0x020305, 0.82).setDepth(-2);
@@ -83,11 +90,72 @@ export class StoryCutsceneScene extends Phaser.Scene {
     this.createButton(GAME_WIDTH - 215, 638, this.panelIndex === 2 ? (getStoryLanguage() === 'sw' ? 'ANZA PAMBANO' : 'START THE FIGHT') : (getStoryLanguage() === 'sw' ? 'ENDELEA' : 'NEXT'));
   }
 
-  private createButton(x: number, y: number, label: string) {
+  private showChapterOne(panel: ComicPanel) {
+    this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'story-chapter1-taken-background')
+      .setDisplaySize(GAME_WIDTH, GAME_HEIGHT).setDepth(-4);
+    // Keep the story copy crisp and legible over the generated dark alley.
+    this.add.rectangle(1102, 360, 356, GAME_HEIGHT, 0x05070b, 0.18).setDepth(-3);
+
+    const divider = this.add.graphics().setDepth(1);
+    divider.lineStyle(7, panel.accent, 0.98).lineBetween(916, 0, 772, GAME_HEIGHT);
+    divider.lineStyle(2, 0xffc51d, 0.94).lineBetween(929, 0, 785, GAME_HEIGHT);
+
+    const heading = this.add.text(938, 91, panel.chapter, {
+      fontFamily: 'Arial Black, Impact, sans-serif', fontSize: '28px', color: '#ffc51d',
+      stroke: '#050505', strokeThickness: 5, fontStyle: 'italic', padding: { left: 3, right: 6, top: 2, bottom: 2 },
+    }).setOrigin(0, 0.5).setDepth(10);
+    if (heading.width > 245) heading.setScale(245 / heading.width, 1);
+    this.add.text(1244, 91, `${this.panelIndex + 1}/3`, {
+      fontFamily: 'Arial Black, sans-serif', fontSize: '20px', color: '#ffffff', stroke: '#050505', strokeThickness: 4,
+    }).setOrigin(1, 0.5).setDepth(10);
+
+    const progress = this.add.graphics().setDepth(10);
+    for (let i = 0; i < 3; i++) {
+      progress.fillStyle(i === 0 ? 0xffc51d : 0x55585d, 1).fillRoundedRect(1182 + i * 28, 117, 22, 8, 4);
+    }
+    progress.lineStyle(2, panel.accent, 0.95).lineBetween(938, 121, 1162, 121);
+
+    const sw = getStoryLanguage() === 'sw';
+    const lines: Array<Array<[string, string]>> = sw ? [
+      [['Mbavu Destroyer', '#ffc51d'], [' amemteka', '#f5f7fb']],
+      [['Mjaka Mfine', '#ffc51d'], [', mpenzi wako,', '#f5f7fb']],
+      [['na kutoweka naye katika', '#f5f7fb']],
+      [['maficho yake jijini.', '#f5f7fb']],
+    ] : [
+      [['Mbavu Destroyer', '#ffc51d'], [' has', '#f5f7fb']],
+      [['kidnapped ', '#f5f7fb'], ['Mjaka Mfine,', '#ffc51d']],
+      [['your girlfriend, and', '#f5f7fb']],
+      [['disappeared with her', '#f5f7fb']],
+      [['into his hideout in the city.', '#f5f7fb']],
+    ];
+    const copyY = sw ? 252 : 236;
+    lines.forEach((segments, row) => {
+      let x = 930;
+      const y = copyY + row * 43;
+      const rowObjects = segments.map(([text, color]) => {
+        const part = this.add.text(x, y, text, {
+          fontFamily: 'Arial, sans-serif', fontSize: '24px', color,
+          fontStyle: color === '#ffc51d' ? 'bold' : 'normal',
+          stroke: '#08090b', strokeThickness: 2, padding: { left: 1, right: 2, top: 2, bottom: 3 },
+        }).setDepth(10);
+        x += part.width;
+        return part;
+      });
+      const rowWidth = x - 930;
+      if (rowWidth > 335) rowObjects.forEach((part) => part.setScale(335 / rowWidth, 1));
+    });
+
+    this.createButton(GAME_WIDTH - 215, 638, getStoryLanguage() === 'sw' ? 'ENDELEA' : 'NEXT', true);
+  }
+
+  private createButton(x: number, y: number, label: string, withArrow = false) {
     const button = this.add.container(x, y).setDepth(30);
     const bg = this.add.graphics();
     bg.fillStyle(0xffc51d).lineStyle(4, 0x050505).fillRoundedRect(-155, -33, 310, 66, 8).strokeRoundedRect(-155, -33, 310, 66, 8);
-    button.add([bg, this.add.text(0, 0, label, { fontFamily: 'Arial Black', fontSize: '22px', color: '#111111', fontStyle: 'italic' }).setOrigin(0.5)]).setSize(310, 66).setInteractive({ useHandCursor: true });
+    const caption = this.add.text(withArrow ? -14 : 0, 0, label, { fontFamily: 'Arial Black', fontSize: '22px', color: '#111111', fontStyle: 'italic' }).setOrigin(0.5);
+    const parts: Phaser.GameObjects.GameObject[] = [bg, caption];
+    if (withArrow) parts.push(this.add.text(128, -1, '›', { fontFamily: 'Arial, sans-serif', fontSize: '52px', color: '#08090b', fontStyle: 'bold' }).setOrigin(0.5));
+    button.add(parts).setSize(310, 66).setInteractive({ useHandCursor: true });
     button.on('pointerover', () => {
       this.playHoverSound();
       this.tweens.add({ targets: button, scale: 1.06, duration: 90 });
