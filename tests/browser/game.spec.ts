@@ -29,9 +29,12 @@ test('arena renders, keyboard moves, pause preserves timers and attack recovery'
   await page.waitForFunction(x => (window as any).__game.scene.getScene('LevelScene').player.x > x, x);
   await page.keyboard.up('ArrowRight');
   expect(await page.evaluate(() => (window as any).__game.scene.getScene('LevelScene').player.x)).toBeGreaterThan(x);
-  // Keep press/release in separate game frames, as a human key press would be.
+  // Phaser reprocesses its DOM event queue until poststep clears it. Keep the
+  // movement release and the pause press/release in separate game frames.
+  await page.evaluate(() => new Promise<void>(resolve => (window as any).__game.events.once('poststep', () => resolve())));
   await page.keyboard.down('p');
   try {
+    await page.evaluate(() => new Promise<void>(resolve => (window as any).__game.events.once('poststep', () => resolve())));
     await expect.poll(() => page.evaluate(() => (window as any).__game.scene.getScene('LevelScene').physics.world.isPaused)).toBe(true);
   } finally { await page.keyboard.up('p'); }
   const result = await page.evaluate(async () => {
