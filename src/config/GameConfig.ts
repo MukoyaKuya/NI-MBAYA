@@ -1,3 +1,4 @@
+import { SceneLoadingPlugin } from '../systems/SceneLoadingPlugin';
 import { DailyChallengeScene } from '../scenes/DailyChallengeScene';
 import { AchievementsScene } from '../scenes/AchievementsScene';
 import { ExitScene } from '../scenes/ExitScene';
@@ -24,6 +25,7 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
   backgroundColor: '#0f1720',
   pixelArt: false,
   loader: { maxParallelDownloads: 4 },
+  plugins: { scene: [{ key: 'SceneLoading', plugin: SceneLoadingPlugin, start: true }] },
   scale: {
     fullscreenTarget: 'game',
     // Keep artwork and pointer coordinates proportional at every window size.
