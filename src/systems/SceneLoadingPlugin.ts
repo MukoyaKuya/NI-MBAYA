@@ -48,13 +48,14 @@ export class SceneLoadingPlugin extends Phaser.Plugins.ScenePlugin {
     const heading = document.createElement('h2');
     heading.textContent = SCREEN_NAMES[scene.sys.settings.key] ?? 'GETTING READY';
     this.progress = document.createElement('p');
-    this.progress.textContent = 'Downloading artwork...';
+    this.progress.textContent = loadingStatus(0, 0);
     this.track = document.createElement('div');
     this.track.className = 'scene-loading__track';
     this.track.setAttribute('role', 'progressbar');
     this.track.setAttribute('aria-label', 'Preparing the next screen');
     this.track.setAttribute('aria-valuemin', '0');
     this.track.setAttribute('aria-valuemax', '100');
+    this.track.setAttribute('aria-valuetext', this.progress.textContent);
     this.fill = document.createElement('div');
     this.fill.className = 'scene-loading__fill';
     this.track.append(this.fill);
