@@ -131,7 +131,19 @@ test('loading stays visibly active when no asset has finished downloading', asyn
       const track = document.querySelector('.scene-loading__track');
       return track && getComputedStyle(track, '::after').transform !== before;
     }, before);
-    await page.screenshot({ path: 'test-results/loading-no-completed-assets.png' });
+    await expect(page.locator('#scene-loading-overlay')).toHaveCSS('background-image', /nairobi-loading-background/);
+    await page.screenshot({ path: '.git/loading-screen-desktop.png' });
+    await page.setViewportSize({ width: 844, height: 390 });
+    const card = await page.locator('.scene-loading__card').boundingBox();
+    expect(card).not.toBeNull();
+    expect(card!.x).toBeGreaterThanOrEqual(0);
+    expect(card!.x + card!.width).toBeLessThanOrEqual(844);
+    expect(card!.y).toBeGreaterThanOrEqual(0);
+    expect(card!.y + card!.height).toBeLessThanOrEqual(390);
+    await page.screenshot({ path: '.git/loading-screen-mobile.png' });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await expect(page.locator('.scene-loading__spinner')).toHaveCSS('animation-name', 'none');
+    expect(await page.locator('.scene-loading__track').evaluate(track => getComputedStyle(track, '::after').animationName)).toBe('none');
   } finally { release(); }
   await page.waitForFunction(() => (window as any).__game.scene.isActive('CharacterSelectScene'));
   await expect(page.locator('#scene-loading-overlay')).toBeHidden();
