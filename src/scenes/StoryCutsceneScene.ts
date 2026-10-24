@@ -19,12 +19,12 @@ export class StoryCutsceneScene extends Phaser.Scene {
 
   preload() {
     const backgrounds = [
-      ['story-chapter1-taken-background', '../assets/optimized/story/chapter-1-taken-background.webp'],
-      ['story-chapter2-blocked-background', '../assets/optimized/story/chapter-2-city-blocked-background.webp'],
-      ['story-chapter3-rescue-background', '../assets/optimized/story/chapter-3-rescue-background.webp'],
+      ['story-chapter1-taken-background', new URL('../assets/optimized/story/chapter-1-taken-background.webp', import.meta.url).href],
+      ['story-chapter2-blocked-background', new URL('../assets/optimized/story/chapter-2-city-blocked-background.webp', import.meta.url).href],
+      ['story-chapter3-rescue-background', new URL('../assets/optimized/story/chapter-3-rescue-background.webp', import.meta.url).href],
     ] as const;
     backgrounds.forEach(([key, path]) => {
-      if (!this.textures.exists(key)) this.load.image(key, new URL(path, import.meta.url).href);
+      if (!this.textures.exists(key)) this.load.image(key, path);
     });
     if (!this.cache.audio.exists('story-intro')) {
       this.load.audio('story-intro', new URL('../assets/optimized/audio/story-intro.mp3', import.meta.url).href);
