@@ -124,7 +124,7 @@ test('loading stays visibly active when no asset has finished downloading', asyn
   });
   try {
     await expect(page.locator('#scene-loading-overlay')).toBeVisible();
-    await expect(page.locator('.scene-loading__card > p').first()).toHaveText('Downloading artwork...');
+    await expect(page.locator('.scene-loading__card > p').first()).toHaveText('Preparing fighters...');
     await expect(page.locator('.scene-loading__track')).not.toHaveAttribute('aria-valuenow');
     const before = await page.locator('.scene-loading__track').evaluate(track => getComputedStyle(track, '::after').transform);
     await page.waitForFunction(before => {
