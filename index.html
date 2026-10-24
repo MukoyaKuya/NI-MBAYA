@@ -30,6 +30,26 @@
         letter-spacing: .12em;
         text-transform: uppercase;
       }
+      .brand-intro__activity {
+        position: absolute;
+        left: 50%;
+        bottom: 64px;
+        width: min(260px, 65vw);
+        height: 5px;
+        transform: translateX(-50%);
+        border-radius: 5px;
+        overflow: hidden;
+        background: #6a3d2218;
+      }
+      .brand-intro__activity::after {
+        content: '';
+        position: absolute;
+        inset: 0 auto 0 -40%;
+        width: 40%;
+        background: linear-gradient(90deg, transparent, #c47c36, transparent);
+        animation: intro-loading-travel 1.25s ease-in-out infinite;
+      }
+      @keyframes intro-loading-travel { to { transform: translateX(350%); } }
       .brand-intro__logo {
         width: min(76vw, 880px);
         height: auto;
@@ -57,6 +77,7 @@
       }
       @media (prefers-reduced-motion: reduce) {
         .brand-intro__logo { animation-duration: 250ms; }
+        .brand-intro__activity::after { animation: none; left: 30%; }
       }
       #portrait-guard {
         position: fixed;
@@ -99,7 +120,8 @@
       </div>
     </div>
     <div id="brand-intro" data-started-at="0" role="status" aria-label="Sababisha Africa presents NI MBAYA">
-      <img class="brand-intro__logo" src="/src/assets/intro/sababisha-africa-logo.jpeg" alt="Sababisha Africa" />
+      <img class="brand-intro__logo" src="/src/assets/intro/sababisha-africa-logo.webp" alt="Sababisha Africa" width="1408" height="768" loading="eager" fetchpriority="high" decoding="async" />
+      <div class="brand-intro__activity" aria-hidden="true"></div>
       <div class="brand-intro__loading" aria-live="polite">Downloading game engine…</div>
       <button class="brand-intro__skip" type="button">Skip intro</button>
     </div>

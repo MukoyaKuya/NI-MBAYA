@@ -833,3 +833,12 @@ test('missing optional attack sheets retain full-body walking art for every earl
     assert.equal(calls.setPosition[1], restingY);
   }
 });
+
+
+test('loading status reports real completed files without a frozen zero percent', () => {
+  const { loadingStatus } = loadSource('src/systems/LoadingStatus.ts');
+  assert.equal(loadingStatus(0, 20), 'Downloading artwork...');
+  assert.equal(loadingStatus(0, 0), 'Downloading artwork...');
+  assert.equal(loadingStatus(3, 20), 'Preparing artwork: 3 of 20 ready');
+  assert.equal(loadingStatus(20, 20), 'Preparing the next screen...');
+});
