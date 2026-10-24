@@ -12,6 +12,7 @@ async function start(page: import('@playwright/test').Page, levelId = 1) {
     game.scene.getScene('MainMenuScene').scene.start('LevelScene', { levelId });
   }, levelId);
   await page.waitForFunction(() => (window as any).__game.scene.getScene('LevelScene').player?.active);
+  await expect(page.locator('#scene-loading-overlay')).toBeHidden();
 }
 
 test('arena renders, keyboard moves, pause preserves timers and attack recovery', async ({ page }) => {

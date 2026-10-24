@@ -4,8 +4,8 @@ import type { EnemyGoon } from '../entities/EnemyGoon';
 export function getEnemyExitMotion(variant: EnemyGoon['visualVariant'], elapsed: number) {
   const dog = variant === 'gameplay-attack-dog';
   const heavy = variant === 'gameplay-goon-heavy';
-  const walking = heavy || variant === 'gameplay-goon-chain';
-  const pace = dog ? 260 : heavy ? 100 : walking ? 135 : 220;
+  const walking = !dog;
+  const pace = dog ? 260 : heavy ? 100 : 135;
   const progress = Math.max(0, Math.min(1, (elapsed - 220) / 380));
   const ramp = progress * progress * (3 - 2 * progress);
   return { speed: pace * ramp, timeScale: ramp, walking };

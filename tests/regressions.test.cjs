@@ -806,3 +806,30 @@ test('enemy stones pass an airborne player and hit after landing', () => {
   assert.equal(stone.active, false);
   assert.equal(overlap.active, false);
 });
+
+
+test('missing optional attack sheets retain full-body walking art for every early-stage goon', () => {
+  const { LevelScene } = loadSource('src/scenes/LevelScene.ts', { phaser: { Scene: class {}, Physics: { Arcade: { Sprite: class {} } } }, '../config/GameConfig': {} });
+  for (const variant of ['gameplay-goon', 'gameplay-goon-hoodie', 'gameplay-goon-club']) {
+    const calls = {};
+    const art = { texture: { key: variant }, anims: {}, stop() { this.anims.isPlaying = false; },
+      setTexture(key) { this.texture.key = key; return this; } };
+    for (const name of ['setPosition', 'setDisplaySize', 'setFlipX', 'setAlpha', 'setTint', 'setAngle', 'setDepth']) art[name] = (...args) => { calls[name] = args; return art; };
+    const shadow = {};
+    for (const name of ['setPosition', 'setDepth', 'setAlpha', 'setScale']) shadow[name] = () => shadow;
+    const scene = Object.assign(Object.create(LevelScene.prototype), {
+      player: { x: 500, state: 'idle' },
+      anims: { exists: key => key.endsWith('-walk'), get: () => ({ frames: [{ textureKey: 'walk-sheet' }] }) },
+    });
+    const enemy = { x: 450, y: 540, z: 0, state: 'idle', visualVariant: variant, moveSpeed: 100, flipX: false, lastAttackAt: 0, body: { velocity: { x: 0, y: 0 } } };
+    const visual = { enemy, art, shadow, baseWidth: 138, baseHeight: 207 };
+    scene.syncEnemyVisual(visual, 0, 1000);
+    const restingSize = calls.setDisplaySize;
+    const restingY = calls.setPosition[1];
+    enemy.state = 'attack'; enemy.lastAttackAt = 1100;
+    scene.syncEnemyVisual(visual, 0, 1100);
+    assert.equal(art.texture.key, 'walk-sheet');
+    assert.deepEqual(calls.setDisplaySize, restingSize);
+    assert.equal(calls.setPosition[1], restingY);
+  }
+});

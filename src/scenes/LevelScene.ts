@@ -84,18 +84,11 @@ export class LevelScene extends Phaser.Scene {
     trackAssetLoading(this);
     const levelId = this.startData.levelId ?? 1;
     const character = 'MBAVU DESTROYER';
-    const fighterKey = 'gameplay-mbavu-idle';
-    const needsCoreAssets = !this.textures.exists(fighterKey)
-      || !this.textures.exists('gameplay-chapati-health-pickup-sheet');
-    const needsLevelAssets = !this.textures.exists(getLevelDefinition(levelId).backgroundKey)
-      || (levelId <= 2 && !this.textures.exists('nairobi-matatu-conductor'));
-    if (needsCoreAssets || needsLevelAssets) this.showLevelLoadingProgress();
     loadCoreGameplayAssets(this, levelId, character);
     loadDeferredLevelAssets(this, levelId);
   }
 
   create(data: LevelStartData = this.startData) {
-    document.getElementById('level-loading-overlay')?.remove();
     this.level = getLevelDefinition(data.levelId ?? 1);
     this.selectedCharacter = 'MBAVU DESTROYER';
     this.levelCleared = false;
@@ -216,24 +209,6 @@ export class LevelScene extends Phaser.Scene {
       activateLoadedAnimations();
     });
     this.load.start();
-  }
-
-  private showLevelLoadingProgress() {
-    document.getElementById('level-loading-overlay')?.remove();
-    const overlay = document.createElement('div');
-    overlay.id = 'level-loading-overlay';
-    overlay.setAttribute('role', 'status');
-    overlay.setAttribute('aria-live', 'polite');
-    Object.assign(overlay.style, {
-      position: 'fixed', inset: '0', zIndex: '1500', display: 'grid', placeItems: 'center',
-      color: '#ffc51d', background: '#07111f', font: 'italic 800 22px/1 Arial Black, Arial, sans-serif',
-      letterSpacing: '0.05em', textAlign: 'center',
-    });
-    overlay.textContent = 'PREPARING THE STREETS OF NAIROBI · 0%';
-    document.body.append(overlay);
-    this.load.on(Phaser.Loader.Events.PROGRESS, (progress: number) => {
-      overlay.textContent = `PREPARING THE STREETS OF NAIROBI · ${Math.round(progress * 100)}%`;
-    });
   }
 
   private showLevelIntro() {
@@ -636,6 +611,7 @@ export class LevelScene extends Phaser.Scene {
     const stone = enemy.visualVariant === 'gameplay-kibera-stone-goon';
     const shield = enemy.visualVariant === 'gameplay-kibera-shield-goon';
     const kiberaGoon = stone || shield;
+    const legacyPortrait = enemy.visualVariant === 'gameplay-goon' || enemy.visualVariant === 'gameplay-goon-club' || enemy.visualVariant === 'gameplay-goon-hoodie';
 
     if (this.player.state === 'defeat' && enemy.state !== 'defeat') {
       if (visual.victoryGone) {
@@ -648,10 +624,10 @@ export class LevelScene extends Phaser.Scene {
       shadow.setVisible(true);
       const motion = getEnemyExitMotion(enemy.visualVariant, this.defeatAftermathElapsed);
       art.anims.timeScale = motion.timeScale;
-      const runAnim = this.getEnemyRunAnimationKey(enemy.visualVariant);
-      if (runAnim && this.anims.exists(runAnim) && (art.anims.currentAnim?.key !== runAnim || !art.anims.isPlaying)) {
-        art.play(runAnim, true);
-      } else if (!runAnim) {
+      const exitAnim = this.getEnemyExitAnimationKey(enemy.visualVariant);
+      if (exitAnim && this.anims.exists(exitAnim) && (art.anims.currentAnim?.key !== exitAnim || !art.anims.isPlaying)) {
+        art.play(exitAnim, true);
+      } else if (!exitAnim) {
         art.stop();
         art.setTexture(enemy.visualVariant);
       }
@@ -660,7 +636,7 @@ export class LevelScene extends Phaser.Scene {
       shadow.setScale(enemyShadowScale, enemyShadowScale * 0.44);
       art
         .setPosition(enemy.x, visual.victoryLaneY - (dog ? 42 : kiberaGoon ? baseHeight * 0.48 : heavy ? 120 : 68))
-        .setDisplaySize(dog || heavy || kiberaGoon || motion.walking ? baseWidth : baseWidth * 1.55, dog || heavy || kiberaGoon || motion.walking ? baseHeight : baseHeight * 1.22)
+        .setDisplaySize(legacyPortrait ? baseWidth * 1.55 : baseWidth, legacyPortrait ? baseHeight * 1.22 : baseHeight)
         .setFlipX(getEnemyTextureFlip(visual.victoryDirection < 0, art.texture.key))
         .setAlpha(1)
         .setTint(0xffffff)
@@ -728,7 +704,6 @@ export class LevelScene extends Phaser.Scene {
       : 1;
 
     const walkAnim = this.getEnemyWalkAnimationKey(enemy.visualVariant);
-    const legacyPortrait = enemy.visualVariant === 'gameplay-goon' || enemy.visualVariant === 'gameplay-goon-club' || enemy.visualVariant === 'gameplay-goon-hoodie';
     const restTexture = legacyPortrait && walkAnim && this.anims.exists(walkAnim)
       ? this.anims.get(walkAnim).frames[0].textureKey : texture;
     if (walking) {
@@ -744,7 +719,8 @@ export class LevelScene extends Phaser.Scene {
         art.play(attackAnim, false);
       } else if (!this.anims.exists(attackAnim)) {
         art.stop();
-        art.setTexture(texture);
+        // Keep the full-body walk frame while optional attack art loads.
+        art.setTexture(restTexture, 0);
       }
     } else {
       if (art.anims.isPlaying) art.stop();
@@ -758,8 +734,8 @@ export class LevelScene extends Phaser.Scene {
     const walkWidth = legacyPortrait ? baseWidth * 1.55 : baseWidth;
     const walkHeight = legacyPortrait ? baseHeight * 1.22 : baseHeight;
     const usingWalkPose = walking || (!striking && restTexture !== texture);
-    // Legacy walk and attack sheets share 384px cells. Keep their scale fixed;
-    // the drawn swing already supplies the extra reach without growing the body.
+    // Use the same full-body cell size for attacks and their walk-frame fallback.
+    // A portrait at this size would appear much larger than the sheet character.
     const attackWidth = legacyPortrait ? walkWidth : stone ? 205 : shield ? 224 : dog ? 270 : heavy ? 270 : baseWidth * 1.9;
     const attackHeight = legacyPortrait ? walkHeight : stone ? 218 : shield ? 236 : dog ? 150 : heavy ? 270 : baseHeight * 1.28;
     const attackOffset = stone ? 24 : shield ? 32 : dog ? 38 : heavy ? 30 : enemy.visualVariant === 'gameplay-goon-club' ? 34 : 24;
@@ -803,15 +779,15 @@ export class LevelScene extends Phaser.Scene {
     return 'goon-red-walk';
   }
 
-  private getEnemyRunAnimationKey(variant: EnemyVisualVariant) {
-    if (variant === 'gameplay-kibera-stone-goon') return 'kibera-stone-sprint';
-    if (variant === 'gameplay-kibera-shield-goon') return 'kibera-shield-sprint';
+  private getEnemyExitAnimationKey(variant: EnemyVisualVariant) {
+    if (variant === 'gameplay-kibera-stone-goon') return 'kibera-stone-walk';
+    if (variant === 'gameplay-kibera-shield-goon') return 'kibera-shield-walk';
     if (variant === 'gameplay-attack-dog') return 'attack-dog-run';
     if (variant === 'gameplay-goon-chain') return 'goon-chain-walk';
     if (variant === 'gameplay-goon-heavy') return 'goon-heavy-walk';
-    if (variant === 'gameplay-goon-club') return 'goon-club-run';
-    if (variant === 'gameplay-goon-hoodie') return 'goon-hoodie-run';
-    return 'goon-red-run';
+    if (variant === 'gameplay-goon-club') return 'goon-club-walk';
+    if (variant === 'gameplay-goon-hoodie') return 'goon-hoodie-walk';
+    return 'goon-red-walk';
   }
 
   private getEnemyDefeatAnimationKey(variant: EnemyVisualVariant) {

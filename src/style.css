@@ -36,3 +36,40 @@ canvas {
   display: block;
   touch-action: none;
 }
+
+
+.scene-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 1500;
+  display: grid;
+  place-items: center;
+  color: #fff0ce;
+  background: radial-gradient(ellipse at 50% 42%, #253046, #07111f 65%);
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+.scene-loading__card { padding: 30px; }
+.scene-loading__brand {
+  display: block;
+  color: #ffc51d;
+  font: italic 900 clamp(36px, 7vw, 76px)/1 'Arial Black', Arial, sans-serif;
+  letter-spacing: -.04em;
+  text-shadow: 3px 4px #000;
+}
+.scene-loading h2 { margin: 24px 0 10px; font-size: clamp(15px, 2vw, 22px); letter-spacing: .12em; }
+.scene-loading p { margin: 0; color: #b8c8dd; font-size: 14px; }
+.scene-loading__spinner {
+  width: 44px;
+  height: 44px;
+  margin: 28px auto 0;
+  border: 4px solid #ffc51d30;
+  border-top-color: #ffc51d;
+  border-right-color: #ff7a24;
+  border-radius: 50%;
+  animation: scene-loading-spin .85s linear infinite;
+}
+@keyframes scene-loading-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .scene-loading__spinner { animation: none; }
+}
