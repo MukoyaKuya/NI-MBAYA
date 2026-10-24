@@ -67,7 +67,7 @@ test('slow optional sheets never enlarge attacking goons or make departures slid
 test('actual combat defeat makes all five enemies walk away with changing frames', async ({ page }) => {
   await page.route(/goon-(red|hoodie|club)-(attack|run)-sheet\.webp/, route => route.abort());
   await page.goto('/?level=1');
-  await page.waitForFunction(() => (window as any).__game?.scene.getScene('LevelScene').player?.active);
+  await page.waitForFunction(() => (window as any).__game?.scene.getScene('LevelScene')?.player?.active);
   await expect(page.locator('#scene-loading-overlay')).toBeHidden();
   await page.keyboard.down('ArrowRight');
   await page.waitForTimeout(180);
