@@ -26,7 +26,7 @@ test('arena renders, keyboard moves, pause preserves timers and attack recovery'
   });
   const x = await page.evaluate(() => (window as any).__game.scene.getScene('LevelScene').player.x);
   await page.keyboard.down('ArrowRight');
-  await page.waitForTimeout(150);
+  await page.waitForFunction(x => (window as any).__game.scene.getScene('LevelScene').player.x > x, x);
   await page.keyboard.up('ArrowRight');
   expect(await page.evaluate(() => (window as any).__game.scene.getScene('LevelScene').player.x)).toBeGreaterThan(x);
   await page.keyboard.press('p');
@@ -87,15 +87,16 @@ test('touch buttons and joystick control the actual player', async ({ browser })
   expect(await page.evaluate(() => !!(window as any).__game.scene.getScene('LevelScene').touchControls)).toBe(true);
   const canvas = await page.locator('canvas').boundingBox();
   if (!canvas) throw new Error('Canvas missing');
-  await page.touchscreen.tap(canvas.x + canvas.width * 1180 / 1280, canvas.y + canvas.height * 638 / 720);
-  await page.waitForTimeout(50);
-  expect(await page.evaluate(() => (window as any).__game.scene.getScene('LevelScene').player.canAttackAt)).toBeGreaterThan(0);
   const cdp = await context.newCDPSession(page);
   const point = (x: number, y: number) => ({ x: canvas.x + canvas.width * x / 1280, y: canvas.y + canvas.height * y / 720 });
+  // Keep the finger down until Phaser processes a frame, as a real press does.
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [point(1180, 638)] });
+  await page.waitForFunction(() => (window as any).__game.scene.getScene('LevelScene').player.canAttackAt > 0);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
   const x = await page.evaluate(() => (window as any).__game.scene.getScene('LevelScene').player.x);
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [point(86, 628)] });
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [point(130, 628)] });
-  await page.waitForTimeout(500);
+  await page.waitForFunction(x => (window as any).__game.scene.getScene('LevelScene').player.x > x, x);
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
   expect(await page.evaluate(() => (window as any).__game.scene.getScene('LevelScene').player.x)).toBeGreaterThan(x);
   await context.close();
