@@ -1,3 +1,4 @@
+import { getGameplayTime } from '../systems/GameplayClock';
 import Phaser from 'phaser';
 import { ATTACK_DATA, AttackKind, getControlKeys } from '../config/Controls';
 import { TouchIntent } from '../ui/TouchControls';
@@ -112,7 +113,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.setVelocity(direction * knockback, 0);
     this.vz = this.health > 0 ? 170 : 260;
     this.z = Math.max(this.z, 1);
-    this.lockedUntil = this.scene.time.now + 250;
+    this.lockedUntil = getGameplayTime(this.scene) + 250;
     this.setCombatState(this.health > 0 ? 'hit' : 'defeat');
   }
 

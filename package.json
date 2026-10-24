@@ -10,12 +10,14 @@
     "test": "node --test tests/*.test.cjs",
     "check:performance": "node scripts/check-performance.cjs",
     "optimize:assets": "python scripts/optimize_assets.py",
-    "optimize:startup": "python scripts/optimize_assets.py --lightweight"
+    "optimize:startup": "python scripts/optimize_assets.py --lightweight",
+    "test:browser": "playwright test"
   },
   "dependencies": {
     "phaser": "^3.90.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "@types/node": "^24.0.10",
     "typescript": "^5.8.3",
     "vite": "^7.0.0"

@@ -29,6 +29,10 @@ jobs:
         run: npm ci
       - name: Run regression tests
         run: npm test
+      - name: Install browser
+        run: npx playwright install --with-deps chromium
+      - name: Run browser integration tests
+        run: npm run test:browser
       - name: Build site
         run: npm run build
       - name: Check performance budgets

@@ -1,3 +1,4 @@
+import { getGameplayTime } from '../systems/GameplayClock';
 import { recordDailyDefeat } from '../config/DailyChallenge';
 import { isEnemyStriking } from '../systems/EnemyMotion';
 import Phaser from 'phaser';
@@ -65,8 +66,8 @@ export class EnemyGoon extends Phaser.Physics.Arcade.Sprite {
     this.health = this.maxHealth;
     // Spread the opening attacks so a newly loaded level cannot stun-lock the player.
     const formationIndex = Phaser.Math.Clamp(Math.round(laneOffset / 18) + 2, 0, 5);
-    this.canAttackAt = this.scene.time.now + 550 + formationIndex * 190;
-    if (dog) this.nextDogBarkAt = this.scene.time.now + Phaser.Math.Between(350, 1100);
+    this.canAttackAt = getGameplayTime(this.scene) + 550 + formationIndex * 190;
+    if (dog) this.nextDogBarkAt = getGameplayTime(this.scene) + Phaser.Math.Between(350, 1100);
   }
 
   update(time: number, player: Player, attackSlotAvailable = true) {
@@ -126,7 +127,7 @@ export class EnemyGoon extends Phaser.Physics.Arcade.Sprite {
         this.lastAttackAt = time;
         if (stone) {
           this.scene.events.emit('enemy:stone-throw', this);
-        } else {
+        } else if (Math.abs((player.z ?? 0) - (this.z ?? 0)) <= 40) {
           player.takeDamage(this.attackDamage, bat ? 360 : 260, this.x);
           this.scene.events.emit('sfx:player-hurt', bat || this.visualVariant === 'gameplay-goon-heavy' || this.visualVariant === 'gameplay-kibera-shield-goon');
         }
@@ -151,7 +152,7 @@ export class EnemyGoon extends Phaser.Physics.Arcade.Sprite {
     this.health = Math.max(0, this.health - damage);
     const direction = this.x >= fromX ? 1 : -1;
     this.setVelocity(direction * knockback, 0);
-    this.lockedUntil = this.scene.time.now + 250;
+    this.lockedUntil = getGameplayTime(this.scene) + 250;
     this.setCombatState(this.health > 0 ? 'hit' : 'defeat');
     if (this.health <= 0) this.defeat();
   }
@@ -160,7 +161,7 @@ export class EnemyGoon extends Phaser.Physics.Arcade.Sprite {
     if (this.defeatRecorded) return;
     this.defeatRecorded = true;
     recordDailyDefeat();
-    this.defeatedAt = this.scene.time.now;
+    this.defeatedAt = getGameplayTime(this.scene);
     this.setCombatState('defeat');
     this.setTint(0x555555);
     this.setVelocity(0, 0);
@@ -170,7 +171,7 @@ export class EnemyGoon extends Phaser.Physics.Arcade.Sprite {
   private setCombatState(state: EnemyState) {
     if (this.state === state) return;
     this.state = state;
-    if (state === 'attack') this.attackStartedAt = this.scene.time.now;
+    if (state === 'attack') this.attackStartedAt = getGameplayTime(this.scene);
     this.setTexture(state === 'hit' ? 'goon-hit' : 'goon-idle');
   }
 }
