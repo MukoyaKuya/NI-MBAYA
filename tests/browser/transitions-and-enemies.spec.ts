@@ -107,3 +107,32 @@ test('actual combat defeat makes all five enemies walk away with changing frames
     expect(Math.abs(enemy.x - enemy.initialX)).toBeGreaterThan(8);
   }
 });
+
+
+test('loading stays visibly active when no asset has finished downloading', async ({ page }) => {
+  await page.goto('/');
+  await page.waitForFunction(() => (window as any).__game?.scene.getScene('MainMenuScene')?.fighterArtReady);
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => release = resolve);
+  await page.route('**/*.webp', async route => { await gate; await route.continue(); });
+  await page.evaluate(() => {
+    const game = (window as any).__game;
+    for (const key of ['menu-mbavu', 'menu-majembe', 'gameplay-chapati-health-pickup-sheet']) {
+      if (game.textures.exists(key)) game.textures.remove(key);
+    }
+    game.scene.getScene('MainMenuScene').scene.start('CharacterSelectScene');
+  });
+  try {
+    await expect(page.locator('#scene-loading-overlay')).toBeVisible();
+    await expect(page.locator('.scene-loading__card > p').first()).toHaveText('Downloading artwork...');
+    await expect(page.locator('.scene-loading__track')).not.toHaveAttribute('aria-valuenow');
+    const before = await page.locator('.scene-loading__track').evaluate(track => getComputedStyle(track, '::after').transform);
+    await page.waitForFunction(before => {
+      const track = document.querySelector('.scene-loading__track');
+      return track && getComputedStyle(track, '::after').transform !== before;
+    }, before);
+    await page.screenshot({ path: 'test-results/loading-no-completed-assets.png' });
+  } finally { release(); }
+  await page.waitForFunction(() => (window as any).__game.scene.isActive('CharacterSelectScene'));
+  await expect(page.locator('#scene-loading-overlay')).toBeHidden();
+});

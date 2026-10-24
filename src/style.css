@@ -73,3 +73,45 @@ canvas {
 @media (prefers-reduced-motion: reduce) {
   .scene-loading__spinner { animation: none; }
 }
+
+
+.scene-loading__track {
+  position: relative;
+  width: min(320px, 72vw);
+  height: 7px;
+  margin: 0 auto 20px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #ffffff12;
+}
+.scene-loading__fill {
+  width: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #ff7a24, #ffc51d);
+  border-radius: inherit;
+  transition: width .3s ease;
+}
+.scene-loading__track::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -40%;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, #fff0b7, transparent);
+  animation: loading-travel 1.25s ease-in-out infinite;
+}
+.scene-loading p.scene-loading__hint {
+  margin-top: 18px;
+  max-width: 340px;
+  color: #8096b0;
+  font-size: 11px;
+  letter-spacing: .08em;
+  line-height: 1.6;
+}
+.scene-loading.is-ready .scene-loading__track::after { animation: none; opacity: 0; }
+@keyframes loading-travel { to { transform: translateX(350%); } }
+@media (prefers-reduced-motion: reduce) {
+  .scene-loading__track::after { animation: none; left: 30%; }
+  .scene-loading__fill { transition: none; }
+}
