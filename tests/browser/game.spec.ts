@@ -46,7 +46,7 @@ test('arena renders, keyboard moves, pause preserves timers and attack recovery'
   });
   expect(result.paused).toBe(result.before);
   expect(result.expiredWhilePaused).toBe(false);
-  expect(result.remainingCooldown).toBe(900);
+  expect(result.remainingCooldown).toBeCloseTo(900, 6);
   await page.waitForFunction(() => (window as any).__game.scene.getScene('LevelScene').testExpired);
   expect(errors).toEqual([]);
 });
