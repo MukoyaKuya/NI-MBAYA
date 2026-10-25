@@ -9,7 +9,19 @@ export class StageRenderer {
       .setDisplaySize(GAME_WIDTH, GAME_HEIGHT)
       .setDepth(0);
     this.scene.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.07).setDepth(2);
-    if (level.id <= 2) this.createBackgroundTraffic(level.id);
+    if (level.id === 2 || (level.id === 1 && this.scene.textures.exists('nairobi-matatu-bus-sheet'))) {
+      this.createBackgroundTraffic(level.id);
+    } else if (level.id === 1) {
+      const onBusReady = (key: string) => {
+        if (key !== 'nairobi-matatu-bus-sheet' || !this.scene.scene.isActive()) return;
+        this.scene.load.off(Phaser.Loader.Events.FILE_COMPLETE, onBusReady);
+        this.createBackgroundTraffic(1);
+      };
+      this.scene.load.on(Phaser.Loader.Events.FILE_COMPLETE, onBusReady);
+      this.scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+        this.scene.load.off(Phaser.Loader.Events.FILE_COMPLETE, onBusReady);
+      });
+    }
     this.scene.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT - 8, GAME_WIDTH, 16, 0x050505, 0.76).setDepth(79);
   }
 
@@ -17,51 +29,62 @@ export class StageRenderer {
     const busSheet = 'nairobi-matatu-bus-sheet';
     const animatedBus = levelId === 1 && this.scene.textures.exists(busSheet);
     const nearMatatu = this.scene.add.sprite(
-      animatedBus ? GAME_WIDTH + 260 : -240,
-      animatedBus ? 468 : 455,
+      animatedBus ? GAME_WIDTH + 400 : -240,
+      animatedBus ? 410 : 455,
       animatedBus ? busSheet : this.getMatatuTextureKey(),
       0,
     )
       .setName(levelId === 1 ? 'level1-matatu' : 'level2-matatu')
-      .setDisplaySize(animatedBus ? 450 : 335, animatedBus ? 197 : 116)
+      .setDisplaySize(animatedBus ? 720 : 335, animatedBus ? 315 : 116)
       .setDepth(5)
-      .setAlpha(0.88);
+      .setAlpha(animatedBus ? 1 : 0.88);
 
     if (animatedBus) {
       const animationKey = 'nairobi-matatu-bus-drive';
       if (!this.scene.anims.exists(animationKey)) {
         this.scene.anims.create({
           key: animationKey,
-          frames: this.scene.anims.generateFrameNumbers(busSheet, { start: 0, end: 8 }),
-          frameRate: 6.25,
+          frames: this.scene.anims.generateFrameNumbers(busSheet, { start: 0, end: 3 }),
+          frameRate: 2.78,
           repeat: -1,
         });
       }
       nearMatatu.play(animationKey);
+      nearMatatu.anims.pause();
+      nearMatatu.setVisible(false);
     }
 
     this.scene.tweens.add({
       targets: nearMatatu,
-      x: animatedBus ? -260 : GAME_WIDTH + 250,
+      x: animatedBus ? -400 : GAME_WIDTH + 250,
       duration: 9200,
       delay: 900,
       repeat: -1,
       repeatDelay: 4200,
       ease: animatedBus ? 'Linear' : 'Sine.InOut',
+      onUpdate: animatedBus ? () => {
+        const inView = nearMatatu.x < GAME_WIDTH + 360 && nearMatatu.x > -360;
+        if (nearMatatu.visible === inView) return;
+        nearMatatu.setVisible(inView);
+        if (inView) nearMatatu.anims.resume();
+        else nearMatatu.anims.pause();
+      } : undefined,
       onRepeat: () => {
-        nearMatatu.y = animatedBus ? Phaser.Math.Between(462, 474) : Phaser.Math.Between(438, 462);
-        nearMatatu.setAlpha(Phaser.Math.FloatBetween(0.78, 0.92));
+        nearMatatu.y = animatedBus ? Phaser.Math.Between(404, 416) : Phaser.Math.Between(438, 462);
+        if (!animatedBus) nearMatatu.setAlpha(Phaser.Math.FloatBetween(0.78, 0.92));
       },
     });
 
-    this.scene.tweens.add({
-      targets: nearMatatu,
-      y: nearMatatu.y - 3,
-      duration: 520,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.InOut',
-    });
+    if (!animatedBus) {
+      this.scene.tweens.add({
+        targets: nearMatatu,
+        y: nearMatatu.y - 3,
+        duration: 520,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.InOut',
+      });
+    }
 
   }
 

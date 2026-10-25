@@ -110,14 +110,7 @@ export function loadCoreGameplayAssets(scene: Phaser.Scene, levelId: number, cha
     loadImage(scene, levelId === 1 ? 'nairobi-cbd-background' : 'gameplay-background', levelId === 1
       ? 'gameplay/generated/nairobi-cbd-background.png'
       : 'gameplay/generated/gameplay-background.png');
-    if (levelId === 1) {
-      if (!scene.textures.exists('nairobi-matatu-bus-sheet')) {
-        scene.load.spritesheet('nairobi-matatu-bus-sheet', asset('gameplay/generated/nairobi-matatu-bus-sheet.webp'), {
-          frameWidth: 384,
-          frameHeight: 168,
-        });
-      }
-    } else {
+    if (levelId === 2) {
       loadImage(scene, 'nairobi-matatu-conductor', 'gameplay/generated/nairobi-matatu-conductor.png');
     }
     loadImage(scene, 'gameplay-goon', 'gameplay/generated/nairobi-goon.png');
@@ -161,6 +154,15 @@ export function loadDeferredLevelAssets(scene: Phaser.Scene, levelId: number) {
 export function loadBattleAnimationAssets(scene: Phaser.Scene, levelId: number, character: string) {
   let queued = false;
   const add = (didQueue: boolean) => { queued = didQueue || queued; };
+  // Traffic is scenery, so its download must not keep Level 1 behind the
+  // loading screen. Queue it first in the background pack for quick arrival.
+  if (levelId === 1 && !scene.textures.exists('nairobi-matatu-bus-sheet')) {
+    scene.load.spritesheet('nairobi-matatu-bus-sheet', asset('gameplay/generated/nairobi-matatu-bus-sheet.webp'), {
+      frameWidth: 512,
+      frameHeight: 224,
+    });
+    queued = true;
+  }
   // Combat has procedural audio fallbacks. Slow sound requests must not keep
   // a playable arena behind its loading screen.
   add(loadAudio(scene, 'special-attack', 'audio/special-attack.mp3'));
