@@ -9,6 +9,7 @@ test('Level 1 drives the compressed animated bus across the arena', async ({ pag
   expect(response.status()).toBe(200);
   await page.waitForFunction(() => (window as any).__game?.scene.getScene('LevelScene')?.player?.active);
   await expect(page.locator('#scene-loading-overlay')).toBeHidden();
+  await page.waitForFunction(() => (window as any).__game.scene.getScene('LevelScene').children.getByName('level1-matatu'));
   const initial = await page.evaluate(() => {
     const scene = (window as any).__game.scene.getScene('LevelScene');
     const bus = scene.children.getByName('level1-matatu');
@@ -17,8 +18,8 @@ test('Level 1 drives the compressed animated bus across the arena', async ({ pag
   });
   expect(initial.key).toBe('nairobi-matatu-bus-sheet');
   expect(initial.animation).toBe('nairobi-matatu-bus-drive');
-  expect(initial.width).toBeCloseTo(450);
-  expect(initial.height).toBeCloseTo(197);
+  expect(initial.width).toBeCloseTo(720);
+  expect(initial.height).toBeCloseTo(315);
   await page.waitForFunction(start => {
     const bus = (window as any).__game.scene.getScene('LevelScene').children.getByName('level1-matatu');
     return bus.frame.name !== start.frame && bus.x < start.x - 25;
@@ -39,4 +40,22 @@ test('Level 2 keeps its existing matatu', async ({ page }) => {
     return scene.children.getByName('level2-matatu').texture.key;
   });
   expect(texture).toBe('nairobi-matatu-conductor');
+});
+
+test('a slow bus download does not delay Level 1 combat', async ({ page }) => {
+  let release!: () => void;
+  const held = new Promise<void>(resolve => { release = resolve; });
+  await page.route(/nairobi-matatu-bus-sheet.*\.webp/, async route => {
+    await held;
+    await route.continue();
+  });
+  await page.goto('/?level=1');
+  try {
+    await page.waitForFunction(() => (window as any).__game?.scene.getScene('LevelScene')?.player?.active);
+    await expect(page.locator('#scene-loading-overlay')).toBeHidden();
+    const absent = await page.evaluate(() =>
+      (window as any).__game.scene.getScene('LevelScene').children.getByName('level1-matatu') == null);
+    expect(absent).toBe(true);
+  } finally { release(); }
+  await page.waitForFunction(() => (window as any).__game.scene.getScene('LevelScene').children.getByName('level1-matatu'));
 });
