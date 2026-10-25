@@ -28,9 +28,9 @@ export function getDifficulty(): Difficulty {
 
 export function getDifficultySettings() { return DIFFICULTIES[getDifficulty()]; }
 
-export function cycleDifficulty(): Difficulty {
+export function cycleDifficulty(direction: 1 | -1 = 1): Difficulty {
   const order: Difficulty[] = ['easy', 'normal', 'hard'];
-  const next = order[(order.indexOf(getDifficulty()) + 1) % order.length];
+  const next = order[(order.indexOf(getDifficulty()) + direction + order.length) % order.length];
   writeStorage(DIFFICULTY_STORAGE_KEY, next);
   return next;
 }
