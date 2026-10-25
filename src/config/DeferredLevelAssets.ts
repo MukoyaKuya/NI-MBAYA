@@ -28,6 +28,7 @@ const assetUrls: Record<string, string> = {
   'gameplay/generated/nairobi-cbd-background.png': new URL('../assets/optimized/gameplay/generated/nairobi-cbd-background.webp', import.meta.url).href,
   'gameplay/generated/gameplay-background.png': new URL('../assets/optimized/gameplay/generated/gameplay-background.webp', import.meta.url).href,
   'gameplay/generated/nairobi-matatu-conductor.png': new URL('../assets/optimized/gameplay/generated/nairobi-matatu-conductor.webp', import.meta.url).href,
+  'gameplay/generated/nairobi-matatu-bus-sheet.webp': new URL('../assets/optimized/gameplay/generated/nairobi-matatu-bus-sheet.webp', import.meta.url).href,
   'gameplay/generated/nairobi-goon.png': new URL('../assets/optimized/gameplay/generated/nairobi-goon.webp', import.meta.url).href,
   'gameplay/generated/goon-hoodie.png': new URL('../assets/optimized/gameplay/generated/goon-hoodie.webp', import.meta.url).href,
   'gameplay/generated/goon-club.png': new URL('../assets/optimized/gameplay/generated/goon-club.webp', import.meta.url).href,
@@ -109,7 +110,16 @@ export function loadCoreGameplayAssets(scene: Phaser.Scene, levelId: number, cha
     loadImage(scene, levelId === 1 ? 'nairobi-cbd-background' : 'gameplay-background', levelId === 1
       ? 'gameplay/generated/nairobi-cbd-background.png'
       : 'gameplay/generated/gameplay-background.png');
-    loadImage(scene, 'nairobi-matatu-conductor', 'gameplay/generated/nairobi-matatu-conductor.png');
+    if (levelId === 1) {
+      if (!scene.textures.exists('nairobi-matatu-bus-sheet')) {
+        scene.load.spritesheet('nairobi-matatu-bus-sheet', asset('gameplay/generated/nairobi-matatu-bus-sheet.webp'), {
+          frameWidth: 384,
+          frameHeight: 168,
+        });
+      }
+    } else {
+      loadImage(scene, 'nairobi-matatu-conductor', 'gameplay/generated/nairobi-matatu-conductor.png');
+    }
     loadImage(scene, 'gameplay-goon', 'gameplay/generated/nairobi-goon.png');
     loadImage(scene, 'gameplay-goon-hoodie', 'gameplay/generated/goon-hoodie.png');
     loadImage(scene, 'gameplay-goon-club', 'gameplay/generated/goon-club.png');
