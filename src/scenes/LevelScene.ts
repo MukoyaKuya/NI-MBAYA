@@ -549,42 +549,132 @@ export class LevelScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setDepth(2000);
 
-    const defeatedText = this.add.text(GAME_WIDTH / 2, 252, 'UMEVAMIWA!', {
+    // The irregular black and red brush stroke keeps the warning legible over
+    // both bright and dark level backgrounds without hiding the fallen fighter.
+    const banner = this.add.graphics().setScrollFactor(0).setDepth(2001);
+    banner.fillStyle(0x060507, 0.94);
+    banner.fillPoints([
+      { x: 125, y: 241 }, { x: 240, y: 224 }, { x: 288, y: 235 },
+      { x: 427, y: 207 }, { x: 478, y: 225 }, { x: 599, y: 213 },
+      { x: 711, y: 223 }, { x: 836, y: 201 }, { x: 910, y: 223 },
+      { x: 1066, y: 207 }, { x: 1148, y: 226 }, { x: 1082, y: 249 },
+      { x: 1182, y: 277 }, { x: 1090, y: 302 }, { x: 1167, y: 331 },
+      { x: 1024, y: 333 }, { x: 952, y: 352 }, { x: 777, y: 341 },
+      { x: 674, y: 359 }, { x: 522, y: 344 }, { x: 351, y: 356 },
+      { x: 265, y: 338 }, { x: 147, y: 353 }, { x: 204, y: 317 },
+      { x: 106, y: 286 }, { x: 197, y: 266 },
+    ], true);
+    banner.lineStyle(7, 0xf01625, 0.9);
+    banner.lineBetween(139, 336, 382, 344);
+    banner.lineBetween(914, 225, 1133, 207);
+    banner.lineStyle(3, 0xffb11b, 0.85);
+    banner.lineBetween(235, 355, 444, 343);
+    banner.lineBetween(841, 358, 1035, 335);
+    banner.fillStyle(0xf01625, 0.95);
+    for (let i = 0; i < 25; i += 1) {
+      const x = 115 + ((i * 179) % 1070);
+      const y = i % 2 === 0 ? 212 - ((i * 23) % 38) : 356 + ((i * 19) % 37);
+      banner.fillCircle(x, y, 2 + (i % 3));
+    }
+
+    const titleStyle = {
       fontFamily: 'Arial Black',
-      fontSize: '92px',
-      color: '#ff2338',
-      stroke: '#fff2a8',
-      strokeThickness: 8,
+      fontSize: '106px',
+      color: '#e90823',
+      stroke: '#ffcf45',
+      strokeThickness: 5,
       fontStyle: 'italic',
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(2002).setAngle(-5).setScale(0.2);
+    } as const;
+    const saberGlow = this.add.text(GAME_WIDTH / 2, 282, 'UMEVAMIWA!', {
+      ...titleStyle,
+      color: '#ff4b30',
+      stroke: '#ffba26',
+      strokeThickness: 15,
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(2002).setAlpha(0.42).setScale(0.2);
+    const defeatedText = this.add.text(GAME_WIDTH / 2, 282, 'UMEVAMIWA!', titleStyle)
+      .setOrigin(0.5).setScrollFactor(0).setDepth(2003).setScale(0.2);
 
-    this.tweens.add({ targets: defeatedText, scale: 1, angle: 2, duration: 360, ease: 'Back.Out' });
-    this.tweens.add({ targets: defeatedText, y: defeatedText.y - 10, duration: 520, ease: 'Sine.InOut', yoyo: true, repeat: -1, delay: 360 });
+    this.tweens.add({ targets: [saberGlow, defeatedText], scale: 1, duration: 390, ease: 'Back.Out' });
+    this.tweens.add({ targets: saberGlow, alpha: { from: 0.3, to: 0.85 }, duration: 620, ease: 'Sine.InOut', yoyo: true, repeat: -1, delay: 390 });
+    // A bright point travels around the warning's outline. The glow text also
+    // breathes beneath it, giving the title the requested saber-like edge.
+    const trace = this.add.graphics().setScrollFactor(0).setDepth(2004);
+    const points = [
+      { x: 194, y: 230 }, { x: 1084, y: 230 },
+      { x: 1084, y: 338 }, { x: 194, y: 338 }, { x: 194, y: 230 },
+    ];
+    const lengths = [890, 108, 890, 108];
+    const perimeter = lengths.reduce((sum, length) => sum + length, 0);
+    const tracePoint = (distance: number) => {
+      let remaining = ((distance % perimeter) + perimeter) % perimeter;
+      for (let i = 0; i < lengths.length; i += 1) {
+        if (remaining <= lengths[i]) {
+          const t = remaining / lengths[i];
+          return { x: Phaser.Math.Linear(points[i].x, points[i + 1].x, t), y: Phaser.Math.Linear(points[i].y, points[i + 1].y, t) };
+        }
+        remaining -= lengths[i];
+      }
+      return points[0];
+    };
+    this.tweens.addCounter({
+      from: 0, to: perimeter, duration: 2100, repeat: -1, ease: 'Linear',
+      onUpdate: (tween) => {
+        trace.clear();
+        const position = tracePoint(tween.getValue() ?? 0);
+        trace.fillStyle(0xffa919, 0.1).fillCircle(position.x, position.y, 23);
+        trace.fillStyle(0xffc74d, 0.28).fillCircle(position.x, position.y, 12);
+        trace.fillStyle(0xfff3bb, 1).fillCircle(position.x, position.y, 4);
+      },
+    });
 
-    const subtitle = this.add.text(GAME_WIDTH / 2, 332, 'Goons Wamekupiga Mbavu', {
+    const subtitlePlate = this.add.graphics().setScrollFactor(0).setDepth(2002);
+    subtitlePlate.fillStyle(0x070608, 0.94).lineStyle(2, 0xffb51c, 1);
+    subtitlePlate.fillPoints([
+      { x: 395, y: 369 }, { x: 895, y: 369 }, { x: 871, y: 411 }, { x: 372, y: 411 },
+    ], true);
+    subtitlePlate.strokeLineShape(new Phaser.Geom.Line(395, 369, 895, 369));
+    subtitlePlate.strokeLineShape(new Phaser.Geom.Line(372, 411, 871, 411));
+    const subtitle = this.add.text(GAME_WIDTH / 2, 390, 'Goons Wamekupiga Mbavu', {
       fontFamily: 'Arial Black',
-      fontSize: '24px',
+      fontSize: '26px',
       color: '#ffffff',
       stroke: '#050505',
       strokeThickness: 5,
       fontStyle: 'italic',
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(2002).setAlpha(0);
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(2003).setAlpha(0);
     this.tweens.add({ targets: subtitle, alpha: 1, duration: 240, delay: 220 });
 
-    const button = this.add.container(GAME_WIDTH / 2, 432).setScrollFactor(0).setDepth(2002);
+    const button = this.add.container(GAME_WIDTH / 2, 485).setScrollFactor(0).setDepth(2003);
     const buttonBg = this.add.graphics();
-    buttonBg.fillStyle(0xffbf1b, 1);
-    buttonBg.lineStyle(4, 0x050505, 1);
-    buttonBg.fillRoundedRect(-116, -34, 232, 68, 8);
-    buttonBg.strokeRoundedRect(-116, -34, 232, 68, 8);
+    const buttonShine = this.add.graphics();
+    const drawReplay = (hovered: boolean) => {
+      buttonBg.clear();
+      buttonBg.fillStyle(0x050505, 0.8).fillRoundedRect(-166, -46, 332, 92, 10);
+      buttonBg.fillStyle(hovered ? 0xffda38 : 0xffbf12, 1);
+      buttonBg.fillPoints([
+        { x: -150, y: -38 }, { x: 145, y: -38 }, { x: 167, y: 0 },
+        { x: 145, y: 38 }, { x: -150, y: 38 }, { x: -172, y: 0 },
+      ], true);
+      buttonBg.lineStyle(3, hovered ? 0xffffff : 0xff6915, 1);
+      buttonBg.strokePoints([
+        { x: -150, y: -38 }, { x: 145, y: -38 }, { x: 167, y: 0 },
+        { x: 145, y: 38 }, { x: -150, y: 38 }, { x: -172, y: 0 },
+      ], true);
+      buttonBg.lineStyle(2, 0xffec80, 0.8);
+      buttonBg.lineBetween(-139, -28, 132, -28);
+      buttonBg.lineBetween(-139, 29, 132, 29);
+    };
+    drawReplay(false);
     const buttonText = this.add.text(0, 0, 'REPLAY', {
       fontFamily: 'Arial Black',
-      fontSize: '30px',
+      fontSize: '34px',
       color: '#111111',
       fontStyle: 'italic',
     }).setOrigin(0.5);
-    button.add([buttonBg, buttonText]);
-    button.setSize(232, 68).setInteractive({ useHandCursor: true });
+    button.add([buttonBg, buttonShine, buttonText]);
+    button.setSize(344, 82).setInteractive({ useHandCursor: true });
+    button.setName('defeat-replay');
+    let hoverTween: Phaser.Tweens.Tween | undefined;
     button.on('pointerdown', () => {
       if (this.transitioningLevel) return;
       this.transitioningLevel = true;
@@ -599,8 +689,31 @@ export class LevelScene extends Phaser.Scene {
         character: this.selectedCharacter,
       });
     });
-    button.on('pointerover', () => this.tweens.add({ targets: button, scale: 1.06, duration: 90 }));
-    button.on('pointerout', () => this.tweens.add({ targets: button, scale: 1, duration: 90 }));
+    button.on('pointerover', () => {
+      this.tweens.killTweensOf(button);
+      drawReplay(true);
+      hoverTween?.stop();
+      hoverTween = this.tweens.addCounter({
+        from: -185, to: 185, duration: 850, repeat: -1,
+        onUpdate: (tween) => {
+          buttonShine.clear();
+          buttonShine.fillStyle(0xffffff, 0.24);
+          const x = tween.getValue() ?? -185;
+          buttonShine.fillPoints([
+            { x: x - 20, y: -31 }, { x: x - 5, y: -31 },
+            { x: x + 20, y: 31 }, { x: x + 5, y: 31 },
+          ], true);
+        },
+      });
+      this.tweens.add({ targets: button, scale: 1.08, duration: 150, ease: 'Back.Out' });
+    });
+    button.on('pointerout', () => {
+      hoverTween?.stop();
+      buttonShine.clear();
+      drawReplay(false);
+      this.tweens.killTweensOf(button);
+      this.tweens.add({ targets: button, scale: 1, duration: 150, ease: 'Sine.Out' });
+    });
     this.tweens.add({ targets: button, scale: { from: 0.75, to: 1 }, alpha: { from: 0, to: 1 }, duration: 260, delay: 360, ease: 'Back.Out' });
   }
 
