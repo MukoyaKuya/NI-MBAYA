@@ -4,6 +4,12 @@ import './style.css';
 import { getGameplayTime } from './systems/GameplayClock';
 import { installPerformanceMonitor } from './systems/PerformanceMonitor';
 
+// Register the defeat font before Phaser creates its first canvas text object.
+// Vite fingerprints this URL and serves the font alongside the game bundle.
+const gorvex = new FontFace('Gorvex', `url("${new URL('./assets/fonts/gorvex.regular.ttf', import.meta.url).href}")`);
+document.fonts.add(gorvex);
+void gorvex.load().catch(() => undefined);
+
 // Phaser owns the canvas lifecycle; Vite only provides bundling and hot reload.
 performance.mark('ni-mbaya:engine-ready');
 const game = new Phaser.Game(gameConfig);
