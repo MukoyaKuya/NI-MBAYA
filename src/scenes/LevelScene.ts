@@ -545,17 +545,30 @@ export class LevelScene extends Phaser.Scene {
 
   private showDefeatedOverlay() {
     this.defeatOverlayShown = true;
+    // Phaser caches canvas text when it is created. Wait for the supplied font
+    // so a slow download cannot leave the warning rendered in a fallback face.
+    if (!document.fonts.check('124px Gorvex')) {
+      void document.fonts.load('124px Gorvex').then(() => {
+        if (this.scene.isActive()) this.renderDefeatedOverlay();
+      }).catch(() => {
+        if (this.scene.isActive()) this.renderDefeatedOverlay();
+      });
+      return;
+    }
+    this.renderDefeatedOverlay();
+  }
+
+  private renderDefeatedOverlay() {
     this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x050108, 0.28)
       .setScrollFactor(0)
       .setDepth(2000);
 
     const titleStyle = {
-      fontFamily: 'Arial Black',
-      fontSize: '104px',
+      fontFamily: 'Gorvex',
+      fontSize: '124px',
       color: '#f0092a',
       stroke: '#ffe08b',
       strokeThickness: 6,
-      fontStyle: 'italic',
     } as const;
     // The warning sits directly over the street. Layered text shadows give it
     // depth and a moving gold edge without an opaque panel behind the action.

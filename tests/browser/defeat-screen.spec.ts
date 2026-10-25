@@ -17,10 +17,18 @@ test('defeat warning animates, Replay responds to hover, and Replay restarts com
     const title = scene.children.list.find((child: any) => child.text === 'UMEVAMIWA!' && child.depth === 2002);
     const glow = scene.children.list.find((child: any) => child.text === 'UMEVAMIWA!' && child.depth === 2001);
     const replay = scene.children.getByName('defeat-replay');
-    return { title: title?.text, glowAlpha: glow?.alpha, replayScale: replay?.scaleX };
+    return {
+      title: title?.text,
+      font: title?.style.fontFamily,
+      fontLoaded: document.fonts.check('124px Gorvex'),
+      glowAlpha: glow?.alpha,
+      replayScale: replay?.scaleX,
+    };
   });
   await page.screenshot({ path: '.git/defeat-screen-desktop.png' });
   expect(initial.title).toBe('UMEVAMIWA!');
+  expect(initial.font).toBe('Gorvex');
+  expect(initial.fontLoaded).toBe(true);
   expect(initial.replayScale).toBeCloseTo(1, 1);
   await page.waitForTimeout(270);
   const glowAlphaLater = await page.evaluate(() => {
