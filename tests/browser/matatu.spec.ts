@@ -17,8 +17,8 @@ test('Level 1 drives the compressed animated bus across the arena', async ({ pag
   });
   expect(initial.key).toBe('nairobi-matatu-bus-sheet');
   expect(initial.animation).toBe('nairobi-matatu-bus-drive');
-  expect(initial.width).toBeCloseTo(340);
-  expect(initial.height).toBeCloseTo(149);
+  expect(initial.width).toBeCloseTo(450);
+  expect(initial.height).toBeCloseTo(197);
   await page.waitForFunction(start => {
     const bus = (window as any).__game.scene.getScene('LevelScene').children.getByName('level1-matatu');
     return bus.frame.name !== start.frame && bus.x < start.x - 25;
