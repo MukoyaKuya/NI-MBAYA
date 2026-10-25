@@ -545,103 +545,52 @@ export class LevelScene extends Phaser.Scene {
 
   private showDefeatedOverlay() {
     this.defeatOverlayShown = true;
-    this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x050108, 0.46)
+    this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x050108, 0.28)
       .setScrollFactor(0)
       .setDepth(2000);
 
-    // The irregular black and red brush stroke keeps the warning legible over
-    // both bright and dark level backgrounds without hiding the fallen fighter.
-    const banner = this.add.graphics().setScrollFactor(0).setDepth(2001);
-    banner.fillStyle(0x060507, 0.94);
-    banner.fillPoints([
-      { x: 125, y: 241 }, { x: 240, y: 224 }, { x: 288, y: 235 },
-      { x: 427, y: 207 }, { x: 478, y: 225 }, { x: 599, y: 213 },
-      { x: 711, y: 223 }, { x: 836, y: 201 }, { x: 910, y: 223 },
-      { x: 1066, y: 207 }, { x: 1148, y: 226 }, { x: 1082, y: 249 },
-      { x: 1182, y: 277 }, { x: 1090, y: 302 }, { x: 1167, y: 331 },
-      { x: 1024, y: 333 }, { x: 952, y: 352 }, { x: 777, y: 341 },
-      { x: 674, y: 359 }, { x: 522, y: 344 }, { x: 351, y: 356 },
-      { x: 265, y: 338 }, { x: 147, y: 353 }, { x: 204, y: 317 },
-      { x: 106, y: 286 }, { x: 197, y: 266 },
-    ], true);
-    banner.lineStyle(7, 0xf01625, 0.9);
-    banner.lineBetween(139, 336, 382, 344);
-    banner.lineBetween(914, 225, 1133, 207);
-    banner.lineStyle(3, 0xffb11b, 0.85);
-    banner.lineBetween(235, 355, 444, 343);
-    banner.lineBetween(841, 358, 1035, 335);
-    banner.fillStyle(0xf01625, 0.95);
-    for (let i = 0; i < 25; i += 1) {
-      const x = 115 + ((i * 179) % 1070);
-      const y = i % 2 === 0 ? 212 - ((i * 23) % 38) : 356 + ((i * 19) % 37);
-      banner.fillCircle(x, y, 2 + (i % 3));
-    }
-
     const titleStyle = {
       fontFamily: 'Arial Black',
-      fontSize: '106px',
-      color: '#e90823',
-      stroke: '#ffcf45',
-      strokeThickness: 5,
+      fontSize: '104px',
+      color: '#f0092a',
+      stroke: '#ffe08b',
+      strokeThickness: 6,
       fontStyle: 'italic',
     } as const;
+    // The warning sits directly over the street. Layered text shadows give it
+    // depth and a moving gold edge without an opaque panel behind the action.
     const saberGlow = this.add.text(GAME_WIDTH / 2, 282, 'UMEVAMIWA!', {
       ...titleStyle,
-      color: '#ff4b30',
-      stroke: '#ffba26',
-      strokeThickness: 15,
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(2002).setAlpha(0.42).setScale(0.2);
+      color: '#ad0016',
+      stroke: '#ffb522',
+      strokeThickness: 18,
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(2001).setAlpha(0.45).setScale(0.2);
     const defeatedText = this.add.text(GAME_WIDTH / 2, 282, 'UMEVAMIWA!', titleStyle)
-      .setOrigin(0.5).setScrollFactor(0).setDepth(2003).setScale(0.2);
+      .setOrigin(0.5).setScrollFactor(0).setDepth(2002).setScale(0.2)
+      .setShadow(5, 8, '#170009', 10, true, true);
 
     this.tweens.add({ targets: [saberGlow, defeatedText], scale: 1, duration: 390, ease: 'Back.Out' });
-    this.tweens.add({ targets: saberGlow, alpha: { from: 0.3, to: 0.85 }, duration: 620, ease: 'Sine.InOut', yoyo: true, repeat: -1, delay: 390 });
-    // A bright point travels around the warning's outline. The glow text also
-    // breathes beneath it, giving the title the requested saber-like edge.
-    const trace = this.add.graphics().setScrollFactor(0).setDepth(2004);
-    const points = [
-      { x: 194, y: 230 }, { x: 1084, y: 230 },
-      { x: 1084, y: 338 }, { x: 194, y: 338 }, { x: 194, y: 230 },
-    ];
-    const lengths = [890, 108, 890, 108];
-    const perimeter = lengths.reduce((sum, length) => sum + length, 0);
-    const tracePoint = (distance: number) => {
-      let remaining = ((distance % perimeter) + perimeter) % perimeter;
-      for (let i = 0; i < lengths.length; i += 1) {
-        if (remaining <= lengths[i]) {
-          const t = remaining / lengths[i];
-          return { x: Phaser.Math.Linear(points[i].x, points[i + 1].x, t), y: Phaser.Math.Linear(points[i].y, points[i + 1].y, t) };
-        }
-        remaining -= lengths[i];
-      }
-      return points[0];
-    };
-    this.tweens.addCounter({
-      from: 0, to: perimeter, duration: 2100, repeat: -1, ease: 'Linear',
-      onUpdate: (tween) => {
-        trace.clear();
-        const position = tracePoint(tween.getValue() ?? 0);
-        trace.fillStyle(0xffa919, 0.1).fillCircle(position.x, position.y, 23);
-        trace.fillStyle(0xffc74d, 0.28).fillCircle(position.x, position.y, 12);
-        trace.fillStyle(0xfff3bb, 1).fillCircle(position.x, position.y, 4);
+    this.tweens.add({ targets: saberGlow, alpha: { from: 0.3, to: 0.7 }, duration: 850, ease: 'Sine.InOut', yoyo: true, repeat: -1, delay: 390 });
+    const edge = { intensity: 0 };
+    this.tweens.add({
+      targets: edge, intensity: 1, duration: 1350, ease: 'Sine.InOut', yoyo: true, repeat: -1,
+      onUpdate: () => {
+        const bright = Phaser.Display.Color.Interpolate.ColorWithColor(
+          Phaser.Display.Color.HexStringToColor('#ffbd32'),
+          Phaser.Display.Color.HexStringToColor('#fff8d6'), 100, Math.round(edge.intensity * 100),
+        );
+        defeatedText.setStroke(Phaser.Display.Color.RGBToString(bright.r, bright.g, bright.b), 6);
       },
     });
 
-    const subtitlePlate = this.add.graphics().setScrollFactor(0).setDepth(2002);
-    subtitlePlate.fillStyle(0x070608, 0.94).lineStyle(2, 0xffb51c, 1);
-    subtitlePlate.fillPoints([
-      { x: 395, y: 369 }, { x: 895, y: 369 }, { x: 871, y: 411 }, { x: 372, y: 411 },
-    ], true);
-    subtitlePlate.strokeLineShape(new Phaser.Geom.Line(395, 369, 895, 369));
-    subtitlePlate.strokeLineShape(new Phaser.Geom.Line(372, 411, 871, 411));
-    const subtitle = this.add.text(GAME_WIDTH / 2, 390, 'Goons Wamekupiga Mbavu', {
+    const subtitle = this.add.text(GAME_WIDTH / 2, 380, 'Goons Wamekupiga Mbavu', {
       fontFamily: 'Arial Black',
-      fontSize: '26px',
+      fontSize: '27px',
       color: '#ffffff',
       stroke: '#050505',
-      strokeThickness: 5,
+      strokeThickness: 6,
       fontStyle: 'italic',
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(2003).setAlpha(0);
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(2002).setAlpha(0);
     this.tweens.add({ targets: subtitle, alpha: 1, duration: 240, delay: 220 });
 
     const button = this.add.container(GAME_WIDTH / 2, 485).setScrollFactor(0).setDepth(2003);

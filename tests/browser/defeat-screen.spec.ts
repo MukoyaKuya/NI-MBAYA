@@ -14,8 +14,8 @@ test('defeat warning animates, Replay responds to hover, and Replay restarts com
   await page.waitForTimeout(700);
   const initial = await page.evaluate(() => {
     const scene = (window as any).__game.scene.getScene('LevelScene');
-    const title = scene.children.list.find((child: any) => child.text === 'UMEVAMIWA!' && child.depth === 2003);
-    const glow = scene.children.list.find((child: any) => child.text === 'UMEVAMIWA!' && child.depth === 2002);
+    const title = scene.children.list.find((child: any) => child.text === 'UMEVAMIWA!' && child.depth === 2002);
+    const glow = scene.children.list.find((child: any) => child.text === 'UMEVAMIWA!' && child.depth === 2001);
     const replay = scene.children.getByName('defeat-replay');
     return { title: title?.text, glowAlpha: glow?.alpha, replayScale: replay?.scaleX };
   });
@@ -25,7 +25,7 @@ test('defeat warning animates, Replay responds to hover, and Replay restarts com
   await page.waitForTimeout(270);
   const glowAlphaLater = await page.evaluate(() => {
     const scene = (window as any).__game.scene.getScene('LevelScene');
-    return scene.children.list.find((child: any) => child.text === 'UMEVAMIWA!' && child.depth === 2002)?.alpha;
+    return scene.children.list.find((child: any) => child.text === 'UMEVAMIWA!' && child.depth === 2001)?.alpha;
   });
   expect(glowAlphaLater).not.toBeCloseTo(initial.glowAlpha, 2);
 
