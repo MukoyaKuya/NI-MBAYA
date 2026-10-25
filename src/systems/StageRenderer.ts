@@ -17,13 +17,13 @@ export class StageRenderer {
     const busSheet = 'nairobi-matatu-bus-sheet';
     const animatedBus = levelId === 1 && this.scene.textures.exists(busSheet);
     const nearMatatu = this.scene.add.sprite(
-      animatedBus ? GAME_WIDTH + 220 : -240,
-      animatedBus ? 488 : 455,
+      animatedBus ? GAME_WIDTH + 260 : -240,
+      animatedBus ? 468 : 455,
       animatedBus ? busSheet : this.getMatatuTextureKey(),
       0,
     )
       .setName(levelId === 1 ? 'level1-matatu' : 'level2-matatu')
-      .setDisplaySize(animatedBus ? 340 : 335, animatedBus ? 149 : 116)
+      .setDisplaySize(animatedBus ? 450 : 335, animatedBus ? 197 : 116)
       .setDepth(5)
       .setAlpha(0.88);
 
@@ -42,14 +42,14 @@ export class StageRenderer {
 
     this.scene.tweens.add({
       targets: nearMatatu,
-      x: animatedBus ? -220 : GAME_WIDTH + 250,
+      x: animatedBus ? -260 : GAME_WIDTH + 250,
       duration: 9200,
       delay: 900,
       repeat: -1,
       repeatDelay: 4200,
       ease: animatedBus ? 'Linear' : 'Sine.InOut',
       onRepeat: () => {
-        nearMatatu.y = animatedBus ? Phaser.Math.Between(477, 494) : Phaser.Math.Between(438, 462);
+        nearMatatu.y = animatedBus ? Phaser.Math.Between(462, 474) : Phaser.Math.Between(438, 462);
         nearMatatu.setAlpha(Phaser.Math.FloatBetween(0.78, 0.92));
       },
     });
