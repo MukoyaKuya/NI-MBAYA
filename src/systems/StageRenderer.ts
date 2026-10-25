@@ -9,26 +9,47 @@ export class StageRenderer {
       .setDisplaySize(GAME_WIDTH, GAME_HEIGHT)
       .setDepth(0);
     this.scene.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.07).setDepth(2);
-    if (level.id <= 2) this.createBackgroundTraffic();
+    if (level.id <= 2) this.createBackgroundTraffic(level.id);
     this.scene.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT - 8, GAME_WIDTH, 16, 0x050505, 0.76).setDepth(79);
   }
 
-  private createBackgroundTraffic() {
-    const nearMatatu = this.scene.add.image(-240, 455, this.getMatatuTextureKey())
-      .setDisplaySize(335, 116)
+  private createBackgroundTraffic(levelId: number) {
+    const busSheet = 'nairobi-matatu-bus-sheet';
+    const animatedBus = levelId === 1 && this.scene.textures.exists(busSheet);
+    const nearMatatu = this.scene.add.sprite(
+      animatedBus ? GAME_WIDTH + 220 : -240,
+      animatedBus ? 488 : 455,
+      animatedBus ? busSheet : this.getMatatuTextureKey(),
+      0,
+    )
+      .setName(levelId === 1 ? 'level1-matatu' : 'level2-matatu')
+      .setDisplaySize(animatedBus ? 340 : 335, animatedBus ? 149 : 116)
       .setDepth(5)
       .setAlpha(0.88);
 
+    if (animatedBus) {
+      const animationKey = 'nairobi-matatu-bus-drive';
+      if (!this.scene.anims.exists(animationKey)) {
+        this.scene.anims.create({
+          key: animationKey,
+          frames: this.scene.anims.generateFrameNumbers(busSheet, { start: 0, end: 8 }),
+          frameRate: 6.25,
+          repeat: -1,
+        });
+      }
+      nearMatatu.play(animationKey);
+    }
+
     this.scene.tweens.add({
       targets: nearMatatu,
-      x: GAME_WIDTH + 250,
+      x: animatedBus ? -220 : GAME_WIDTH + 250,
       duration: 9200,
       delay: 900,
       repeat: -1,
       repeatDelay: 4200,
-      ease: 'Sine.InOut',
+      ease: animatedBus ? 'Linear' : 'Sine.InOut',
       onRepeat: () => {
-        nearMatatu.y = Phaser.Math.Between(438, 462);
+        nearMatatu.y = animatedBus ? Phaser.Math.Between(477, 494) : Phaser.Math.Between(438, 462);
         nearMatatu.setAlpha(Phaser.Math.FloatBetween(0.78, 0.92));
       },
     });
