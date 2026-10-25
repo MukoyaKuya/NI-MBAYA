@@ -563,85 +563,40 @@ export class LevelScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setDepth(2000);
 
-    const titleStyle = {
-      fontFamily: 'Gorvex',
-      fontSize: '124px',
-      color: '#f0092a',
-      stroke: '#ffe08b',
-      strokeThickness: 6,
-    } as const;
-    // The warning sits directly over the street. Layered text shadows give it
-    // depth and a moving gold edge without an opaque panel behind the action.
-    const saberGlow = this.add.text(GAME_WIDTH / 2, 282, 'UMEVAMIWA!', {
-      ...titleStyle,
-      color: '#ad0016',
-      stroke: '#ffb522',
-      strokeThickness: 18,
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(2001).setAlpha(0.45).setScale(0.2);
-    const defeatedText = this.add.text(GAME_WIDTH / 2, 282, 'UMEVAMIWA!', titleStyle)
-      .setOrigin(0.5).setScrollFactor(0).setDepth(2002).setScale(0.2)
-      .setShadow(5, 8, '#170009', 10, true, true);
+    const overlay = document.createElement('div');
+    overlay.className = 'defeat-ui';
+    overlay.id = 'defeat-ui';
+    overlay.setAttribute('role', 'group');
+    overlay.setAttribute('aria-label', 'Defeat');
 
-    this.tweens.add({ targets: [saberGlow, defeatedText], scale: 1, duration: 390, ease: 'Back.Out' });
-    this.tweens.add({ targets: saberGlow, alpha: { from: 0.3, to: 0.7 }, duration: 850, ease: 'Sine.InOut', yoyo: true, repeat: -1, delay: 390 });
-    const edge = { intensity: 0 };
-    this.tweens.add({
-      targets: edge, intensity: 1, duration: 1350, ease: 'Sine.InOut', yoyo: true, repeat: -1,
-      onUpdate: () => {
-        const bright = Phaser.Display.Color.Interpolate.ColorWithColor(
-          Phaser.Display.Color.HexStringToColor('#ffbd32'),
-          Phaser.Display.Color.HexStringToColor('#fff8d6'), 100, Math.round(edge.intensity * 100),
-        );
-        defeatedText.setStroke(Phaser.Display.Color.RGBToString(bright.r, bright.g, bright.b), 6);
-      },
+    const warning = document.createElement('h1');
+    warning.className = 'defeat-ui__warning';
+    warning.setAttribute('aria-label', 'UMEVAMIWA!');
+    [...'UMEVAMIWA!'].forEach((letter, index) => {
+      const glyph = document.createElement('span');
+      glyph.className = 'defeat-ui__letter';
+      glyph.setAttribute('aria-hidden', 'true');
+      glyph.style.setProperty('--letter-index', String(index));
+      glyph.textContent = letter;
+      warning.append(glyph);
     });
 
-    const subtitle = this.add.text(GAME_WIDTH / 2, 380, 'Goons Wamekupiga Mbavu', {
-      fontFamily: 'Arial Black',
-      fontSize: '27px',
-      color: '#ffffff',
-      stroke: '#050505',
-      strokeThickness: 6,
-      fontStyle: 'italic',
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(2002).setAlpha(0);
-    this.tweens.add({ targets: subtitle, alpha: 1, duration: 240, delay: 220 });
+    const subtitle = document.createElement('p');
+    subtitle.className = 'defeat-ui__subtitle';
+    subtitle.textContent = 'Goons Wamekupiga Mbavu';
 
-    const button = this.add.container(GAME_WIDTH / 2, 485).setScrollFactor(0).setDepth(2003);
-    const buttonBg = this.add.graphics();
-    const buttonShine = this.add.graphics();
-    const drawReplay = (hovered: boolean) => {
-      buttonBg.clear();
-      buttonBg.fillStyle(0x050505, 0.8).fillRoundedRect(-166, -46, 332, 92, 10);
-      buttonBg.fillStyle(hovered ? 0xffda38 : 0xffbf12, 1);
-      buttonBg.fillPoints([
-        { x: -150, y: -38 }, { x: 145, y: -38 }, { x: 167, y: 0 },
-        { x: 145, y: 38 }, { x: -150, y: 38 }, { x: -172, y: 0 },
-      ], true);
-      buttonBg.lineStyle(3, hovered ? 0xffffff : 0xff6915, 1);
-      buttonBg.strokePoints([
-        { x: -150, y: -38 }, { x: 145, y: -38 }, { x: 167, y: 0 },
-        { x: 145, y: 38 }, { x: -150, y: 38 }, { x: -172, y: 0 },
-      ], true);
-      buttonBg.lineStyle(2, 0xffec80, 0.8);
-      buttonBg.lineBetween(-139, -28, 132, -28);
-      buttonBg.lineBetween(-139, 29, 132, 29);
-    };
-    drawReplay(false);
-    const buttonText = this.add.text(0, 0, 'REPLAY', {
-      fontFamily: 'Arial Black',
-      fontSize: '34px',
-      color: '#111111',
-      fontStyle: 'italic',
-    }).setOrigin(0.5);
-    button.add([buttonBg, buttonShine, buttonText]);
-    button.setSize(344, 82).setInteractive({ useHandCursor: true });
-    button.setName('defeat-replay');
-    let hoverTween: Phaser.Tweens.Tween | undefined;
-    button.on('pointerdown', () => {
+    const button = document.createElement('button');
+    button.id = 'defeat-replay';
+    button.className = 'defeat-ui__replay';
+    button.type = 'button';
+    button.setAttribute('aria-label', 'Replay level');
+    button.innerHTML = '<span class="defeat-ui__replay-icon" aria-hidden="true">↻</span><span class="defeat-ui__replay-label">REPLAY</span><span class="defeat-ui__replay-arrows" aria-hidden="true">››</span>';
+    button.addEventListener('click', (event) => {
+      event.stopPropagation();
       if (this.transitioningLevel) return;
       this.transitioningLevel = true;
       this.sounds.playUiSelect();
-      button.disableInteractive();
+      button.disabled = true;
       this.physics.world.resume();
       this.anims.resumeAll();
       this.scene.start('LevelScene', {
@@ -651,32 +606,25 @@ export class LevelScene extends Phaser.Scene {
         character: this.selectedCharacter,
       });
     });
-    button.on('pointerover', () => {
-      this.tweens.killTweensOf(button);
-      drawReplay(true);
-      hoverTween?.stop();
-      hoverTween = this.tweens.addCounter({
-        from: -185, to: 185, duration: 850, repeat: -1,
-        onUpdate: (tween) => {
-          buttonShine.clear();
-          buttonShine.fillStyle(0xffffff, 0.24);
-          const x = tween.getValue() ?? -185;
-          buttonShine.fillPoints([
-            { x: x - 20, y: -31 }, { x: x - 5, y: -31 },
-            { x: x + 20, y: 31 }, { x: x + 5, y: 31 },
-          ], true);
-        },
-      });
-      this.tweens.add({ targets: button, scale: 1.08, duration: 150, ease: 'Back.Out' });
+    overlay.append(warning, subtitle, button);
+    document.body.append(overlay);
+
+    // Phaser FIT can letterbox the canvas. Match its displayed rectangle so
+    // CSS animation and the replay hit target stay aligned at every viewport.
+    const positionOverlay = () => {
+      const bounds = this.game.canvas.getBoundingClientRect();
+      overlay.style.left = `${bounds.left}px`;
+      overlay.style.top = `${bounds.top}px`;
+      overlay.style.transform = `scale(${bounds.width / GAME_WIDTH}, ${bounds.height / GAME_HEIGHT})`;
+    };
+    positionOverlay();
+    window.addEventListener('resize', positionOverlay);
+    this.scale.on(Phaser.Scale.Events.RESIZE, positionOverlay);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      window.removeEventListener('resize', positionOverlay);
+      this.scale.off(Phaser.Scale.Events.RESIZE, positionOverlay);
+      overlay.remove();
     });
-    button.on('pointerout', () => {
-      hoverTween?.stop();
-      buttonShine.clear();
-      drawReplay(false);
-      this.tweens.killTweensOf(button);
-      this.tweens.add({ targets: button, scale: 1, duration: 150, ease: 'Sine.Out' });
-    });
-    this.tweens.add({ targets: button, scale: { from: 0.75, to: 1 }, alpha: { from: 0, to: 1 }, duration: 260, delay: 360, ease: 'Back.Out' });
   }
 
   private syncEnemyVisual(visual: EnemyVisual, index: number, time: number) {
