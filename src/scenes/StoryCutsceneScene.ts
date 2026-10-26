@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 import { stopStreamingMusic } from '../systems/StreamingMusic';
 import { getStoryLanguage, isSoundEnabled } from '../config/GameSettings';
+import { editableCopy } from '../config/EditableContent';
+import { STORY_PARAGRAPHS } from '../config/StoryContent';
 
 type StoryStartData = { character?: string; chapatis?: number; health?: number };
 
@@ -102,7 +104,16 @@ export class StoryCutsceneScene extends Phaser.Scene {
     ];
     const lines = (sw ? swahiliLines : englishLines)[this.panelIndex];
     const copyY = sw ? 252 : 236;
-    lines.forEach((segments, row) => {
+    const originalParagraph = STORY_PARAGRAPHS[this.panelIndex][sw ? 'sw' : 'en'];
+    const updatedParagraph = editableCopy(originalParagraph);
+    if (updatedParagraph !== originalParagraph) {
+      const editedBody = this.add.text(930, copyY, updatedParagraph, {
+        fontFamily: 'Arial, sans-serif', fontSize: '24px', color: body,
+        lineSpacing: 10, wordWrap: { width: 325, useAdvancedWrap: true },
+        stroke: '#08090b', strokeThickness: 2,
+      }).setDepth(10);
+      if (editedBody.height > 295) editedBody.setScale(1, 295 / editedBody.height);
+    } else lines.forEach((segments, row) => {
       let x = 930;
       const y = copyY + row * 43;
       const rowObjects = segments.map(([text, color]) => {

@@ -1,0 +1,386 @@
+{
+  "version": 1,
+  "sections": [
+    {
+      "name": "Browser and overlays",
+      "entries": [
+        "Downloading game engine…",
+        "Goons Wamekupiga Mbavu",
+        "NI MBAYA is built for a wide fighting arena. Turn your device sideways for the full experience.",
+        "PLAY IN LANDSCAPE",
+        "REPLAY",
+        "ROTATE YOUR DEVICE",
+        "Skip intro",
+        "UMEVAMIWA!"
+      ]
+    },
+    {
+      "name": "Achievements",
+      "entries": [
+        "ABOVE THE CITY",
+        "ACHIEVEMENTS",
+        "BACK",
+        "BACKSTREET FIGHTER",
+        "BINGWA WA JIJI",
+        "CBD SURVIVOR",
+        "CITY CHAMPION",
+        "Clear all four locations. Make Nairobi your story.",
+        "Clear Level 1 · Nairobi CBD",
+        "Clear Level 2 · Downtown Backstreet",
+        "Clear Level 3 · Nairobi Rooftops",
+        "Clear Level 4 · Kibera",
+        "Clear levels to earn badges. Progress is saved on this browser.",
+        "EVERY LOCATION. ANOTHER MILESTONE.",
+        "IMEFUNGULIWA",
+        "IMEFUNGWA",
+        "JUU YA JIJI",
+        "KIBERA VICTORY",
+        "KILA ENEO. HATUA MOJA ZAIDI.",
+        "LOCKED",
+        "MAFANIKIO",
+        "Maliza Kiwango 1 · Nairobi CBD",
+        "Maliza Kiwango 2 · Downtown Backstreet",
+        "Maliza Kiwango 3 · Nairobi Rooftops",
+        "Maliza Kiwango 4 · Kibera",
+        "Maliza maeneo yote manne. Andika hadithi yako Nairobi.",
+        "Maliza viwango kufungua beji. Maendeleo yanahifadhiwa kwenye kivinjari hiki.",
+        "MPIGANAJI WA MITAA",
+        "RUDI",
+        "SHUJAA WA CBD",
+        "UNLOCKED",
+        "USHINDI WA KIBERA",
+        "ZIMEFUNGULIWA"
+      ]
+    },
+    {
+      "name": "Boot",
+      "entries": [
+        "Starting NI MBAYA…"
+      ]
+    },
+    {
+      "name": "Character Select",
+      "entries": [
+        "BACK",
+        "CHOOSE YOUR FIGHTER",
+        "DEFEAT HIM TO UNLOCK",
+        "DEFEAT MBAVU TO UNLOCK",
+        "FIGHTER PROFILE",
+        "LOCKED",
+        "MAJEMBE",
+        "MBAVU",
+        "MBAVU DESTROYER",
+        "PWR",
+        "SELECT",
+        "SPD",
+        "STREET FIGHTER"
+      ]
+    },
+    {
+      "name": "Culture",
+      "entries": [
+        "A browser fighting game that puts Nairobi-inspired characters and places at the centre of the experience.",
+        "BACK",
+        "FOR: Players who want accessible action, and creators who want African stories to be central—not background—in games.",
+        "GAMES • NAIROBI • CREATIVE FICTION",
+        "HADITHI",
+        "Hii ni kazi ya ubunifu, si mwakilishi rasmi wa maeneo au jamii za Nairobi. Tunajenga kwa heshima, utafiti na nafasi ya kuboresha kwa maoni.",
+        "KWA NANI: Wachezaji wanaotaka mchezo wa action unaopatikana kirahisi na waumbaji wanaoona simulizi za Afrika zinaweza kuwa katikati ya mchezo.",
+        "LANGUAGE: ENGLISH",
+        "LUGHA: KISWAHILI",
+        "Mchezo wa mapigano wa kivinjari unaoweka wahusika na maeneo yaliyochochewa na Nairobi katikati ya uzoefu.",
+        "MICHEZO • NAIROBI • UBUNIFU",
+        "RUDI",
+        "STORIES",
+        "THE WORLD OF NI MBAYA",
+        "This is creative fiction, not an official representation of Nairobi neighbourhoods or communities. It is built with respect, research, and room to improve through feedback.",
+        "ULIMWENGU WA NI MBAYA"
+      ]
+    },
+    {
+      "name": "Daily Challenge",
+      "entries": [
+        "BACK",
+        "DAILY CHALLENGE",
+        "Play any level. Replays count. Defeats still count if you lose the round.",
+        "PLAY NOW",
+        "REWARD CLAIMED"
+      ]
+    },
+    {
+      "name": "Exit",
+      "entries": [
+        "GAME EXITED",
+        "MAIN SCREEN",
+        "You can close this tab, or return to the main screen."
+      ]
+    },
+    {
+      "name": "How To Play",
+      "entries": [
+        "ANZA PAMBANO",
+        "BADILI NJIA",
+        "DOKEZO: WEKA GOONS KWENYE NJIA YAKO. SHINDA WATATU ILI CHAPATI YA AFYA ITOKEE.",
+        "FIGHT THROUGH NAIROBI AND RESCUE MJAKA MFINE",
+        "HOW TO PLAY",
+        "JINSI YA KUCHEZA",
+        "JOYSTICK KUSHOTO",
+        "JUMP",
+        "KEYBOARD",
+        "KIBODI",
+        "KICK",
+        "LANE",
+        "LEFT JOYSTICK",
+        "MAALUMU",
+        "MOBILE",
+        "MOVE",
+        "MOVE + LANE",
+        "NGUMI",
+        "PIGANA NAIROBI NA UMWOKOE MJAKA MFINE",
+        "PUNCH",
+        "RUKA",
+        "SIMU",
+        "SONGA",
+        "SONGA + NJIA",
+        "SPACE",
+        "SPECIAL",
+        "START THE FIGHT",
+        "TEKE",
+        "TIP: KEEP GOONS IN YOUR LANE. DEFEAT THREE TO MAKE A HEALTH CHAPATI DROP."
+      ]
+    },
+    {
+      "name": "Level",
+      "entries": [
+        "ALL LOCATIONS CONQUERED!",
+        "AREA SECURED. KEEP MOVING!",
+        "Goons Wamekupiga Mbavu",
+        "LEVEL CLEAR!",
+        "MAIN MENU",
+        "MBAVU DESTROYER",
+        "MJAKA FINE",
+        "NAIROBI STORY UNLOCKED!",
+        "NEXT",
+        "Replay level",
+        "UMEVAMIWA!"
+      ]
+    },
+    {
+      "name": "Main Menu",
+      "entries": [
+        "ARCADE MODE",
+        "BOSS RUSH",
+        "CREDITS",
+        "DAILY CHALLENGE",
+        "FIGHTERS ARE ENTERING — ONE MOMENT",
+        "READY TO CLAIM",
+        "REWARD CLAIMED",
+        "VIEW TODAY’S CHALLENGE"
+      ]
+    },
+    {
+      "name": "Options",
+      "entries": [
+        "BACK",
+        "COMBAT",
+        "DIFFICULTY",
+        "DIFFICULTY UPDATED",
+        "ENGLISH",
+        "FULL SCREEN",
+        "FULL SCREEN UNAVAILABLE IN THIS BROWSER",
+        "KEY CHANGE CANCELLED",
+        "KEYBOARD BUTTONS",
+        "KEYS RESET",
+        "KISWAHILI",
+        "LANGUAGE: ENGLISH",
+        "LUGHA: KISWAHILI",
+        "MOVEMENT",
+        "NORMAL SCREEN",
+        "OFF",
+        "ON",
+        "OPTIONS",
+        "PRESS KEY",
+        "RESET KEYS",
+        "SCREEN MODE",
+        "SOUND",
+        "SOUND OFF",
+        "SOUND ON",
+        "STORY LANGUAGE"
+      ]
+    },
+    {
+      "name": "Story Collection",
+      "entries": [
+        "BACK",
+        "Clear this level to unlock its story.",
+        "HADITHI ZA NAIROBI",
+        "LANGUAGE: ENGLISH",
+        "LUGHA: KISWAHILI",
+        "Maliza kiwango hiki ili kufungua hadithi.",
+        "NAIROBI STORIES",
+        "RUDI"
+      ]
+    },
+    {
+      "name": "Story Cutscene",
+      "entries": [
+        ", mpenzi wako,",
+        "and save your girlfriend.",
+        "ANZA PAMBANO",
+        "CHAPTER 1 — TAKEN",
+        "CHAPTER 2 — THE CITY IS BLOCKED",
+        "CHAPTER 3 — THE RESCUE",
+        "disappeared with her",
+        "ENDELEA",
+        "Ensure you teach him a",
+        "from getting to him.",
+        "Go find",
+        "Hakikisha unamfundisha",
+        "hatalisahau kamwe.",
+        "Ili kukupunguza kasi,",
+        "into his hideout in the city.",
+        "kukuwinda na kukuzuia",
+        "lesson he will never forget.",
+        "maficho yake jijini.",
+        "Mbavu Destroyer",
+        "Mjaka Mfine",
+        "Mjaka Mfine,",
+        "na kutoweka naye katika",
+        "na umwokoe mpenzi wako.",
+        "NEXT",
+        "somo ambalo",
+        "START THE FIGHT",
+        "SURA 1 — WATEKWA",
+        "SURA 2 — JIJI LIMEZUILIWA",
+        "SURA 3 — UOKOAJI",
+        "to hunt you and stop you",
+        "To slow you down, he has",
+        "your girlfriend, and"
+      ]
+    },
+    {
+      "name": "HUD",
+      "entries": [
+        "AREA CLEAR",
+        "ATTACK DOG",
+        "BOSSY GOONS",
+        "CBD GOON",
+        "CHAIN GOON",
+        "CHANGE FIGHTER  ›",
+        "CHAPATIS",
+        "CLAIMED",
+        "COLLECTED",
+        "COMPLETE",
+        "CURRENT TARGET",
+        "EXIT GAME",
+        "GOONS DEFEATED",
+        "HITS!\nAWESOME!",
+        "KIBERA SHIELD GOON",
+        "KIBERA STONE THROWER",
+        "LEVEL 1",
+        "LEVEL 25  •  FIGHTER",
+        "MAIN SCREEN",
+        "MAJEMBE",
+        "MBAVU DESTROYER",
+        "MISSION",
+        "MJAKA FINE",
+        "NAIROBI CBD",
+        "NGARA GOON",
+        "PAUSED",
+        "PRESS ESC OR P TO RESUME",
+        "RESUME",
+        "TYRE-IRON HEAVY"
+      ]
+    },
+    {
+      "name": "World Content",
+      "entries": [
+        "Above the city, the rooftops turn movement, timing, and distance into the challenge.",
+        "BACKSTREETS: RHYTHM AND RESOLVE",
+        "CBD ni mahali pa mwendo: wasafiri, wafanyabiashara, matatu na ndoto hukutana. Katika NI MBAYA, hapa ndipo Mbavu anaanza kuthibitisha anaweza kusimama imara.",
+        "Every city has side streets where small businesses, late-night food and neighbours create their own rhythm. This chapter celebrates that everyday resilience.",
+        "From above, Nairobi looks like many stories happening at once. The rooftops remind the fighter to look beyond the next opponent and keep moving with purpose.",
+        "Juu ya jiji, paa za majengo zinageuza mwendo, muda na umbali kuwa changamoto.",
+        "Kibera inaonyeshwa hapa kama uwanja wa kubuni uliohamasishwa na nguvu ya Nairobi—si maelezo ya wakazi wake.",
+        "Kibera is presented here as a fictional fight arena inspired by Nairobi’s energy—not a statement about its residents.",
+        "KIBERA: COMMUNITY AND CREATIVITY",
+        "KIBERA: JAMII NA UBUNIFU",
+        "Kila jiji lina mitaa ya ndani ambako biashara ndogo, chakula cha usiku na majirani huunda midundo yao. Sura hii inaadhimisha ujasiri huo wa kila siku.",
+        "Kutoka juu, Nairobi inaonekana kama simulizi nyingi zinazotokea kwa wakati mmoja. Paa za majengo zinamkumbusha mpiganaji kutazama zaidi ya mpinzani anayefuata na kusonga kwa kusudi.",
+        "Majembe is a street fighter who trusts rhythm, reach, and courage when the crowd closes in.",
+        "Majembe ni mpiganaji wa mtaani anayeamini midundo, umbali na ujasiri wakati umati unakaribia.",
+        "Mbavu is a future challenger. Defeat him to unlock his chapter in the fight.",
+        "Mbavu ni mpinzani wa baadaye. Mshinde ili kufungua sura yake kwenye pambano.",
+        "MITAA YA NDANI: MIDUNDO NA UJASIRI",
+        "Mjaka Fine fights with pace and precision—quick entries, clean exits, and no wasted movement.",
+        "Mjaka Fine hupigana kwa kasi na usahihi—anaingia haraka, anatoka safi, na hapotezi mwendo.",
+        "Nairobi CBD is the opening arena: a fast-moving city centre where the fight begins.",
+        "Nairobi CBD ndiyo uwanja wa kwanza: katikati ya jiji lenye kasi, pambano linaanza.",
+        "NAIROBI CBD: JIJI LINAENDA",
+        "NAIROBI CBD: THE CITY MOVES",
+        "PAA ZA MAJENGO: MTIZAMO MPANA",
+        "ROOFTOPS: A WIDER VIEW",
+        "Sura hii ya kubuni imehamasishwa na nguvu ya Nairobi, si madai ya kuwawakilisha wakazi wake. Inaenzi wazo kwamba ubunifu na jamii vinaweza kuwa vyanzo vya nguvu.",
+        "The backstreet level narrows the space and raises the pressure as rivals close in.",
+        "The CBD is a place of motion: commuters, traders, matatus and ambition crossing paths. In NI MBAYA, it becomes the first place Mbavu proves he can hold his ground.",
+        "This fictional chapter is inspired by Nairobi energy, not a claim to represent its residents. It honours the idea that creativity and community can be powerful sources of strength.",
+        "Uwanja wa mtaa wa nyuma unabana nafasi na kuongeza presha wapinzani wanapokaribia."
+      ]
+    },
+    {
+      "name": "Levels",
+      "entries": [
+        "DOWNTOWN BACKSTREET",
+        "KIBERA",
+        "LEVEL 1",
+        "LEVEL 2",
+        "LEVEL 3",
+        "LEVEL 4",
+        "NAIROBI CBD",
+        "NAIROBI ROOFTOPS"
+      ]
+    },
+    {
+      "name": "Scene Loading Plugin",
+      "entries": [
+        "Arranging the scene...",
+        "BACK TO NAIROBI",
+        "CHOOSE YOUR FIGHTER",
+        "DAILY CHALLENGE",
+        "EXPLORE NAIROBI",
+        "GAME SETTINGS",
+        "GET READY TO FIGHT",
+        "GETTING READY",
+        "Loading next screen",
+        "NI MBAYA",
+        "Preparing the next screen",
+        "PREPARING THE STREETS",
+        "Ready. Twende!",
+        "SEE YOU IN THE STREETS",
+        "Still downloading. Slower connections can take a moment.",
+        "THE STORY CONTINUES",
+        "TWENDE. NAIROBI IS GETTING READY.",
+        "YOUR ACHIEVEMENTS",
+        "YOUR JOURNEY"
+      ]
+    },
+    {
+      "name": "Loading Status",
+      "entries": [
+        "Preparing fighters...",
+        "Preparing the next screen..."
+      ]
+    },
+    {
+      "name": "Story Content",
+      "entries": [
+        "Go find Mbavu Destroyer and save your girlfriend. Ensure you teach him a lesson he will never forget.",
+        "Ili kukupunguza kasi, ametuma goons kote Nairobi kukuwinda na kukuzuia usimfikie.",
+        "Mbavu Destroyer amemteka Mjaka Mfine, mpenzi wako, na kutoweka naye katika maficho yake jijini.",
+        "Mbavu Destroyer has kidnapped Mjaka Mfine, your girlfriend, and disappeared with her into his hideout in the city.",
+        "Mtafute Mbavu Destroyer na umwokoe mpenzi wako. Hakikisha unamfundisha somo ambalo hatalisahau kamwe.",
+        "To slow you down, he has sent goons across Nairobi to hunt you and stop you from getting to him."
+      ]
+    }
+  ]
+}

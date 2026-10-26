@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Content Studio · NI MBAYA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="admin-shell">
+      <aside class="sidebar">
+        <a class="brand" href="../" aria-label="Back to NI MBAYA"><span class="brand-mark">N<span>I</span></span><span><strong>NI MBAYA</strong><small>CONTENT STUDIO</small></span></a>
+        <div class="sidebar-label">WORKSPACE</div>
+        <nav id="sections" aria-label="Content sections"></nav>
+        <div class="sidebar-bottom"><span class="online-dot"></span> Game content <span id="section-count">0 fields</span></div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div class="breadcrumb">GAME CONTENT <span>/</span> <strong id="crumb-section">OVERVIEW</strong></div>
+          <div class="top-actions"><span id="save-indicator" class="save-indicator">No edits</span><a href="../" class="ghost-link">↗ Open game</a></div>
+        </header>
+
+        <div class="content-wrap">
+          <section class="hero">
+            <div><div class="eyebrow">NI MBAYA / CONTENT MANAGEMENT</div><h1>Make every word <em>count.</em></h1><p>Edit the game’s on-screen copy, review it in a playable preview, then publish when it is ready.</p></div>
+            <div class="hero-number"><strong id="edited-count">00</strong><span>EDITED<br />FIELDS</span></div>
+          </section>
+
+          <section class="toolbar" aria-label="Editor tools">
+            <div class="search-wrap"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Find text across every screen..." aria-label="Search game text" /></div>
+            <button id="add-text" class="button button-outline" type="button">＋ Add exact text</button>
+            <button id="preview" class="button button-dark" type="button">▶ Preview game</button>
+          </section>
+
+          <section class="editor-head"><div><span id="section-kicker" class="eyebrow">CONTENT LIBRARY</span><h2 id="section-title">All content</h2><p id="section-description">Choose a section or search for a line to edit.</p></div><span id="result-count" class="count-pill">0 lines</span></section>
+          <div id="entries" class="entries"></div>
+          <button id="load-more" class="load-more" type="button" hidden>Show more text ↓</button>
+          <div id="empty-state" class="empty-state" hidden>No text matches this search.</div>
+
+          <section class="publish-panel">
+            <div class="publish-heading"><span class="publish-icon">↗</span><div><h2>Publish to the live game</h2><p>Publishing commits the text file to your GitHub repository. GitHub Pages deploys the update after its checks finish.</p></div></div>
+            <label for="github-token">GitHub access token <span>Repository contents: read and write</span></label>
+            <div class="publish-row"><input id="github-token" type="password" autocomplete="off" spellcheck="false" placeholder="Paste token for this publishing session" /><button id="publish" class="button button-gold" type="button">Publish changes <span>↗</span></button></div>
+            <p class="privacy-note">Use a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer" style="color:#e5bd55;text-decoration:underline">fine-grained token</a> for this repository with Contents: Read and write. The token is sent only to GitHub’s API and is never saved in browser storage.</p>
+            <div class="utility-actions"><button id="download" type="button">↓ Download JSON backup</button><label class="import-button" for="import">↑ Import JSON backup</label><input id="import" type="file" accept="application/json,.json" hidden /><button id="discard" type="button">Discard local draft</button></div>
+          </section>
+          <footer>NI MBAYA CONTENT STUDIO <span>Text embedded in artwork is edited by replacing that artwork.</span></footer>
+        </div>
+      </main>
+    </div>
+    <div id="toast" role="status" aria-live="polite"></div>
+    <script type="module" src="/src/admin.ts"></script>
+  </body>
+</html>
