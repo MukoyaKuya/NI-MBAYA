@@ -45,7 +45,7 @@ export class MainMenuScene extends Phaser.Scene {
     this.loadFighterArtAfterMenuIsVisible();
 
     this.addHoverButton({ key: 'menu-v2-button-story', box: [600, 466, 1048, 554], onClick: () => this.openCharacterSelect(), hoverScale: 1.045, hoverLift: 2 });
-    this.addHoverButton({ key: 'menu-v2-button-arcade', box: [610, 558, 1044, 641], onClick: () => this.showComingSoon('ARCADE MODE'), hoverScale: 1.045, hoverLift: 2 });
+    this.addHoverButton({ key: 'menu-v2-button-arcade', box: [610, 558, 1044, 641], onClick: () => this.scene.start('ArcadeSelectScene'), hoverScale: 1.045, hoverLift: 2 });
     this.addHoverButton({ key: 'menu-v2-button-boss-rush', box: [612, 644, 1048, 730], onClick: () => this.showComingSoon('BOSS RUSH'), hoverScale: 1.045, hoverLift: 2 });
     this.addHoverButton({ key: 'menu-v2-button-options', box: [612, 736, 1048, 824], onClick: () => this.scene.start('OptionsScene'), hoverScale: 1.045, hoverLift: 2 });
     this.createDailyChallengeCard();

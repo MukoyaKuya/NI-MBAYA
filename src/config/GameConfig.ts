@@ -12,6 +12,8 @@ import { CultureScene } from '../scenes/CultureScene';
 import { StoryCollectionScene } from '../scenes/StoryCollectionScene';
 import { StoryCutsceneScene } from '../scenes/StoryCutsceneScene';
 import { HowToPlayScene } from '../scenes/HowToPlayScene';
+import { ArcadeSelectScene } from '../scenes/ArcadeSelectScene';
+import { ArcadeMatchScene } from '../scenes/ArcadeMatchScene';
 
 export const GAME_WIDTH = 1280;
 export const GAME_HEIGHT = 720;
@@ -40,5 +42,5 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
       debug: false,
     },
   },
-  scene: [BootScene, MainMenuScene, CharacterSelectScene, OptionsScene, CultureScene, StoryCollectionScene, StoryCutsceneScene, HowToPlayScene, LevelScene, ExitScene, AchievementsScene, DailyChallengeScene],
+  scene: [BootScene, MainMenuScene, CharacterSelectScene, ArcadeSelectScene, ArcadeMatchScene, OptionsScene, CultureScene, StoryCollectionScene, StoryCutsceneScene, HowToPlayScene, LevelScene, ExitScene, AchievementsScene, DailyChallengeScene],
 };
