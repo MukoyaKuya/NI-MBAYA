@@ -607,21 +607,27 @@ export class LevelScene extends Phaser.Scene {
       });
     });
     overlay.append(warning, subtitle, button);
-    document.body.append(overlay);
+    // The fullscreen element is #game. An overlay attached to <body> sits
+    // behind that element in fullscreen, even with a larger CSS z-index.
+    const gameContainer = this.game.canvas.parentElement ?? document.body;
+    gameContainer.append(overlay);
 
     // Phaser FIT can letterbox the canvas. Match its displayed rectangle so
     // CSS animation and the replay hit target stay aligned at every viewport.
     const positionOverlay = () => {
       const bounds = this.game.canvas.getBoundingClientRect();
-      overlay.style.left = `${bounds.left}px`;
-      overlay.style.top = `${bounds.top}px`;
+      const containerBounds = gameContainer.getBoundingClientRect();
+      overlay.style.left = `${bounds.left - containerBounds.left}px`;
+      overlay.style.top = `${bounds.top - containerBounds.top}px`;
       overlay.style.transform = `scale(${bounds.width / GAME_WIDTH}, ${bounds.height / GAME_HEIGHT})`;
     };
     positionOverlay();
     window.addEventListener('resize', positionOverlay);
+    document.addEventListener('fullscreenchange', positionOverlay);
     this.scale.on(Phaser.Scale.Events.RESIZE, positionOverlay);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       window.removeEventListener('resize', positionOverlay);
+      document.removeEventListener('fullscreenchange', positionOverlay);
       this.scale.off(Phaser.Scale.Events.RESIZE, positionOverlay);
       overlay.remove();
     });
