@@ -69,3 +69,29 @@ test('defeat overlay follows a letterboxed landscape canvas', async ({ page }) =
   await page.locator('#defeat-replay').click();
   await expect(page.locator('#defeat-ui')).toHaveCount(0);
 });
+
+test('defeat warning and Replay stay visible and usable in fullscreen', async ({ page }) => {
+  await page.goto('/?level=1');
+  await page.waitForFunction(() => (window as any).__game?.scene.getScene('LevelScene')?.player?.active);
+  await page.evaluate(() => document.getElementById('game')!.requestFullscreen());
+  await expect.poll(() => page.evaluate(() => document.fullscreenElement?.id)).toBe('game');
+  await page.evaluate(() => {
+    const scene = (window as any).__game.scene.getScene('LevelScene');
+    scene.player.takeDamage(1000, 0, 0);
+    scene.showDefeatedOverlay();
+  });
+  const overlay = page.locator('#defeat-ui');
+  await expect(overlay).toBeVisible();
+  await expect(overlay.locator('.defeat-ui__warning')).toBeVisible();
+  await expect(page.locator('#defeat-replay')).toBeVisible();
+  const alignment = await page.evaluate(() => {
+    const canvas = document.querySelector('canvas')!.getBoundingClientRect();
+    const overlay = document.getElementById('defeat-ui')!.getBoundingClientRect();
+    return { canvas, overlay };
+  });
+  expect(alignment.overlay.x).toBeCloseTo(alignment.canvas.x, 1);
+  expect(alignment.overlay.y).toBeCloseTo(alignment.canvas.y, 1);
+  await page.locator('#defeat-replay').click();
+  await expect(overlay).toHaveCount(0);
+  await page.waitForFunction(() => (window as any).__game.scene.getScene('LevelScene').player?.active);
+});
