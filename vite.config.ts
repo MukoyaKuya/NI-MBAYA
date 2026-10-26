@@ -18,6 +18,10 @@ export default defineConfig({
     // Cache the engine independently from the game's own code. A content-only
     // update then avoids forcing returning players to download Phaser again.
     rollupOptions: {
+      input: {
+        game: fileURLToPath(new URL('./index.html', import.meta.url)),
+        admin: fileURLToPath(new URL('./admin/index.html', import.meta.url)),
+      },
       output: {
         manualChunks: {
           phaser: ['phaser'],

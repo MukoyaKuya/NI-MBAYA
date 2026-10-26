@@ -11,7 +11,8 @@
     "check:performance": "node scripts/check-performance.cjs",
     "optimize:assets": "python scripts/optimize_assets.py",
     "optimize:startup": "python scripts/optimize_assets.py --lightweight",
-    "test:browser": "playwright test"
+    "test:browser": "playwright test",
+    "content:catalog": "node scripts/generate-content-catalog.cjs"
   },
   "dependencies": {
     "phaser": "^3.90.0"
