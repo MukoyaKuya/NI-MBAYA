@@ -1,13 +1,13 @@
 # Arcade mode plan
 
-Status: the local two-player slice below is playable. The 3D production pass remains dependent on rigged character models and animations.
+Status: the local player-versus-CPU slice below is playable. The 3D production pass remains dependent on rigged character models and animations.
 
 ## Playable first slice
 
-- Enter Arcade from the main menu and let two local players independently choose Majembe or Mbavu. Both fighters are available in Arcade; Story mode unlock rules stay separate.
+- Enter Arcade from the main menu and choose Majembe or Mbavu. The other fighter is controlled by the game. Both fighters are available in Arcade; Story mode unlock rules stay separate.
 - Run a best-of-three, 90-second fight on one fixed horizontal plane with movement, jump, punch, kick, block, health, rounds, rematch, and return to selection.
-- Render the Archives arena as separate layers: clean building/road plate, moving matatus and pedestrians, transparent fence, then fighters and match interface. Load Arcade assets only after entering the mode.
-- Verify the selector, layered traffic, two-player input, knockouts, timer, and rematch in a browser.
+- Render the Archives arena as separate layers: clean building/road plate, animated matatu and four shuffling pedestrians, transparent fence, then fighters and match interface. Load Arcade assets only after entering the mode.
+- Animate both fighters' walking with compact WebP sheets. Verify both fighter choices, CPU movement and attacks, layered traffic, knockouts, timer, and rematch in a browser.
 
 ## 3D production pass
 
@@ -17,5 +17,5 @@ Status: the local two-player slice below is playable. The 3D production pass rem
 
 ## Later expansion
 
-- Add the wider fighter roster, arenas, crowd reactions, music, sound effects, training, and accessibility settings.
+- Add optional local two-player mode, the wider fighter roster, arenas, crowd reactions, music, sound effects, training, and accessibility settings.
 - For online fights, add a server and a latency-tolerant synchronization design; the static GitHub Pages site alone cannot host matchmaking or authoritative sessions.

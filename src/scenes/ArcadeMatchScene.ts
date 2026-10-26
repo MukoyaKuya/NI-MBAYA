@@ -7,8 +7,8 @@ type Move = 'punch' | 'kick';
 type Fighter = {
   id: ArcadeFighterId; x: number; jump: number; velocityY: number; facing: 1 | -1;
   health: number; wins: number; stunUntil: number; attackUntil: number; hitAt: number;
-  attack: Move | null; attackResolved: boolean; nextAttackAt: number; blocking: boolean;
-  sprite: Phaser.GameObjects.Image; shadow: Phaser.GameObjects.Ellipse;
+  attack: Move | null; attackResolved: boolean; nextAttackAt: number; blocking: boolean; moving: boolean;
+  sprite: Phaser.GameObjects.Sprite; shadow: Phaser.GameObjects.Ellipse;
 };
 type Controls = Record<string, Phaser.Input.Keyboard.Key>;
 
@@ -27,8 +27,10 @@ export class ArcadeMatchScene extends Phaser.Scene {
   private scoreTexts: Phaser.GameObjects.Text[] = [];
   private timerText!: Phaser.GameObjects.Text;
   private announcement!: Phaser.GameObjects.Text;
-  private bus!: Phaser.GameObjects.Image;
-  private pedestrians: { sprite: Phaser.GameObjects.Image; velocity: number; phase: number }[] = [];
+  private bus!: Phaser.GameObjects.Sprite;
+  private pedestrians: { sprite: Phaser.GameObjects.Sprite; velocity: number; phase: number }[] = [];
+  private aiNextAttackAt = 0;
+  private aiGuardUntil = 0;
 
   constructor() { super('ArcadeMatchScene'); }
 
@@ -42,9 +44,17 @@ export class ArcadeMatchScene extends Phaser.Scene {
     const images = [
       ['arcade-archives', new URL('../assets/optimized/arcade/archives-clean.webp', import.meta.url).href],
       ['arcade-fence', new URL('../assets/optimized/arcade/archives-fence.webp', import.meta.url).href],
-      ...([1, 2, 3, 4] as const).map(index => [`arcade-pedestrian-${index}`, new URL(`../assets/optimized/arcade/pedestrian-${index}.webp`, import.meta.url).href]),
     ];
     for (const [key, url] of images) if (!this.textures.exists(key)) this.load.image(key, url);
+    for (const id of this.selected) if (!this.textures.exists(`arcade-${id}-walk`)) {
+      this.load.spritesheet(`arcade-${id}-walk`, new URL(`../assets/optimized/arcade/${id}-walk.webp`, import.meta.url).href,
+        { frameWidth: 256, frameHeight: 448 });
+    }
+    for (const index of [1, 2, 3, 4] as const) if (!this.textures.exists(`arcade-pedestrian-${index}-walk`)) {
+      this.load.spritesheet(`arcade-pedestrian-${index}-walk`,
+        new URL(`../assets/optimized/arcade/pedestrian-${index}-walk.webp`, import.meta.url).href,
+        { frameWidth: 128, frameHeight: 256 });
+    }
     for (const id of this.selected) {
       const fighter = ARCADE_FIGHTERS[id];
       if (!this.textures.exists(fighter.texture)) this.load.image(fighter.texture, fighter.image);
@@ -60,12 +70,25 @@ export class ArcadeMatchScene extends Phaser.Scene {
     startStreamingMusic('fight-music', new URL('../assets/optimized/audio/fight-music.mp3', import.meta.url).href, 0.26);
     this.clock = ROUND_SECONDS; this.round = 1; this.phase = 'between';
     this.healthFills = []; this.scoreTexts = []; this.pedestrians = [];
+    for (const id of this.selected) if (!this.anims.exists(`arcade-${id}-walking`)) this.anims.create({
+      key: `arcade-${id}-walking`, frames: this.anims.generateFrameNumbers(`arcade-${id}-walk`, { start: 0, end: 3 }),
+      frameRate: 7, repeat: -1,
+    });
+    for (const index of [1, 2, 3, 4] as const) if (!this.anims.exists(`arcade-pedestrian-${index}-shuffling`)) this.anims.create({
+      key: `arcade-pedestrian-${index}-shuffling`,
+      frames: this.anims.generateFrameNumbers(`arcade-pedestrian-${index}-walk`, { start: 0, end: 3 }),
+      frameRate: 5, repeat: -1,
+    });
+    if (!this.anims.exists('arcade-matatu-rolling')) this.anims.create({
+      key: 'arcade-matatu-rolling', frames: this.anims.generateFrameNumbers('arcade-matatu', { start: 0, end: 3 }),
+      frameRate: 5, repeat: -1,
+    });
     this.drawArena();
     this.createFighters();
     this.drawHud();
     this.controls = this.input.keyboard?.addKeys({
       p1Left: 'A', p1Right: 'D', p1Jump: 'W', p1Punch: 'F', p1Kick: 'G', p1Block: 'H',
-      p2Left: 'LEFT', p2Right: 'RIGHT', p2Jump: 'UP', p2Punch: 'J', p2Kick: 'K', p2Block: 'L',
+      arrowLeft: 'LEFT', arrowRight: 'RIGHT', arrowJump: 'UP',
     }) as Controls | undefined;
     const back = () => this.scene.start('ArcadeSelectScene');
     const replay = () => { if (this.phase === 'finished') this.scene.restart({ fighters: this.selected }); };
@@ -80,12 +103,15 @@ export class ArcadeMatchScene extends Phaser.Scene {
 
   private drawArena() {
     this.add.image(640, 360, 'arcade-archives').setDisplaySize(1280, 720).setDepth(0);
-    this.bus = this.add.image(-220, 461, 'arcade-matatu', 0).setDisplaySize(205, 90).setDepth(2);
+    this.bus = this.add.sprite(-380, 459, 'arcade-matatu', 0).setDisplaySize(335, 147).setDepth(2);
+    this.bus.play('arcade-matatu-rolling');
     for (let i = 0; i < 4; i++) {
       const direction = i % 2 === 0 ? 1 : -1;
-      const sprite = this.add.image(i * 320 + 70, 490, `arcade-pedestrian-${i + 1}`)
-        .setOrigin(0.5, 1).setDisplaySize(55, 110).setFlipX(direction < 0).setDepth(3);
-      this.pedestrians.push({ sprite, velocity: direction * (12 + i * 3), phase: i * 1.7 });
+      const variant = i + 1;
+      const sprite = this.add.sprite(i * 320 + 70, 495, `arcade-pedestrian-${variant}-walk`, i)
+        .setOrigin(0.5, 1).setDisplaySize(54, 108).setDepth(3);
+      sprite.play(`arcade-pedestrian-${variant}-shuffling`);
+      this.pedestrians.push({ sprite, velocity: direction * (16 + i * 4), phase: i * 1.7 });
     }
     // The planter and tree are painted into the clean plate. Reveal them by
     // masking their columns out of moving traffic and the foreground fence.
@@ -103,11 +129,11 @@ export class ArcadeMatchScene extends Phaser.Scene {
     const make = (id: ArcadeFighterId, x: number, facing: 1 | -1): Fighter => {
       const definition = ARCADE_FIGHTERS[id];
       const shadow = this.add.ellipse(x, FLOOR_Y + 1, 115, 19, 0x090811, 0.42).setDepth(8);
-      const sprite = this.add.image(x, FLOOR_Y, definition.texture)
+      const sprite = this.add.sprite(x, FLOOR_Y, definition.texture)
         .setOrigin(0.5, 1).setDisplaySize(id === 'majembe' ? 195 : 218, 344).setDepth(12);
       return { id, x, jump: 0, velocityY: 0, facing, health: 100, wins: 0,
         stunUntil: 0, attackUntil: 0, hitAt: 0, attack: null, attackResolved: false,
-        nextAttackAt: 0, blocking: false, sprite, shadow };
+        nextAttackAt: 0, blocking: false, moving: false, sprite, shadow };
     };
     this.fighters = [make(this.selected[0], 330, 1), make(this.selected[1], 950, -1)];
   }
@@ -137,10 +163,10 @@ export class ArcadeMatchScene extends Phaser.Scene {
     this.announcement = this.add.text(640, 238, '', {
       fontFamily: 'Impact, Arial Black, sans-serif', fontSize: '60px', color: '#ffc928',
     }).setOrigin(0.5).setStroke('#10080b', 8).setDepth(30);
-    this.add.text(20, 693, 'P1  A / D MOVE • W JUMP • F PUNCH • G KICK • H BLOCK', {
+    this.add.text(20, 693, 'YOU  A / D OR ← / → MOVE • W / ↑ JUMP • F PUNCH • G KICK • H BLOCK', {
       fontFamily: 'Arial Black, sans-serif', fontSize: '11px', color: '#ffe6b5',
     }).setDepth(23).setStroke('#10080b', 3);
-    this.add.text(1260, 693, 'P2  ← / → MOVE • ↑ JUMP • J PUNCH • K KICK • L BLOCK', {
+    this.add.text(1260, 693, 'CPU OPPONENT', {
       fontFamily: 'Arial Black, sans-serif', fontSize: '11px', color: '#ffe6b5',
     }).setOrigin(1, 0).setDepth(23).setStroke('#10080b', 3);
   }
@@ -150,10 +176,11 @@ export class ArcadeMatchScene extends Phaser.Scene {
     this.fighters.forEach((fighter, index) => {
       fighter.x = index === 0 ? 330 : 950; fighter.jump = 0; fighter.velocityY = 0;
       fighter.health = 100; fighter.stunUntil = 0; fighter.attackUntil = 0;
-      fighter.nextAttackAt = 0; fighter.attack = null; fighter.blocking = false;
+      fighter.nextAttackAt = 0; fighter.attack = null; fighter.blocking = false; fighter.moving = false;
       fighter.sprite.clearTint().setAlpha(1).setAngle(0).setVisible(true);
       fighter.shadow.setVisible(true);
     });
+    this.aiNextAttackAt = 0; this.aiGuardUntil = 0;
     this.announcement.setText(`ROUND ${this.round}`).setVisible(true).setScale(0.65);
     this.tweens.add({ targets: this.announcement, scale: 1, duration: 280, ease: 'Back.Out' });
     this.time.delayedCall(1250, () => {
@@ -171,8 +198,8 @@ export class ArcadeMatchScene extends Phaser.Scene {
     if (!this.controls || !this.fighters) return;
     if (this.phase === 'fighting') {
       this.clock = Math.max(0, this.clock - seconds);
-      this.controlFighter(0, seconds, time);
-      this.controlFighter(1, seconds, time);
+      this.controlPlayer(seconds, time);
+      this.controlAi(seconds, time);
       this.separateFighters();
       this.resolveAttack(0, time);
       this.resolveAttack(1, time);
@@ -185,30 +212,65 @@ export class ArcadeMatchScene extends Phaser.Scene {
 
   private animateBackground(time: number, seconds: number) {
     this.bus.x += 61 * seconds;
-    if (this.bus.x > 1450) this.bus.x = -220;
-    this.bus.y = 461 + Math.sin(time / 150) * 1.6;
+    if (this.bus.x > 1500) this.bus.x = -380;
+    this.bus.y = 459 + Math.sin(time / 150) * 2.2;
     for (const person of this.pedestrians) {
       person.sprite.x += person.velocity * seconds;
       if (person.velocity > 0 && person.sprite.x > 1330) person.sprite.x = -50;
       if (person.velocity < 0 && person.sprite.x < -50) person.sprite.x = 1330;
-      person.sprite.y = 490 + Math.sin(time / 170 + person.phase) * 2;
+      person.sprite.y = 495 + Math.sin(time / 170 + person.phase) * 2;
     }
   }
 
-  private controlFighter(index: number, seconds: number, time: number) {
-    const fighter = this.fighters[index];
+  private controlPlayer(seconds: number, time: number) {
+    const fighter = this.fighters[0];
     const controls = this.controls!;
-    const prefix = index === 0 ? 'p1' : 'p2';
     const stunned = time < fighter.stunUntil;
     const attacking = time < fighter.attackUntil;
-    fighter.blocking = !stunned && !attacking && fighter.jump === 0 && controls[`${prefix}Block`].isDown;
+    fighter.moving = false;
+    fighter.blocking = !stunned && !attacking && fighter.jump === 0 && controls.p1Block.isDown;
     if (!stunned && !attacking && !fighter.blocking) {
-      const direction = Number(controls[`${prefix}Right`].isDown) - Number(controls[`${prefix}Left`].isDown);
+      const direction = Number(controls.p1Right.isDown || controls.arrowRight.isDown)
+        - Number(controls.p1Left.isDown || controls.arrowLeft.isDown);
       fighter.x = Phaser.Math.Clamp(fighter.x + direction * (ARCADE_FIGHTERS[fighter.id].speed * 48) * seconds, 105, 1175);
-      if (Phaser.Input.Keyboard.JustDown(controls[`${prefix}Jump`]) && fighter.jump === 0) fighter.velocityY = 660;
-      if (Phaser.Input.Keyboard.JustDown(controls[`${prefix}Punch`])) this.beginAttack(fighter, 'punch', time);
-      else if (Phaser.Input.Keyboard.JustDown(controls[`${prefix}Kick`])) this.beginAttack(fighter, 'kick', time);
+      fighter.moving = direction !== 0;
+      if ((Phaser.Input.Keyboard.JustDown(controls.p1Jump) || Phaser.Input.Keyboard.JustDown(controls.arrowJump))
+        && fighter.jump === 0) fighter.velocityY = 660;
+      if (Phaser.Input.Keyboard.JustDown(controls.p1Punch)) this.beginAttack(fighter, 'punch', time);
+      else if (Phaser.Input.Keyboard.JustDown(controls.p1Kick)) this.beginAttack(fighter, 'kick', time);
     }
+    this.updateJump(fighter, seconds);
+  }
+
+  private controlAi(seconds: number, time: number) {
+    const fighter = this.fighters[1];
+    const player = this.fighters[0];
+    const stunned = time < fighter.stunUntil;
+    const attacking = time < fighter.attackUntil;
+    const distance = Math.abs(player.x - fighter.x);
+    fighter.moving = false;
+    fighter.blocking = !stunned && !attacking && fighter.jump === 0 && time < this.aiGuardUntil;
+    if (!stunned && !attacking && !fighter.blocking) {
+      // Keep a useful fighting distance. Decisions happen on a cooldown so
+      // the CPU can be read and countered rather than reacting every frame.
+      const direction = distance > 140 ? Math.sign(player.x - fighter.x)
+        : distance < 98 ? -Math.sign(player.x - fighter.x) : 0;
+      fighter.x = Phaser.Math.Clamp(fighter.x + direction * ARCADE_FIGHTERS[fighter.id].speed * 39 * seconds,
+        105, 1175);
+      fighter.moving = direction !== 0;
+      if (player.attack && distance < 170 && time >= this.aiNextAttackAt && Math.random() < 0.3) {
+        this.aiGuardUntil = time + 400;
+        this.aiNextAttackAt = time + 700;
+      } else if (distance < 165 && time >= this.aiNextAttackAt && player.health > 0) {
+        this.beginAttack(fighter, distance < 130 ? 'punch' : 'kick', time);
+        this.aiNextAttackAt = time + 850 + Math.random() * 450;
+        fighter.moving = false;
+      }
+    }
+    this.updateJump(fighter, seconds);
+  }
+
+  private updateJump(fighter: Fighter, seconds: number) {
     if (fighter.jump > 0 || fighter.velocityY > 0) {
       fighter.jump = Math.max(0, fighter.jump + fighter.velocityY * seconds);
       fighter.velocityY -= 1650 * seconds;
@@ -264,15 +326,23 @@ export class ArcadeMatchScene extends Phaser.Scene {
     const attacking = time < fighter.attackUntil && fighter.attack;
     const lunge = attacking ? (fighter.attack === 'punch' ? 20 : 31) : 0;
     const definition = ARCADE_FIGHTERS[fighter.id];
-    const texture = attacking ? fighter.attack === 'punch' ? definition.punchTexture : definition.kickTexture : definition.texture;
-    if (fighter.sprite.texture.key !== texture) fighter.sprite.setTexture(texture);
+    const walking = !attacking && fighter.moving && !fighter.blocking && fighter.jump === 0
+      && time >= fighter.stunUntil && this.phase === 'fighting';
+    if (walking) {
+      const animation = `arcade-${fighter.id}-walking`;
+      if (fighter.sprite.anims.currentAnim?.key !== animation || !fighter.sprite.anims.isPlaying) fighter.sprite.play(animation);
+    } else {
+      if (fighter.sprite.anims.isPlaying) fighter.sprite.anims.stop();
+      const texture = attacking ? fighter.attack === 'punch' ? definition.punchTexture : definition.kickTexture : definition.texture;
+      if (fighter.sprite.texture.key !== texture) fighter.sprite.setTexture(texture);
+    }
     const width = fighter.id === 'majembe'
       ? attacking ? fighter.attack === 'punch' ? 245 : 268 : 195
       : attacking ? fighter.attack === 'punch' ? 255 : 275 : 218;
     fighter.sprite.setPosition(fighter.x + fighter.facing * lunge, FLOOR_Y - fighter.jump)
       .setFlipX(fighter.facing !== (fighter.id === 'majembe' ? 1 : -1))
       .setAngle(attacking ? fighter.facing * -2 : fighter.blocking ? fighter.facing * 3 : 0)
-      .setDisplaySize(width, 344);
+      .setDisplaySize(width, walking ? 440 : 344);
     fighter.shadow.setPosition(fighter.x, FLOOR_Y + 1).setScale(Math.max(0.64, 1 - fighter.jump / 520));
   }
 
