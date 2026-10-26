@@ -51,7 +51,9 @@ test('options arrows, saved settings, fullscreen, key capture and reset work', a
   await expect.poll(() => value(page, 'difficulty')).toBe('HARD');
   await clickGame(page, 920, 211);
   await expect.poll(() => value(page, 'sound')).toBe('OFF');
-  expect(await page.evaluate(() => (window as any).__game.sound.mute)).toBe(true);
+  // Menu music is streamed through HTMLAudioElement, so the saved sound
+  // setting is the source of truth. Phaser may use a no-audio manager in CI.
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('ni-mbaya-sound-enabled'))).toBe('false');
   await clickGame(page, 679, 211);
   await expect.poll(() => value(page, 'sound')).toBe('ON');
   await clickGame(page, 920, 261);
