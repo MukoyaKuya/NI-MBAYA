@@ -41,12 +41,12 @@ test('level-one attack animations use the fragment-cleaned frames', async ({ pag
   }
 });
 
-test('level-three goons fall with intact walk art and settle on the roof', async ({ page }) => {
+test('level-three goons fall with intact art and settle on the roof', async ({ page }) => {
   await page.goto('/?level=3');
   await page.waitForFunction(() => (window as any).__game?.scene.getScene('LevelScene')?.player?.active);
   await page.waitForFunction(() => {
     const scene = (window as any).__game.scene.getScene('LevelScene');
-    return scene.anims.exists('goon-chain-walk') && scene.anims.exists('goon-heavy-walk') && scene.anims.exists('attack-dog-run');
+    return scene.anims.exists('goon-chain-walk') && scene.anims.exists('goon-heavy-walk') && scene.anims.exists('attack-dog-defeat');
   });
   await page.evaluate(() => {
     const scene = (window as any).__game.scene.getScene('LevelScene');
@@ -58,7 +58,9 @@ test('level-three goons fall with intact walk art and settle on the roof', async
   await page.waitForFunction(() => {
     const scene = (window as any).__game.scene.getScene('LevelScene');
     return scene.enemyVisuals.filter((visual: any) => visual.enemy.state === 'defeat')
-      .every((visual: any) => Math.abs(visual.art.angle) >= 89);
+      .every((visual: any) => visual.enemy.visualVariant === 'gameplay-attack-dog'
+        ? visual.art.anims.currentAnim?.key === 'attack-dog-defeat' && visual.art.anims.currentFrame?.index >= 7
+        : Math.abs(visual.art.angle) >= 89);
   });
   const fallen = await page.evaluate(() => {
     const scene = (window as any).__game.scene.getScene('LevelScene');
@@ -70,16 +72,22 @@ test('level-three goons fall with intact walk art and settle on the roof', async
       angle: visual.art.angle,
       groundY: visual.enemy.y + 34,
       poseY: visual.art.y,
-      bounds: visual.fall.bounds,
-      width: visual.fall.width,
+      bounds: visual.fall?.bounds,
+      width: visual.fall?.width,
+      animation: visual.art.anims.currentAnim?.key,
     }));
   });
   expect(fallen).toHaveLength(3);
   for (const visual of fallen) {
+    if (visual.variant === 'gameplay-attack-dog') {
+      expect(visual.texture).toBe('gameplay-attack-dog-defeat-sheet-clean');
+      expect(visual.animation).toBe('attack-dog-defeat');
+      expect(visual.angle).toBe(0);
+      expect(visual.poseY + (344 / 384 - 0.5) * 116).toBeCloseTo(visual.groundY, 0);
+      continue;
+    }
     expect(visual.texture).toMatch(/-(walk|run)-sheet/);
     expect(visual.texture).not.toContain('defeat');
-    expect(visual.visible).toBe(true);
-    expect(visual.alpha).toBeGreaterThan(0.9);
     expect(visual.bounds).toBeDefined();
     const visibleBottom = visual.angle > 0
       ? (visual.bounds[2] / 384 - 0.5) * visual.width

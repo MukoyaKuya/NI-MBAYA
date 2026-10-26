@@ -13,6 +13,7 @@ const exportsObject = {};
 new Function('exports', compiled)(exportsObject);
 const names = ['goon-red-run-sheet', 'goon-hoodie-run-sheet', 'goon-club-run-sheet',
   'goon-red-attack-sheet', 'goon-hoodie-attack-sheet', 'goon-club-attack-sheet',
+  'attack-dog-defeat-sheet',
   'kibera-stone-goon-sprint-sheet', 'kibera-shield-goon-sprint-sheet',
   'mbavu-defeat-fall-fullboots-sheet', 'chapati-health-pickup-sheet'];
 const result = {};

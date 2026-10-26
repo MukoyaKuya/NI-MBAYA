@@ -56,7 +56,6 @@ const ENEMY_FALL_BOUNDS: Partial<Record<EnemyVisualVariant, EnemyVisibleBounds>>
   'gameplay-goon-club': [108, 20, 275, 360],
   'gameplay-goon-chain': [70, 18, 314, 362],
   'gameplay-goon-heavy': [47, 41, 337, 358],
-  'gameplay-attack-dog': [21, 109, 363, 326],
 };
 
 export class LevelScene extends Phaser.Scene {
@@ -690,6 +689,11 @@ export class LevelScene extends Phaser.Scene {
       if (!visual.defeatStarted) {
         visual.defeatStarted = true;
         art.setAlpha(1).clearTint();
+        if (dog && this.anims.exists('attack-dog-defeat')) {
+          // The dog is horizontal already; its authored sequence collapses it
+          // onto the road. Rotating the run pose would stand it upright.
+          art.setAngle(0).setDisplaySize(baseWidth, baseHeight).play('attack-dog-defeat');
+        } else {
         // Authored level-three defeat cells crop limbs as the body crosses a
         // frame boundary. Use an intact full-body walk pose for every fall.
         const walkAnim = this.getEnemyWalkAnimationKey(enemy.visualVariant);
@@ -700,8 +704,15 @@ export class LevelScene extends Phaser.Scene {
         const height = legacyPortrait ? baseHeight * 1.22 : baseHeight;
         visual.fall = { direction: enemy.x < this.player.x ? -1 : 1, startY: art.y, width, height, bounds: ENEMY_FALL_BOUNDS[enemy.visualVariant] };
         art.setTexture(restTexture, 0).setDisplaySize(width, height).setAngle(0);
+        }
         // Hold the body on the road before fading.
         this.tweens.add({ targets: [art, shadow], alpha: 0, delay: 1600, duration: 600, ease: 'Sine.In', onComplete: () => { art.setVisible(false); shadow.setVisible(false); } });
+      }
+      if (dog && this.anims.exists('attack-dog-defeat')) {
+        // Every dog defeat frame has the same opaque bottom (y=344 of 384).
+        art.setPosition(enemy.x, enemy.y + 34 - (344 / 384 - 0.5) * baseHeight).setDepth(enemy.y - 1);
+        shadow.setPosition(enemy.x, enemy.y + 28).setDepth(enemy.y - 2);
+        return;
       }
       if (visual.fall) {
         const fall = visual.fall;

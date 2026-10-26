@@ -53,9 +53,9 @@ test('optional combat audio loads after the arena instead of blocking its startu
   assert.deepEqual(audio.sort(), ['challenge-win', 'heavy-hit', 'hero-defeat', 'punch-hit', 'special-attack']);
 });
 
-test('precomputed cleanup spans stay inside all ten original sheets', () => {
+test('precomputed cleanup spans stay inside all eleven original sheets', () => {
   const { SPRITE_FRAGMENT_RUNS } = loadSource('src/systems/SpriteFragmentRuns.ts');
-  assert.equal(Object.keys(SPRITE_FRAGMENT_RUNS).length, 10);
+  assert.equal(Object.keys(SPRITE_FRAGMENT_RUNS).length, 11);
   for (const [key, spans] of Object.entries(SPRITE_FRAGMENT_RUNS)) {
     const pixels = (key.includes('mbavu') ? 512 : 384) * 8 * 384;
     assert.equal(spans.length % 2, 0);

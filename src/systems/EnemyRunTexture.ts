@@ -7,6 +7,7 @@ const CLEAN_ENEMY_SHEETS = new Set([
   'gameplay-kibera-shield-goon-sprint-sheet',
   'gameplay-goon-red-attack-sheet', 'gameplay-goon-hoodie-attack-sheet',
   'gameplay-goon-club-attack-sheet',
+  'gameplay-attack-dog-defeat-sheet',
 ]);
 
 /** Keep the connected character, excluding detached pieces even inside its bounds. */

@@ -44,6 +44,7 @@ const assetUrls: Record<string, string> = {
   'gameplay/generated/level3-nairobi-rooftop-background.png': new URL('../assets/optimized/gameplay/generated/level3-nairobi-rooftop-background.webp', import.meta.url).href,
   'gameplay/generated/attack-dog-attack-sheet.png': new URL('../assets/optimized/gameplay/generated/attack-dog-attack-sheet.webp', import.meta.url).href,
   'gameplay/generated/attack-dog-run-sheet.png': new URL('../assets/optimized/gameplay/generated/attack-dog-run-sheet.webp', import.meta.url).href,
+  'gameplay/generated/attack-dog-defeat-sheet.png': new URL('../assets/optimized/gameplay/generated/attack-dog-defeat-sheet.webp', import.meta.url).href,
   'gameplay/generated/goon-chain-idle-sheet.png': new URL('../assets/optimized/gameplay/generated/goon-chain-idle-sheet.webp', import.meta.url).href,
   'gameplay/generated/goon-chain-walk-sheet.png': new URL('../assets/optimized/gameplay/generated/goon-chain-walk-sheet.webp', import.meta.url).href,
   'gameplay/generated/goon-chain-attack-sheet.png': new URL('../assets/optimized/gameplay/generated/goon-chain-attack-sheet.webp', import.meta.url).href,
@@ -128,6 +129,7 @@ export function loadDeferredLevelAssets(scene: Phaser.Scene, levelId: number) {
     loadSheet(scene, 'gameplay-goon-heavy', 'gameplay/generated/goon-heavy-idle-sheet.png', 384);
     loadAudio(scene, 'dog-growl', 'audio/dog-growl.mp3');
     loadSheet(scene, 'gameplay-attack-dog-run-sheet', 'gameplay/generated/attack-dog-run-sheet.png', 384);
+    loadSheet(scene, 'gameplay-attack-dog-defeat-sheet', 'gameplay/generated/attack-dog-defeat-sheet.png', 384);
     loadSheet(scene, 'gameplay-goon-chain-walk-sheet', 'gameplay/generated/goon-chain-walk-sheet.png', 384);
     loadSheet(scene, 'gameplay-goon-heavy-walk-sheet', 'gameplay/generated/goon-heavy-walk-v2-sheet.png', 384);
   }
@@ -190,6 +192,7 @@ export function loadBattleAnimationAssets(scene: Phaser.Scene, levelId: number, 
 
   if (levelId === 3) {
     add(loadSheet(scene, 'gameplay-attack-dog-run-sheet', 'gameplay/generated/attack-dog-run-sheet.png', 384));
+    add(loadSheet(scene, 'gameplay-attack-dog-defeat-sheet', 'gameplay/generated/attack-dog-defeat-sheet.png', 384));
     add(loadSheet(scene, 'gameplay-goon-chain-walk-sheet', 'gameplay/generated/goon-chain-walk-sheet.png', 384));
     add(loadSheet(scene, 'gameplay-goon-chain-attack-sheet', 'gameplay/generated/goon-chain-attack-sheet.png', 384));
     add(loadSheet(scene, 'gameplay-goon-heavy-walk-sheet', 'gameplay/generated/goon-heavy-walk-v2-sheet.png', 384));

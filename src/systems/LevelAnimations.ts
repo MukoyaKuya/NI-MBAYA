@@ -16,6 +16,7 @@ export function createLevelAnimations(scene: Phaser.Scene) {
     };
     createEightFrameAnimation('chapati-health-spin', 'gameplay-chapati-health-pickup-sheet', 12, -1);
     createEightFrameAnimation('attack-dog-run', 'gameplay-attack-dog-run-sheet', 13, -1);
+    createEightFrameAnimation('attack-dog-defeat', 'gameplay-attack-dog-defeat-sheet', 11, 0);
     createEightFrameAnimation('attack-dog-attack', 'gameplay-attack-dog', 12, 0);
     createEightFrameAnimation('goon-chain-idle', 'gameplay-goon-chain', 6, -1);
     createEightFrameAnimation('goon-chain-walk', 'gameplay-goon-chain-walk-sheet', 10, -1);
