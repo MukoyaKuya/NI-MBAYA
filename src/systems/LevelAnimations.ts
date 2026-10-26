@@ -17,11 +17,9 @@ export function createLevelAnimations(scene: Phaser.Scene) {
     createEightFrameAnimation('chapati-health-spin', 'gameplay-chapati-health-pickup-sheet', 12, -1);
     createEightFrameAnimation('attack-dog-run', 'gameplay-attack-dog-run-sheet', 13, -1);
     createEightFrameAnimation('attack-dog-attack', 'gameplay-attack-dog', 12, 0);
-    createEightFrameAnimation('attack-dog-defeat', 'gameplay-attack-dog-defeat-sheet', 10, 0);
     createEightFrameAnimation('goon-chain-idle', 'gameplay-goon-chain', 6, -1);
     createEightFrameAnimation('goon-chain-walk', 'gameplay-goon-chain-walk-sheet', 10, -1);
     createEightFrameAnimation('goon-chain-attack', 'gameplay-goon-chain-attack-sheet', 13, 0);
-    createEightFrameAnimation('goon-chain-defeat', 'gameplay-goon-chain-defeat-sheet', 10, 0);
     createEightFrameAnimation('goon-heavy-idle', 'gameplay-goon-heavy', 5, -1);
     if (!scene.anims.exists('goon-heavy-walk') && scene.textures.exists('gameplay-goon-heavy-walk-sheet')) {
       scene.anims.create({
@@ -32,7 +30,6 @@ export function createLevelAnimations(scene: Phaser.Scene) {
       });
     }
     createEightFrameAnimation('goon-heavy-attack', 'gameplay-goon-heavy-attack-sheet', 11, 0);
-    createEightFrameAnimation('goon-heavy-defeat', 'gameplay-goon-heavy-defeat-sheet', 9, 0);
     createEightFrameAnimation('kibera-stone-walk', 'gameplay-kibera-stone-goon-walk-sheet', 10, -1);
     createEightFrameAnimation('kibera-stone-sprint', 'gameplay-kibera-stone-goon-sprint-sheet', 14, -1);
     createEightFrameAnimation('kibera-stone-throw', 'gameplay-kibera-stone-goon-throw-sheet', 12, 0);
@@ -70,7 +67,7 @@ export function createLevelAnimations(scene: Phaser.Scene) {
     if (!scene.anims.exists('goon-red-attack') && scene.textures.exists('gameplay-goon-red-attack-sheet')) {
       scene.anims.create({
         key: 'goon-red-attack',
-        frames: scene.anims.generateFrameNumbers('gameplay-goon-red-attack-sheet', { start: 0, end: 7 }),
+        frames: scene.anims.generateFrameNumbers(getCleanEnemyRunTexture(scene.textures, 'gameplay-goon-red-attack-sheet'), { start: 0, end: 7 }),
         frameRate: 14,
         repeat: 0,
       });
@@ -79,7 +76,7 @@ export function createLevelAnimations(scene: Phaser.Scene) {
     if (!scene.anims.exists('goon-hoodie-attack') && scene.textures.exists('gameplay-goon-hoodie-attack-sheet')) {
       scene.anims.create({
         key: 'goon-hoodie-attack',
-        frames: scene.anims.generateFrameNumbers('gameplay-goon-hoodie-attack-sheet', { start: 0, end: 7 }),
+        frames: scene.anims.generateFrameNumbers(getCleanEnemyRunTexture(scene.textures, 'gameplay-goon-hoodie-attack-sheet'), { start: 0, end: 7 }),
         frameRate: 14,
         repeat: 0,
       });
@@ -88,7 +85,7 @@ export function createLevelAnimations(scene: Phaser.Scene) {
     if (!scene.anims.exists('goon-club-attack') && scene.textures.exists('gameplay-goon-club-attack-sheet')) {
       scene.anims.create({
         key: 'goon-club-attack',
-        frames: scene.anims.generateFrameNumbers('gameplay-goon-club-attack-sheet', { start: 0, end: 7 }),
+        frames: scene.anims.generateFrameNumbers(getCleanEnemyRunTexture(scene.textures, 'gameplay-goon-club-attack-sheet'), { start: 0, end: 7 }),
         frameRate: 13,
         repeat: 0,
       });

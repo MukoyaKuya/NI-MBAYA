@@ -1,7 +1,7 @@
 import { PLAYER_ART, PLAYER_DEFEAT_FALL_DISPLAY, PLAYER_FEINT_FRAMES, MJAKA_ART, type PlayerArtSpec } from '../config/PlayerArt';
 import { throwEnemyStone } from '../systems/EnemyProjectiles';
 import { isEnemyStriking, isEnemyWalking, getEnemyTextureFlip, getEnemyExitMotion } from '../systems/EnemyMotion';
-import { getEnemyDefeatPose } from '../systems/EnemyDefeatMotion';
+import { getEnemyDefeatPose, type EnemyVisibleBounds } from '../systems/EnemyDefeatMotion';
 import { createLevelAnimations } from '../systems/LevelAnimations';
 import { LEVELS, getLevelDefinition, type LevelDefinition } from '../config/Levels';
 import { getGameplayTime } from '../systems/GameplayClock';
@@ -30,7 +30,7 @@ type EnemyVisual = {
   baseWidth: number;
   baseHeight: number;
   defeatStarted: boolean;
-  fall?: { direction: number; startY: number; width: number; height: number };
+  fall?: { direction: number; startY: number; width: number; height: number; bounds?: EnemyVisibleBounds };
   victoryDirection: 1 | -1;
   victoryLaneY: number;
   victoryGone: boolean;
@@ -47,6 +47,17 @@ type LevelStartData = {
 
 const MAX_SIMULTANEOUS_ENEMY_ATTACKS = 2;
 const ENEMY_ATTACK_SLOT_WINDOW = 900;
+
+// Frame-zero opaque bounds for the walk/run art used during knockdown. The
+// transparent padding differs by fighter and must not be treated as a body.
+const ENEMY_FALL_BOUNDS: Partial<Record<EnemyVisualVariant, EnemyVisibleBounds>> = {
+  'gameplay-goon': [114, 16, 269, 360],
+  'gameplay-goon-hoodie': [117, 17, 267, 360],
+  'gameplay-goon-club': [108, 20, 275, 360],
+  'gameplay-goon-chain': [70, 18, 314, 362],
+  'gameplay-goon-heavy': [47, 41, 337, 358],
+  'gameplay-attack-dog': [21, 109, 363, 326],
+};
 
 export class LevelScene extends Phaser.Scene {
   private player!: Player;
@@ -679,42 +690,27 @@ export class LevelScene extends Phaser.Scene {
       if (!visual.defeatStarted) {
         visual.defeatStarted = true;
         art.setAlpha(1).clearTint();
-        const defeatAnim = this.getEnemyDefeatAnimationKey(enemy.visualVariant);
-        if (defeatAnim && this.anims.exists(defeatAnim)) {
-          art.play(defeatAnim, false).setAngle(0);
-          if (dog) art.setDisplaySize(260, 164);
-          else if (enemy.visualVariant === 'gameplay-goon-heavy') art.setDisplaySize(270, 270);
-          else if (enemy.visualVariant === 'gameplay-goon-chain') art.setDisplaySize(300, 230);
-        } else {
-          // Use a full-body walking frame rather than stretching a portrait or
-          // freezing an oversized attack frame. Preserve the standing proportions.
-          const walkAnim = this.getEnemyWalkAnimationKey(enemy.visualVariant);
-          const restTexture = this.anims.exists(walkAnim)
-            ? this.anims.get(walkAnim).frames[0].textureKey : enemy.visualVariant;
-          art.stop();
-          const width = kiberaGoon ? baseWidth : baseWidth * 1.55;
-          const height = kiberaGoon ? baseHeight : baseHeight * 1.22;
-          visual.fall = { direction: enemy.x < this.player.x ? -1 : 1, startY: art.y, width, height };
-          art.setTexture(restTexture, 0).setDisplaySize(width, height).setAngle(0);
-        }
-        // Let even the heavy's eight-frame fall finish, then hold the body
-        // on the road before fading. Never fade while it is still falling.
+        // Authored level-three defeat cells crop limbs as the body crosses a
+        // frame boundary. Use an intact full-body walk pose for every fall.
+        const walkAnim = this.getEnemyWalkAnimationKey(enemy.visualVariant);
+        const restTexture = this.anims.exists(walkAnim)
+          ? this.anims.get(walkAnim).frames[0].textureKey : enemy.visualVariant;
+        art.stop();
+        const width = legacyPortrait ? baseWidth * 1.55 : baseWidth;
+        const height = legacyPortrait ? baseHeight * 1.22 : baseHeight;
+        visual.fall = { direction: enemy.x < this.player.x ? -1 : 1, startY: art.y, width, height, bounds: ENEMY_FALL_BOUNDS[enemy.visualVariant] };
+        art.setTexture(restTexture, 0).setDisplaySize(width, height).setAngle(0);
+        // Hold the body on the road before fading.
         this.tweens.add({ targets: [art, shadow], alpha: 0, delay: 1600, duration: 600, ease: 'Sine.In', onComplete: () => { art.setVisible(false); shadow.setVisible(false); } });
       }
       if (visual.fall) {
         const fall = visual.fall;
-        const pose = getEnemyDefeatPose(time - enemy.defeatedAt, fall.width, fall.height, fall.startY, enemy.y + 34, fall.direction);
+        const pose = getEnemyDefeatPose(time - enemy.defeatedAt, fall.width, fall.height, fall.startY, enemy.y + 34, fall.direction, fall.bounds);
         const x = Phaser.Math.Clamp(enemy.x + pose.offsetX, pose.halfWidth + 12, GAME_WIDTH - pose.halfWidth - 12);
         art.setPosition(x, pose.y).setAngle(pose.angle).setDepth(enemy.y - 1);
         shadow.setPosition(x, enemy.y + 28).setDepth(enemy.y - 2);
         return;
       }
-      const generatedDefeat = Boolean(this.getEnemyDefeatAnimationKey(enemy.visualVariant) && this.anims.exists(this.getEnemyDefeatAnimationKey(enemy.visualVariant)));
-      const defeatOffsetY = dog ? 65 : kiberaGoon ? baseHeight * 0.42 : enemy.visualVariant === 'gameplay-goon-heavy' ? 120 : enemy.visualVariant === 'gameplay-goon-chain' ? 102 : 34;
-      const defeatHalfWidth = generatedDefeat ? art.displayWidth / 2 : 20;
-      const defeatX = Phaser.Math.Clamp(enemy.x, defeatHalfWidth + 12, GAME_WIDTH - defeatHalfWidth - 12);
-      art.setPosition(defeatX, enemy.y - defeatOffsetY - enemy.z).setDepth(enemy.y - 1);
-      shadow.setPosition(defeatX, enemy.y).setDepth(enemy.y - 2);
       return;
     }
 
@@ -817,13 +813,6 @@ export class LevelScene extends Phaser.Scene {
     if (variant === 'gameplay-goon-club') return 'goon-club-walk';
     if (variant === 'gameplay-goon-hoodie') return 'goon-hoodie-walk';
     return 'goon-red-walk';
-  }
-
-  private getEnemyDefeatAnimationKey(variant: EnemyVisualVariant) {
-    if (variant === 'gameplay-attack-dog') return 'attack-dog-defeat';
-    if (variant === 'gameplay-goon-chain') return 'goon-chain-defeat';
-    if (variant === 'gameplay-goon-heavy') return 'goon-heavy-defeat';
-    return '';
   }
 
   private getPlayerAngle() {

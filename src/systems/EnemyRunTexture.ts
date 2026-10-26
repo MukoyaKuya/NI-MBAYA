@@ -1,10 +1,12 @@
 import type Phaser from 'phaser';
 import { SPRITE_FRAGMENT_RUNS } from './SpriteFragmentRuns';
 
-const RUN_SHEETS = new Set([
+const CLEAN_ENEMY_SHEETS = new Set([
   'gameplay-goon-red-run-sheet', 'gameplay-goon-hoodie-run-sheet',
   'gameplay-goon-club-run-sheet', 'gameplay-kibera-stone-goon-sprint-sheet',
   'gameplay-kibera-shield-goon-sprint-sheet',
+  'gameplay-goon-red-attack-sheet', 'gameplay-goon-hoodie-attack-sheet',
+  'gameplay-goon-club-attack-sheet',
 ]);
 
 /** Keep the connected character, excluding detached pieces even inside its bounds. */
@@ -55,9 +57,9 @@ export function removeDetachedPixels(data: Uint8ClampedArray, width: number, hei
   }
 }
 
-/** Build once per loaded sheet, before either direction of the run is played. */
+/** Build once per loaded sheet, before a run or attack is played. */
 export function getCleanEnemyRunTexture(textures: Phaser.Textures.TextureManager, key: string) {
-  if (!RUN_SHEETS.has(key)) return key;
+  if (!CLEAN_ENEMY_SHEETS.has(key)) return key;
   return getCleanSheet(textures, key, 384, 384);
 }
 
