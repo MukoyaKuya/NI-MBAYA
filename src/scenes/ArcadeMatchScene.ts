@@ -10,7 +10,7 @@ type Fighter = {
   id: ArcadeFighterId; x: number; jump: number; velocityY: number; facing: 1 | -1;
   health: number; wins: number; stunUntil: number; attackUntil: number; hitAt: number;
   attack: Move | null; attackStartedAt: number; attackResolved: boolean; contactChecked: boolean; nextAttackAt: number;
-  blocking: boolean; moving: boolean; duck: number; ducking: boolean; duckUpdatedAt: number;
+  blocking: boolean; moving: boolean; duck: number; ducking: boolean; duckUpdatedAt: number; jumpUpdatedAt: number;
   sprite: Phaser.GameObjects.Sprite; shadow: Phaser.GameObjects.Ellipse;
 };
 type Controls = Record<ControlAction, Phaser.Input.Keyboard.Key>;
@@ -157,7 +157,7 @@ export class ArcadeMatchScene extends Phaser.Scene {
         stunUntil: 0, attackUntil: 0, hitAt: 0, attack: null, attackStartedAt: 0, attackResolved: false,
         contactChecked: false,
         nextAttackAt: 0, blocking: false, moving: false, duck: 0, ducking: false,
-        duckUpdatedAt: this.time.now, sprite, shadow };
+        duckUpdatedAt: this.time.now, jumpUpdatedAt: this.time.now, sprite, shadow };
     };
     this.fighters = [make(this.selected[0], 330, 1), make(this.selected[1], 950, -1)];
   }
@@ -204,7 +204,8 @@ export class ArcadeMatchScene extends Phaser.Scene {
       fighter.health = 100; fighter.stunUntil = 0; fighter.attackUntil = 0;
       fighter.nextAttackAt = 0; fighter.attack = null; fighter.attackResolved = false;
       fighter.contactChecked = false; fighter.blocking = false; fighter.moving = false;
-      fighter.duck = 0; fighter.ducking = false; fighter.duckUpdatedAt = this.time.now;
+      fighter.duck = 0; fighter.ducking = false;
+      fighter.duckUpdatedAt = this.time.now; fighter.jumpUpdatedAt = this.time.now;
       fighter.sprite.clearTint().setAlpha(1).setAngle(0).setVisible(true);
       fighter.shadow.setVisible(true);
     });
@@ -284,12 +285,12 @@ export class ArcadeMatchScene extends Phaser.Scene {
       fighter.x = Phaser.Math.Clamp(fighter.x + direction * (ARCADE_FIGHTERS[fighter.id].speed * 48) * seconds, 105, 1175);
       fighter.moving = fighter.x !== previousX;
       if ((Phaser.Input.Keyboard.JustDown(controls.jump) || touch?.jump)
-        && fighter.jump === 0) fighter.velocityY = 660;
+        && fighter.jump === 0) { fighter.velocityY = 660; fighter.jumpUpdatedAt = time; }
       if (this.queuedAttack && this.beginAttack(fighter, this.queuedAttack, time)) {
         this.queuedAttack = null;
       }
     }
-    this.updateJump(fighter, seconds);
+    this.updateJump(fighter, time);
   }
 
   private controlAi(seconds: number, time: number) {
@@ -333,12 +334,15 @@ export class ArcadeMatchScene extends Phaser.Scene {
         fighter.moving = false;
       }
     }
-    this.updateJump(fighter, seconds);
+    this.updateJump(fighter, time);
   }
 
-  private updateJump(fighter: Fighter, seconds: number) {
+  private updateJump(fighter: Fighter, time: number) {
+    const seconds = Phaser.Math.Clamp((time - fighter.jumpUpdatedAt) / 1000, 0, 1.2);
+    fighter.jumpUpdatedAt = time;
+    if (seconds === 0) return;
     if (fighter.jump > 0 || fighter.velocityY > 0) {
-      fighter.jump = Math.max(0, fighter.jump + fighter.velocityY * seconds);
+      fighter.jump = Math.max(0, fighter.jump + fighter.velocityY * seconds - 825 * seconds * seconds);
       fighter.velocityY -= 1650 * seconds;
       if (fighter.jump === 0) fighter.velocityY = 0;
     }

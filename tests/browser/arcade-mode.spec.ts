@@ -249,6 +249,12 @@ test('Arcade uses Story controls: Down alone ducks, Space jumps, and L attacks',
   await page.evaluate(() => {
     const match = (window as any).__game.scene.getScene('ArcadeMatchScene');
     match.aiNextAttackAt = Number.MAX_SAFE_INTEGER;
+    match.fighters[0].stunUntil = 0;
+    match.fighters[0].attack = null;
+    match.fighters[0].attackUntil = 0;
+    match.fighters[0].nextAttackAt = 0;
+    match.fighters[1].attack = null;
+    match.fighters[1].attackUntil = 0;
     match.fighters[0].x = 540;
     match.fighters[1].x = 680;
   });
