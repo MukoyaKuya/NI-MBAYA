@@ -206,6 +206,120 @@ test('failed writes use session values and reset masks old persisted values', ()
   delete globalThis.localStorage;
 });
 
+test('successful storage writes and removals observe subsequent external changes', () => {
+  const previous = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  const persisted = new Map();
+  let blocked = false;
+  Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: {
+    getItem: key => persisted.get(key) ?? null,
+    setItem(key, value) { if (blocked) throw new Error('quota'); persisted.set(key, value); },
+    removeItem(key) { if (blocked) throw new Error('blocked'); persisted.delete(key); },
+  } });
+  try {
+    const storage = loadSource('src/config/Storage.ts');
+    storage.writeStorage('key', 'first');
+    persisted.set('key', 'other tab');
+    assert.equal(storage.readStorage('key'), 'other tab');
+    storage.removeStorage('key');
+    persisted.set('key', 'recreated elsewhere');
+    assert.equal(storage.readStorage('key'), 'recreated elsewhere');
+    blocked = true;
+    storage.writeStorage('key', 'fallback');
+    assert.equal(storage.readStorage('key'), 'fallback');
+    blocked = false;
+    storage.writeStorage('key', 'recovered');
+    persisted.set('key', 'updated elsewhere');
+    assert.equal(storage.readStorage('key'), 'updated elsewhere');
+    blocked = true;
+    storage.removeStorage('key');
+    assert.equal(storage.readStorage('key'), null);
+    blocked = false;
+    storage.removeStorage('key');
+    persisted.set('key', 'after recovery');
+    assert.equal(storage.readStorage('key'), 'after recovery');
+  } finally {
+    if (previous) Object.defineProperty(globalThis, 'localStorage', previous);
+    else delete globalThis.localStorage;
+  }
+});
+
+test('control bindings reject reserved, unsupported and duplicate keys and repair old saves', () => {
+  const previous = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  const values = new Map();
+  Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: {
+    getItem: key => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, value), removeItem: key => values.delete(key),
+  } });
+  try {
+    const controls = loadSource('src/config/Controls.ts');
+    for (const key of ['P', 'ESC', 'F8', 'K', 'UNIDENTIFIED']) {
+      assert.ok(controls.getControlKeyError('punch', key));
+      assert.equal(controls.setControlKey('punch', key).punch, 'J');
+      assert.equal(values.size, 0);
+    }
+    assert.equal(controls.setControlKey('punch', 'q').punch, 'Q');
+    assert.equal(controls.getControlKeyError('punch', 'Q'), null);
+    values.set('ni-mbaya-controls', JSON.stringify({ left: 'Q', right: 'Q', punch: 'P', kick: 'LEFT', jump: '1', special: 'NUMPAD_2' }));
+    const repaired = controls.getControlKeys();
+    assert.equal(repaired.left, 'Q');
+    assert.equal(repaired.kick, 'LEFT');
+    assert.equal(repaired.jump, 'ONE');
+    assert.equal(repaired.special, 'NUMPAD_TWO');
+    assert.equal(new Set(Object.values(repaired)).size, 8);
+    assert.ok(!Object.values(repaired).includes('P'));
+    assert.equal(controls.normalizeKeyName({ code: 'Digit1', key: '!' }), 'ONE');
+    assert.equal(controls.normalizeKeyName({ code: 'Numpad2', key: '2' }), 'NUMPAD_TWO');
+    assert.equal(controls.normalizeKeyName({ code: 'ControlLeft', key: 'Control' }), 'CTRL');
+    assert.equal(controls.formatKeyName('NUMPAD_TWO'), 'NUM 2');
+  } finally {
+    if (previous) Object.defineProperty(globalThis, 'localStorage', previous);
+    else delete globalThis.localStorage;
+  }
+});
+
+test('options explain binding conflicts and keep capture open until a valid key is chosen', () => {
+  const previous = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: undefined });
+  try {
+    const cache = new Map();
+    const { OptionsScene } = loadSource('src/scenes/OptionsScene.ts', { phaser: { Scene: class {} } }, cache);
+    const controls = loadSource('src/config/Controls.ts', {}, cache);
+    const scene = Object.assign(Object.create(OptionsScene.prototype), {
+      waitingForKey: 'punch', refreshRows() {}, showStatus(message) { this.status = message; },
+    });
+    const press = (code, key) => scene.handleKeyDown({ code, key, repeat: false, preventDefault() {}, stopPropagation() {} });
+    press('KeyP', 'p');
+    assert.match(scene.status, /RESERVED FOR PAUSE/);
+    assert.equal(scene.waitingForKey, 'punch');
+    press('KeyK', 'k');
+    assert.match(scene.status, /ALREADY USED FOR KICK/);
+    assert.equal(scene.waitingForKey, 'punch');
+    assert.equal(controls.getControlKeys().punch, 'J');
+    press('KeyQ', 'q');
+    assert.equal(scene.waitingForKey, undefined);
+    assert.equal(controls.getControlKeys().punch, 'Q');
+    assert.equal(scene.status, 'PUNCH UPDATED');
+  } finally {
+    if (previous) Object.defineProperty(globalThis, 'localStorage', previous);
+    else delete globalThis.localStorage;
+  }
+});
+
+test('remapped movement does not retain implicit cursor bindings', () => {
+  const { Player } = loadSource('src/entities/Player.ts', { phaser: { Physics: { Arcade: { Sprite: class {} } }, Input: { Keyboard: { JustDown: () => false } } } });
+  const player = Object.assign(Object.create(Player.prototype), {
+    health: 100, state: 'idle', z: 0, vz: 0, y: 540, lockedUntil: 0,
+    keys: Object.fromEntries(['left', 'right', 'up', 'down', 'jump', 'punch', 'kick', 'special'].map(key => [key, { isDown: false }])),
+    cursors: { left: { isDown: true }, right: { isDown: false }, up: { isDown: false }, down: { isDown: false } },
+    touchIntent: { axisX: 0, axisY: 0 }, setVelocityX(value) { this.vx = value; }, setVelocityY() {}, setFlipX() {}, setTexture() {},
+  });
+  player.update(100, 16);
+  assert.equal(player.vx, 0);
+  player.keys.left.isDown = true;
+  player.update(116, 16);
+  assert.equal(player.vx, -360);
+});
+
 test('HUD cannot resume a level completion or defeat pause', () => {
   const { HUD } = loadSource('src/ui/HUD.ts', { phaser: {}, '../config/GameConfig': { GAME_WIDTH: 1280, GAME_HEIGHT: 720 } });
   const hud = Object.create(HUD.prototype);

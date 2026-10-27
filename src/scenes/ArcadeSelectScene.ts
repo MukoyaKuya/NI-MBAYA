@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { ARCADE_FIGHTERS, ARCADE_FIGHTER_IDS, type ArcadeFighterId } from '../config/ArcadeFighters';
+import { formatKeyName, getControlKeys } from '../config/Controls';
 import { startStreamingMusic } from '../systems/StreamingMusic';
 
 export class ArcadeSelectScene extends Phaser.Scene {
@@ -21,6 +22,7 @@ export class ArcadeSelectScene extends Phaser.Scene {
 
   create() {
     startStreamingMusic('menu-music', new URL('../assets/optimized/audio/menu-music.mp3', import.meta.url).href, 0.24);
+    const controlKeys = getControlKeys();
     this.chosen = 'majembe'; this.launching = false; this.portraits = []; this.names = [];
     this.add.image(640, 360, 'arcade-archives').setDisplaySize(1280, 720);
     this.add.rectangle(640, 360, 1280, 720, 0x03050c, 0.72);
@@ -35,12 +37,12 @@ export class ArcadeSelectScene extends Phaser.Scene {
       fontFamily: 'Impact, Arial Black, sans-serif', fontSize: '29px', color: '#0b0c0d',
       backgroundColor: '#ffc928', padding: { x: 32, y: 13 },
     }).setOrigin(0.5).setInteractive({ useHandCursor: true }).on('pointerdown', () => this.startFight());
-    this.add.text(640, 707, 'A / D OR ← / →  CHOOSE    •    ENTER  FIGHT    •    ESC  BACK', {
+    this.add.text(640, 707, `${formatKeyName(controlKeys.left)} / ${formatKeyName(controlKeys.right)}  CHOOSE    •    ENTER  FIGHT    •    ESC  BACK`, {
       fontFamily: 'Arial Black, sans-serif', fontSize: '13px', color: '#c8bfae',
     }).setOrigin(0.5);
     const listeners: [string, () => void][] = [
-      ['keydown-A', () => this.cycle(-1)], ['keydown-D', () => this.cycle(1)],
-      ['keydown-LEFT', () => this.cycle(-1)], ['keydown-RIGHT', () => this.cycle(1)],
+      [`keydown-${controlKeys.left}`, () => this.cycle(-1)],
+      [`keydown-${controlKeys.right}`, () => this.cycle(1)],
       ['keydown-ENTER', () => this.startFight()], ['keydown-ESC', () => this.scene.start('MainMenuScene')],
     ];
     for (const [event, handler] of listeners) this.input.keyboard?.on(event, handler);

@@ -13,7 +13,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   state: PlayerState = 'idle';
   z = 0;
   vz = 0;
-  private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
   private keys: Record<string, Phaser.Input.Keyboard.Key>;
   private canAttackAt = 0;
   private lockedUntil = 0;
@@ -30,7 +29,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.setMaxVelocity(520, 360);
     this.setSize(48, 92);
     this.setOffset(24, 30);
-    this.cursors = scene.input.keyboard!.createCursorKeys();
     this.keys = scene.input.keyboard!.addKeys(getControlKeys()) as Record<string, Phaser.Input.Keyboard.Key>;
     (this.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
   }
@@ -60,10 +58,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     const onFloor = this.z <= 0;
     if (time < this.lockedUntil) return;
 
-    const left = this.cursors.left.isDown || this.keys.left.isDown || this.touchIntent.axisX < -0.2;
-    const right = this.cursors.right.isDown || this.keys.right.isDown || this.touchIntent.axisX > 0.2;
-    const up = this.cursors.up.isDown || this.keys.up.isDown || this.touchIntent.axisY < -0.2;
-    const down = this.cursors.down.isDown || this.keys.down.isDown || this.touchIntent.axisY > 0.2;
+    const left = this.keys.left.isDown || this.touchIntent.axisX < -0.2;
+    const right = this.keys.right.isDown || this.touchIntent.axisX > 0.2;
+    const up = this.keys.up.isDown || this.touchIntent.axisY < -0.2;
+    const down = this.keys.down.isDown || this.touchIntent.axisY > 0.2;
     const jumpPressed = Phaser.Input.Keyboard.JustDown(this.keys.jump) || this.touchIntent.jump;
 
     this.setVelocityX(left ? -360 : right ? 360 : 0);

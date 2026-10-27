@@ -9,10 +9,16 @@ export function readStorage(key: string): string | null {
 
 export function writeStorage(key: string, value: string) {
   sessionValues.set(key, value);
-  try { globalThis.localStorage?.setItem(key, value); } catch { /* Session fallback remains available. */ }
+  try {
+    const storage = globalThis.localStorage;
+    if (storage) { storage.setItem(key, value); sessionValues.delete(key); }
+  } catch { /* Session fallback remains available. */ }
 }
 
 export function removeStorage(key: string) {
   sessionValues.set(key, null);
-  try { globalThis.localStorage?.removeItem(key); } catch { /* Session fallback remains available. */ }
+  try {
+    const storage = globalThis.localStorage;
+    if (storage) { storage.removeItem(key); sessionValues.delete(key); }
+  } catch { /* Session fallback remains available. */ }
 }

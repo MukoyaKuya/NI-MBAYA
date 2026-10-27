@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { startStreamingMusic } from '../systems/StreamingMusic';
-import { CONTROL_ACTIONS, CONTROL_LABELS, ControlAction, formatKeyName, getControlKeys, normalizeKeyName, resetControlKeys, setControlKey } from '../config/Controls';
+import { CONTROL_ACTIONS, CONTROL_LABELS, ControlAction, formatKeyName, getControlKeys, getControlKeyError, normalizeKeyName, resetControlKeys, setControlKey } from '../config/Controls';
 import { cycleDifficulty, getDifficultySettings, getStoryLanguage, isSoundEnabled, toggleSoundEnabled, toggleStoryLanguage } from '../config/GameSettings';
 
 type Setting = 'difficulty' | 'sound' | 'language' | 'screen';
@@ -284,8 +284,11 @@ export class OptionsScene extends Phaser.Scene {
       event.stopPropagation();
       if (event.key === 'Escape') { this.cancelKeyCapture(); return; }
       const action = this.waitingForKey;
+      const key = normalizeKeyName(event);
+      const error = getControlKeyError(action, key);
+      if (error) { this.showStatus(`${error} · PRESS ANOTHER KEY`); return; }
       this.waitingForKey = undefined;
-      setControlKey(action, normalizeKeyName(event));
+      setControlKey(action, key);
       this.refreshRows();
       this.showStatus(`${CONTROL_LABELS[action].toUpperCase()} UPDATED`);
     } else if (event.key === 'Escape') { event.stopPropagation(); this.goBack(); }
