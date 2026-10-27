@@ -133,6 +133,11 @@ test('Majembe can be selected against CPU Mbavu', async ({ page }) => {
     match.fighters[0].x = 540;
     match.fighters[1].x = 675;
     match.aiNextAttackAt = Number.MAX_SAFE_INTEGER;
+    match.fighters[0].attack = null;
+    match.fighters[0].attackUntil = 0;
+    match.fighters[0].stunUntil = 0;
+    match.fighters[0].duck = 0;
+    match.fighters[0].jump = 0;
     match.fighters[1].attack = null;
     match.fighters[1].attackUntil = 0;
     match.fighters[1].stunUntil = 0;
@@ -143,6 +148,7 @@ test('Majembe can be selected against CPU Mbavu', async ({ page }) => {
     const match = (window as any).__game.scene.getScene('ArcadeMatchScene');
     match.fighters[0].nextAttackAt = 0;
     match.beginAttack(match.fighters[0], 'kick', match.time.now);
+    match.aiReactedAttackAt = match.fighters[0].attackStartedAt;
   });
   await expect.poll(() => page.evaluate(() => (window as any).__game.scene.getScene('ArcadeMatchScene').fighters[1].duck),
     { timeout: 1500 }).toBeGreaterThan(0.4);

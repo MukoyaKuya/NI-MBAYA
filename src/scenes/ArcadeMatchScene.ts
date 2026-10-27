@@ -10,7 +10,7 @@ type Fighter = {
   id: ArcadeFighterId; x: number; jump: number; velocityY: number; facing: 1 | -1;
   health: number; wins: number; stunUntil: number; attackUntil: number; hitAt: number;
   attack: Move | null; attackStartedAt: number; attackResolved: boolean; contactChecked: boolean; nextAttackAt: number;
-  blocking: boolean; moving: boolean; duck: number; ducking: boolean;
+  blocking: boolean; moving: boolean; duck: number; ducking: boolean; duckUpdatedAt: number;
   sprite: Phaser.GameObjects.Sprite; shadow: Phaser.GameObjects.Ellipse;
 };
 type Controls = Record<ControlAction, Phaser.Input.Keyboard.Key>;
@@ -156,7 +156,8 @@ export class ArcadeMatchScene extends Phaser.Scene {
       return { id, x, jump: 0, velocityY: 0, facing, health: 100, wins: 0,
         stunUntil: 0, attackUntil: 0, hitAt: 0, attack: null, attackStartedAt: 0, attackResolved: false,
         contactChecked: false,
-        nextAttackAt: 0, blocking: false, moving: false, duck: 0, ducking: false, sprite, shadow };
+        nextAttackAt: 0, blocking: false, moving: false, duck: 0, ducking: false,
+        duckUpdatedAt: this.time.now, sprite, shadow };
     };
     this.fighters = [make(this.selected[0], 330, 1), make(this.selected[1], 950, -1)];
   }
@@ -203,7 +204,7 @@ export class ArcadeMatchScene extends Phaser.Scene {
       fighter.health = 100; fighter.stunUntil = 0; fighter.attackUntil = 0;
       fighter.nextAttackAt = 0; fighter.attack = null; fighter.attackResolved = false;
       fighter.contactChecked = false; fighter.blocking = false; fighter.moving = false;
-      fighter.duck = 0; fighter.ducking = false;
+      fighter.duck = 0; fighter.ducking = false; fighter.duckUpdatedAt = this.time.now;
       fighter.sprite.clearTint().setAlpha(1).setAngle(0).setVisible(true);
       fighter.shadow.setVisible(true);
     });
@@ -221,8 +222,8 @@ export class ArcadeMatchScene extends Phaser.Scene {
   }
 
   update(time: number, delta: number) {
-    // Keep simulation close to wall-clock time on slower browser frames so
-    // ducking can actually finish before a telegraphed kick lands.
+    // Movement stays bounded after a stall. Defensive poses use the actual
+    // scene clock because Phaser can smooth delta to one nominal frame.
     const seconds = Math.min(delta, 100) / 1000;
     this.animateBackground(time, seconds);
     if (!this.controls || !this.fighters) return;
@@ -231,19 +232,13 @@ export class ArcadeMatchScene extends Phaser.Scene {
       this.fighters.forEach(fighter => {
         if (fighter.attack && fighter.attackResolved && time >= fighter.attackUntil) fighter.attack = null;
       });
-      // Resolve a previous strike before a delayed frame can replace it with
-      // the next input or AI decision.
+      this.controlPlayer(seconds, time);
+      this.controlAi(seconds, time);
+      this.separateFighters();
       this.resolveAttack(0, time);
       this.resolveAttack(1, time);
-      if (this.phase === 'fighting') {
-        this.controlPlayer(seconds, time);
-        this.controlAi(seconds, time);
-        this.separateFighters();
-        this.resolveAttack(0, time);
-        this.resolveAttack(1, time);
-        if (this.clock === 0) this.finishRound(this.fighters[0].health === this.fighters[1].health
-          ? null : this.fighters[0].health > this.fighters[1].health ? 0 : 1);
-      }
+      if (this.clock === 0) this.finishRound(this.fighters[0].health === this.fighters[1].health
+        ? null : this.fighters[0].health > this.fighters[1].health ? 0 : 1);
     }
     this.fighters.forEach(fighter => this.drawFighter(fighter, time));
     this.refreshHud();
@@ -276,11 +271,11 @@ export class ArcadeMatchScene extends Phaser.Scene {
     }
     if (time > this.queuedAttackUntil) this.queuedAttack = null;
     const stunned = time < fighter.stunUntil;
-    const attacking = time < fighter.attackUntil;
+    const attacking = time < fighter.attackUntil || (fighter.attack !== null && !fighter.attackResolved);
     fighter.moving = false;
     fighter.ducking = !stunned && !attacking && fighter.jump === 0
       && (controls.down.isDown || (touch?.axisY ?? 0) > 0.2);
-    this.updateDuck(fighter, seconds);
+    this.updateDuck(fighter, time);
     fighter.blocking = false;
     if (!stunned && !attacking && !fighter.ducking && fighter.duck < 0.1) {
       const direction = Number(controls.right.isDown || (touch?.axisX ?? 0) > 0.2)
@@ -301,7 +296,7 @@ export class ArcadeMatchScene extends Phaser.Scene {
     const fighter = this.fighters[1];
     const player = this.fighters[0];
     const stunned = time < fighter.stunUntil;
-    const attacking = time < fighter.attackUntil;
+    const attacking = time < fighter.attackUntil || (fighter.attack !== null && !fighter.attackResolved);
     const distance = Math.abs(player.x - fighter.x);
     fighter.moving = false;
     // React to the visible windup once per kick; the delay leaves time for a
@@ -317,7 +312,7 @@ export class ArcadeMatchScene extends Phaser.Scene {
     }
     fighter.ducking = !stunned && !attacking && fighter.jump === 0
       && time >= this.aiDuckAt && time < this.aiDuckUntil;
-    this.updateDuck(fighter, seconds);
+    this.updateDuck(fighter, time);
     fighter.blocking = !stunned && !attacking && !fighter.ducking && fighter.duck < 0.1
       && fighter.jump === 0 && time < this.aiGuardUntil;
     if (!stunned && !attacking && !fighter.blocking && !fighter.ducking && fighter.duck < 0.1) {
@@ -349,12 +344,15 @@ export class ArcadeMatchScene extends Phaser.Scene {
     }
   }
 
-  private updateDuck(fighter: Fighter, seconds: number) {
+  private updateDuck(fighter: Fighter, time: number) {
+    const seconds = Phaser.Math.Clamp((time - fighter.duckUpdatedAt) / 1000, 0, 0.5);
+    fighter.duckUpdatedAt = time;
     fighter.duck = Phaser.Math.Clamp(fighter.duck + (fighter.ducking ? 1 : -1) * seconds / DUCK_SECONDS, 0, 1);
   }
 
   private beginAttack(fighter: Fighter, move: Move, time: number) {
-    if (time < fighter.nextAttackAt || fighter.jump > 100 || fighter.duck > 0.1) return false;
+    if (time < fighter.nextAttackAt || (fighter.attack !== null && !fighter.attackResolved)
+      || fighter.jump > 100 || fighter.duck > 0.1) return false;
     fighter.attack = move; fighter.attackResolved = false; fighter.contactChecked = false;
     fighter.attackStartedAt = time;
     fighter.hitAt = time + (move === 'kick' ? 330 : ACTION_MS[move] / 2);
